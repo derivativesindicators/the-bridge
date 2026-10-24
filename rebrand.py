@@ -85,7 +85,9 @@ def main():
     if cp.read_text() != new: cp.write_text(new); n += 1
 
     # 2. package names (Cargo lib name kept: openalgo_desktop_lib is a code identifier)
-    n += edit(R / "src-tauri/Cargo.toml", lambda s: re.sub(r'(?m)^name = "openalgo-desktop"$', f'name = "{o.slug}"', s, count=1))
+    # Cargo package name is kept as `openalgo-desktop`: the crate depends on itself as a dev-dependency
+    # (test-support feature) and the MCP CLI/user-agent use it. Installer/exe names come from productName.
+    n += edit(R / "src-tauri/Cargo.toml", lambda s: re.sub(r'(?m)^name = "[a-z0-9-]+"\n(version = "[^"]+"\n)', lambda m: 'name = "openalgo-desktop"\n' + m.group(1), s, count=1))
     n += edit(R / "package.json", lambda s: s.replace('"name": "openalgo-desktop"', f'"name": "{o.slug}"', 1))
     # updater URLs used in UI/release notes
     for f in ("src-tauri/src/services/update/mod.rs",):
@@ -132,6 +134,13 @@ def main():
         ic = R / "src-tauri/icons"
         shutil.copy(o.icon, R / "public/logo.png"); shutil.copy(ic / "icon.ico", R / "public/favicon.ico")
         shutil.copy(ic / "128x128@2x.png", R / "public/apple-touch-icon.png")
+        try:
+            from PIL import Image
+            Image.open(o.icon).convert("RGBA").resize((192, 192), Image.LANCZOS).save(R / "public/images/android-chrome-192x192.png")
+        except ImportError:
+            shutil.copy(ic / "128x128@2x.png", R / "public/images/android-chrome-192x192.png")
+        for svg in ("openalgo-glyph.svg", "openalgo-mark.svg"):  # unused upstream marks
+            (R / "public/images" / svg).unlink(missing_ok=True)
 
     # 7. MODIFICATIONS.md (AGPL 5a)
     mp = R / "MODIFICATIONS.md"
