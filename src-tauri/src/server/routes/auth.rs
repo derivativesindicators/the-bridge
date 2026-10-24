@@ -166,8 +166,8 @@ async fn finish_sign_in(
 /// while the keys of an earlier build still have to move into openalgo.db
 /// (KEY-01): the move happens at a sign-in in the app window only. The same
 /// answer, after the same work, for every name and password.
-pub const SIGN_IN_IN_APP_WINDOW_FIRST: &str = "Sign in once in the OpenAlgo Desktop window on \
-the computer where it is installed: OpenAlgo is moving your saved keys into its own database. \
+pub const SIGN_IN_IN_APP_WINDOW_FIRST: &str = "Sign in once in the The Bridge window on \
+the computer where it is installed: The Bridge is moving your saved keys into its own database. \
 After that you can sign in here too.";
 
 /// Answer a sign-in that issued no session as the auth service decided
@@ -485,7 +485,7 @@ fn foreign(headers: &HeaderMap) -> bool {
 /// What a POST logout answers when the broker session ended in memory but
 /// its stored record could not be updated yet (the session poll retries).
 pub const LOGOUT_REVOKE_PENDING: &str = "Logged out. Your broker session has ended, but \
-OpenAlgo could not record that on this computer yet and will keep trying in the background.";
+The Bridge could not record that on this computer yet and will keep trying in the background.";
 
 /// GET|POST /auth/logout. The signed-in trader's logout revokes the broker
 /// session, ends every browser session and tells every window. A caller

@@ -104,12 +104,12 @@ pub const INVALID_API_KEY: &str = "Invalid openalgo apikey";
 /// 2026-10-13). The web has no such state; the desktop keeps the web's
 /// `{status, message}` envelope and answers 503, so a client can tell it
 /// from a wrong key (403).
-pub const API_LOCKED: &str = "Sign in to OpenAlgo to use the API. The API is off after OpenAlgo \
+pub const API_LOCKED: &str = "Sign in to The Bridge to use the API. The API is off after The Bridge \
 starts and after you log out, until you sign in again.";
 /// What a strategy or Chartink webhook with a valid address answers while
 /// OpenAlgo is locked (KEY-01): the alert is refused, nothing is placed.
-pub const WEBHOOK_LOCKED: &str = "OpenAlgo is locked, so this alert was not acted on. Alerts are \
-refused after OpenAlgo starts and after you log out: sign in to OpenAlgo to receive them again.";
+pub const WEBHOOK_LOCKED: &str = "The Bridge is locked, so this alert was not acted on. Alerts are \
+refused after The Bridge starts and after you log out: sign in to The Bridge to receive them again.";
 pub const BROKER_MODULE_NOT_FOUND: &str = "Broker-specific module not found";
 
 /// The connected broker and its session token.

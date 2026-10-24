@@ -103,10 +103,10 @@ export default function Home() {
   const navLinks = [
     { href: '/', label: 'Home', internal: true },
     { href: '/faq', label: 'FAQ', internal: true },
-    { href: 'https://www.openalgo.in/learn', label: 'Varsity', internal: false },
-    { href: 'https://openalgo.in/discord', label: 'Community', internal: false },
-    { href: 'https://openalgo.in/roadmap', label: 'Roadmap', internal: false },
-    { href: 'https://docs.openalgo.in', label: 'Docs', internal: false },
+    { href: 'https://derivativesindicators.com', label: 'Learn', internal: false },
+    { href: 'https://derivativesindicators.com', label: 'Community', internal: false },
+    { href: 'https://derivativesindicators.com', label: 'Roadmap', internal: false },
+    { href: 'https://derivativesindicators.com', label: 'Docs', internal: false },
   ]
 
   return (
@@ -168,10 +168,10 @@ export default function Home() {
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     <Download className="h-5 w-5" />
-                    Download
+                    Download The Bridge
                   </Link>
                   <a
-                    href="https://www.openalgo.in/learn"
+                    href="https://derivativesindicators.com"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-2 px-4 py-2 rounded-md hover:bg-accent"
@@ -180,7 +180,7 @@ export default function Home() {
                     Varsity
                   </a>
                   <a
-                    href="https://openalgo.in/discord"
+                    href="https://derivativesindicators.com"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-2 px-4 py-2 rounded-md hover:bg-accent"
@@ -189,7 +189,7 @@ export default function Home() {
                     Community
                   </a>
                   <a
-                    href="https://openalgo.in/roadmap"
+                    href="https://derivativesindicators.com"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-2 px-4 py-2 rounded-md hover:bg-accent"
@@ -198,7 +198,7 @@ export default function Home() {
                     Roadmap
                   </a>
                   <a
-                    href="https://docs.openalgo.in"
+                    href="https://derivativesindicators.com"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-2 px-4 py-2 rounded-md hover:bg-accent"
@@ -238,7 +238,7 @@ export default function Home() {
           {/* Right side */}
           <div className="flex items-center gap-2">
             <Link to="/download">
-              <Button size="sm">Download</Button>
+              <Button size="sm">Download The Bridge</Button>
             </Link>
             <Button
               variant="ghost"
@@ -257,7 +257,7 @@ export default function Home() {
         <section className="container mx-auto px-4 pt-20 pb-16 sm:pt-28 sm:pb-20">
           <div className="text-center max-w-4xl mx-auto">
             <a
-              href="https://www.openalgo.in/learn"
+              href="https://derivativesindicators.com"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] mb-8 shadow-sm transition-colors hover:border-emerald-500/40 hover:bg-card"
@@ -292,7 +292,7 @@ export default function Home() {
               <Button size="lg" variant="outline" asChild>
                 <Link to="/download">
                   <Download className="mr-2 h-5 w-5" />
-                  Download
+                  Download The Bridge
                 </Link>
               </Button>
             </div>

@@ -370,9 +370,9 @@ mod tests {
 
     /// The key the maintainer published for updates (public; the private
     /// half is a GitHub secret). The app must carry exactly this one.
-    const MAINTAINER_PUBKEY: &str = "REPLACE_WITH_OUR_UPDATER_PUBKEY";
+    const MAINTAINER_PUBKEY: &str = "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDQ4MzkzMERBNkZCQUNDQ0MKUldUTXpMcHYyakE1U0piZWEwNlFZNGNCYzF0Y1Zhb2cxeVJYRTl2NVF3eGpZM0lUcXVMaUFFR3QK";
     const ENDPOINT: &str =
-        "https://UPDATE-SERVER-PLACEHOLDER.invalid/latest.json";
+        "https://github.com/derivativesindicators/the-bridge/releases/latest/download/latest.json";
 
     pub(super) fn shipped_config() -> Value {
         let p = Path::new(env!("CARGO_MANIFEST_DIR")).join("tauri.conf.json");
@@ -406,7 +406,7 @@ mod tests {
         let mut lines = file.lines();
         assert_eq!(
             lines.next(),
-            Some("untrusted comment: minisign public key: 13379A2AE5C0AB71")
+            Some("untrusted comment: minisign public key: 483930DA6FBACCCC")
         );
         let raw = B64.decode(lines.next().unwrap()).unwrap();
         assert_eq!(raw.len(), 42);

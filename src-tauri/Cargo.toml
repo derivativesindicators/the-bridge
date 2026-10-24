@@ -2,7 +2,7 @@
 name = "openalgo-desktop"
 version = "1.0.2"
 description = "OpenAlgo Desktop - Algorithmic Trading Platform"
-authors = ["OpenAlgo"]
+authors = ["Derivatives Indicators"]
 edition = "2021"
 license = "AGPL-3.0-only"
 publish = false

@@ -41,7 +41,7 @@ pub const TOOLS: &[ToolDef] = &[
         description: r#"Send a Telegram alert notification.
 
     Args:
-        username: OpenAlgo login ID/username
+        username: The Bridge login ID/username
         message: Alert message to send
         priority: Notification priority (1-10, default 5). Higher values may be used
                   by the bot for emphasis/sorting depending on configuration.

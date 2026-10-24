@@ -705,7 +705,7 @@ mod tests {
             let banner = g.banner.to_lowercase();
             match kind {
                 SignIn::Redirect => assert!(
-                    banner.contains("login page") && banner.contains("back to openalgo"),
+                    banner.contains("login page") && banner.contains("back to the bridge"),
                     "{b}: {}",
                     g.banner
                 ),

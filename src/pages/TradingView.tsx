@@ -452,7 +452,7 @@ export default function TradingView() {
               </p>
               <Button asChild variant="default">
                 <a
-                  href="https://docs.openalgo.in/trading-platform/tradingview"
+                  href="https://derivativesindicators.com"
                   target="_blank"
                   rel="noopener noreferrer"
                 >

@@ -276,7 +276,7 @@ pub async fn admit(
             Some(b) => match ctx.mcp.enter(&b.key, MAX_PER_TOKEN) {
                 Some(g) => Some(g),
                 None => return Err(busy(
-                    "This AI client already has the most analysis requests OpenAlgo runs at once. \
+                    "This AI client already has the most analysis requests The Bridge runs at once. \
 Wait for one to finish and try again.",
                 )),
             },
@@ -291,7 +291,7 @@ Wait for one to finish and try again.",
     if let Some(b) = &budget {
         if !b.reserve(ctx, planned_calls(tool, a)) {
             return Err(error(
-                "This AI client has made too many requests to OpenAlgo in the last minute. \
+                "This AI client has made too many requests to The Bridge in the last minute. \
 Wait a minute and try again.",
                 &[
                     ("error_type", json!("rate_limited")),

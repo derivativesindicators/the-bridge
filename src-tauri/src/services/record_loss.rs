@@ -133,8 +133,8 @@ fn message(l: &Losses) -> String {
         ));
     }
     format!(
-        "OpenAlgo could not save {} since it started. Orders are not affected; those pages are \
-         missing the entries. If this keeps happening, restart OpenAlgo and report it.",
+        "The Bridge could not save {} since it started. Orders are not affected; those pages are \
+         missing the entries. If this keeps happening, restart The Bridge and report it.",
         parts.join(" and ")
     )
 }

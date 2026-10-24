@@ -395,7 +395,7 @@ pub async fn reset_account(
     )?;
     let question = Question {
         title: "Reset your The Bridge account?",
-        message: "This removes your OpenAlgo login, API key and saved broker keys, ends your \
+        message: "This removes your The Bridge login, API key and saved broker keys, ends your \
 broker session, stops every AI client (MCP) token, unlinks Telegram and WhatsApp, and gives \
 your strategy and Chartink webhooks new addresses. Your trade and strategy history stays. You \
 then create a new account.",

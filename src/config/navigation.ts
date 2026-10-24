@@ -93,7 +93,7 @@ export const profileMenuItems: NavItem[] = [
 
 // External links
 export const externalLinks = {
-  docs: { href: 'https://docs.openalgo.in', label: 'Docs', icon: BookOpen },
+  docs: { href: 'https://derivativesindicators.com', label: 'Docs', icon: BookOpen },
 }
 
 // Shared utility to check if a route is active.

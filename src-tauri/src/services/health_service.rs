@@ -554,8 +554,8 @@ pub fn overall_of(m: &HealthRow, now: DateTime<Utc>) -> Overall {
         return unknown(
             Some(age),
             format!(
-                "The latest health sample is {} old, so the state of OpenAlgo is unknown. \
-                 Health sampling may have stopped; restart OpenAlgo if this continues.",
+                "The latest health sample is {} old, so the state of The Bridge is unknown. \
+                 Health sampling may have stopped; restart The Bridge if this continues.",
                 age_text(age)
             ),
         );
@@ -569,7 +569,7 @@ pub fn overall_of(m: &HealthRow, now: DateTime<Utc>) -> Overall {
         _ => unknown(
             Some(age),
             "The latest health sample could not measure this computer's resources, so the \
-             state of OpenAlgo is unknown."
+             state of The Bridge is unknown."
                 .into(),
         ),
     }

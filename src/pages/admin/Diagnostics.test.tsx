@@ -155,7 +155,7 @@ describe('Diagnostics host card', () => {
     )
     expect(within(note).getByRole('link', { name: 'The Bridge web' })).toHaveAttribute(
       'href',
-      'https://github.com/marketcalls/openalgo'
+      'https://github.com/derivativesindicators/the-bridge'
     )
   })
 

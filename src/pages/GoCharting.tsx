@@ -435,7 +435,7 @@ export default function GoCharting() {
                 </Button>
                 <Button asChild variant="default" size="sm">
                   <a
-                    href="https://docs.openalgo.in/trading-platform/gocharting"
+                    href="https://derivativesindicators.com"
                     target="_blank"
                     rel="noopener noreferrer"
                   >

@@ -251,7 +251,7 @@ mod tests {
         let o = Offer::new("1.2.0-beta.1", Some("  ".into()), None);
         assert_eq!(
             o.release_url,
-            "https://SOURCE-REPO-URL-PLACEHOLDER/releases/tag/v1.2.0-beta.1"
+            "https://github.com/derivativesindicators/the-bridge/releases/tag/v1.2.0-beta.1"
         );
         assert_eq!(o.notes, None);
     }

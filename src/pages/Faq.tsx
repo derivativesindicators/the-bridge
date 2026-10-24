@@ -64,7 +64,7 @@ const faqData = [
       {
         question: 'What are the costs involved?',
         answer:
-          'OpenAlgo is completely free and open-source under the AGPL license. There are no licensing fees, subscription costs, or hidden charges. You only pay for your hosting infrastructure (if using cloud/VPS) and standard brokerage charges from your broker. Self-hosting on your own computer is completely free.',
+          'The Bridge is free and open-source under the AGPL-3.0 licence (it is based on OpenAlgo Desktop). There are no licensing fees or subscriptions. You only pay standard brokerage charges from your broker.',
       },
       {
         question: 'How secure is The Bridge?',
@@ -112,17 +112,17 @@ const faqData = [
       {
         question: 'Can I use The Bridge for my proprietary trading strategies?',
         answer:
-          'Yes, you can use OpenAlgo for your personal or proprietary trading strategies. The AGPL license allows free use for personal trading. However, if you modify OpenAlgo and provide it as a service to others, you must make your modifications open source.',
+          'Yes. The AGPL-3.0 licence allows free use for your own trading. If you modify the app and let others use it over a network, you must make your modified source available to them.',
       },
       {
         question: 'Can I rebrand The Bridge for commercial use?',
         answer:
-          'Under the AGPL license, you can modify OpenAlgo, but any derivative work must also be open source and credit the original project. For commercial licensing options that allow rebranding without open-source requirements, please contact the OpenAlgo team.',
+          'Under the AGPL-3.0 licence you may modify and redistribute it, provided your version stays under AGPL-3.0, keeps the copyright and licence notices, and credits the original OpenAlgo project.',
       },
       {
         question: 'Can I charge others for using my The Bridge setup?',
         answer:
-          'If you provide OpenAlgo as a service to others (even if modified), the AGPL license requires you to share your source code. For commercial service offerings without this requirement, commercial licensing options are available.',
+          'If you provide a modified version as a service to others, the AGPL-3.0 licence requires you to offer them its source code.',
       },
       {
         question: 'Can I integrate The Bridge with GPT/AI assistants?',
@@ -140,9 +140,9 @@ export default function Faq() {
   const navLinks = [
     { href: '/', label: 'Home', internal: true },
     { href: '/faq', label: 'FAQ', internal: true },
-    { href: 'https://openalgo.in/discord', label: 'Community', internal: false },
-    { href: 'https://openalgo.in/roadmap', label: 'Roadmap', internal: false },
-    { href: 'https://docs.openalgo.in', label: 'Docs', internal: false },
+    { href: 'https://derivativesindicators.com', label: 'Community', internal: false },
+    { href: 'https://derivativesindicators.com', label: 'Roadmap', internal: false },
+    { href: 'https://derivativesindicators.com', label: 'Docs', internal: false },
   ]
 
   return (
@@ -204,10 +204,10 @@ export default function Faq() {
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     <Download className="h-5 w-5" />
-                    Download
+                    Download The Bridge
                   </Link>
                   <a
-                    href="https://openalgo.in/discord"
+                    href="https://derivativesindicators.com"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-2 px-4 py-2 rounded-md hover:bg-accent"
@@ -216,7 +216,7 @@ export default function Faq() {
                     Community
                   </a>
                   <a
-                    href="https://openalgo.in/roadmap"
+                    href="https://derivativesindicators.com"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-2 px-4 py-2 rounded-md hover:bg-accent"
@@ -225,7 +225,7 @@ export default function Faq() {
                     Roadmap
                   </a>
                   <a
-                    href="https://docs.openalgo.in"
+                    href="https://derivativesindicators.com"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-2 px-4 py-2 rounded-md hover:bg-accent"
@@ -265,7 +265,7 @@ export default function Faq() {
           {/* Right side */}
           <div className="flex items-center gap-2">
             <Link to="/download">
-              <Button size="sm">Download</Button>
+              <Button size="sm">Download The Bridge</Button>
             </Link>
             <Button
               variant="ghost"
@@ -337,7 +337,7 @@ export default function Faq() {
                     Comprehensive guides and API references
                   </p>
                   <Button variant="outline" asChild>
-                    <a href="https://docs.openalgo.in" target="_blank" rel="noopener noreferrer">
+                    <a href="https://derivativesindicators.com" target="_blank" rel="noopener noreferrer">
                       Read Docs
                     </a>
                   </Button>
@@ -347,15 +347,15 @@ export default function Faq() {
               <Card className="text-center">
                 <CardHeader>
                   <MessageCircle className="h-10 w-10 mx-auto text-primary" />
-                  <CardTitle className="text-lg">Discord Community</CardTitle>
+                  <CardTitle className="text-lg">Community</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground mb-4">
                     Join our active community for support
                   </p>
                   <Button variant="outline" asChild>
-                    <a href="https://openalgo.in/discord" target="_blank" rel="noopener noreferrer">
-                      Join Discord
+                    <a href="https://derivativesindicators.com" target="_blank" rel="noopener noreferrer">
+                      Visit website
                     </a>
                   </Button>
                 </CardContent>
@@ -378,7 +378,7 @@ export default function Faq() {
                   </p>
                   <Button variant="outline" asChild>
                     <a
-                      href="https://github.com/marketcalls/openalgo"
+                      href="https://github.com/derivativesindicators/the-bridge"
                       target="_blank"
                       rel="noopener noreferrer"
                     >

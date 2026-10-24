@@ -138,8 +138,8 @@ pub fn is_spa_route(path: &str) -> bool {
     })
 }
 
-const FALLBACK_INDEX: &str = "<!doctype html><html lang=\"en\"><head><meta charset=\"UTF-8\"><title>OpenAlgo</title></head>\
-<body><p>The OpenAlgo interface is not built in this copy of the app. Reinstall OpenAlgo Desktop.</p></body></html>";
+const FALLBACK_INDEX: &str = "<!doctype html><html lang=\"en\"><head><meta charset=\"UTF-8\"><title>The Bridge</title></head>\
+<body><p>The The Bridge interface is not built in this copy of the app. Reinstall The Bridge.</p></body></html>";
 
 pub fn index_response(status: StatusCode) -> Response {
     let body = Assets::get("index.html")

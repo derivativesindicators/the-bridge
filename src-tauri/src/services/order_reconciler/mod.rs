@@ -80,7 +80,7 @@ pub const LIVE_RELEASE_SECS: i64 = 600;
 pub const TIMESTAMP_SLACK_SECS: i64 = 60;
 
 /// What a trader reads when a new entry waits for a reconcile.
-pub const ENTRIES_PAUSED: &str = "New entries are paused for a moment while OpenAlgo re-checks \
+pub const ENTRIES_PAUSED: &str = "New entries are paused for a moment while The Bridge re-checks \
 the broker's order book after a gap in order updates. Stops and exits keep running. Try again in \
 a few seconds.";
 

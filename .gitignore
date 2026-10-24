@@ -160,3 +160,12 @@ tests/fixtures/**/*.raw.txt
 docs/audit/qa_audit/**/qa_shapes.json
 __pycache__/
 ~$*
+
+# signing material / secrets (never commit)
+secrets/
+*.key
+*.key.pub.bak
+*.pem
+*.p12
+.env
+.env.*

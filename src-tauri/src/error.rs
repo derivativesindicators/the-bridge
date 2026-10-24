@@ -227,10 +227,10 @@ impl AppError {
 
 /// What a sign-in answers when the keys of an earlier build could not be
 /// read from the system keychain to move them into openalgo.db (KEY-01).
-pub const KEYCHAIN_UNAVAILABLE_MESSAGE: &str = "OpenAlgo needs to read your keys from the system \
+pub const KEYCHAIN_UNAVAILABLE_MESSAGE: &str = "The Bridge needs to read your keys from the system \
 keychain one last time, to move them into its own database, and the keychain is locked or refused \
 access. Choose Allow the keychain once and retry, and allow access when your computer asks: after \
-this OpenAlgo never uses the keychain again. Or choose Start fresh: your account, settings and \
+this The Bridge never uses the keychain again. Or choose Start fresh: your account, settings and \
 history stay, and you enter your broker keys again, get a new API key and set up two-factor login \
 again.";
 
@@ -242,7 +242,7 @@ the folder on the computer it came from, or choose Start fresh: your account, se
 stay, and you enter your broker keys again, get a new API key and set up two-factor login again.";
 
 /// What a sign-in answers when the saved keys cannot be read.
-pub const VAULT_UNREADABLE_MESSAGE: &str = "OpenAlgo could not read the keys saved with your \
+pub const VAULT_UNREADABLE_MESSAGE: &str = "The Bridge could not read the keys saved with your \
 account. Choose Start fresh: your account, settings and history stay, and you enter your broker \
 keys again, get a new API key and set up two-factor login again.";
 

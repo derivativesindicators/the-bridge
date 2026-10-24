@@ -95,7 +95,7 @@ pub fn write_result(response: Value, action: &str, verify_with: &str) -> Value {
             Some("timeout_error") => {
                 return error(
                     format!(
-                        "Request timed out while {}. The request reached OpenAlgo \
+                        "Request timed out while {}. The request reached The Bridge \
 and MAY have taken effect. Do NOT retry blindly: call {} to check whether it went through, then decide.",
                         action, verify_with
                     ),
@@ -113,7 +113,7 @@ and MAY have taken effect. Do NOT retry blindly: call {} to check whether it wen
             Some(super::dispatch::UNKNOWN_OUTCOME) => {
                 return error(
                     format!(
-                        "No definite answer came back while {}. The request reached OpenAlgo \
+                        "No definite answer came back while {}. The request reached The Bridge \
 and MAY have taken effect at the broker. Do NOT retry blindly: call {} to check whether it went \
 through, then decide.",
                         action, verify_with
@@ -130,7 +130,7 @@ through, then decide.",
             Some("connection_error") => {
                 return error(
                     format!(
-                        "Could not connect to OpenAlgo while {}. The request was \
+                        "Could not connect to The Bridge while {}. The request was \
 never submitted, so nothing changed and retrying is safe once the server is reachable.",
                         action
                     ),

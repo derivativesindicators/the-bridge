@@ -503,15 +503,15 @@ If you hit rate limits:
 ## Support & Resources
 
 ### Documentation
-- OpenAlgo Docs: https://docs.openalgo.in
+- OpenAlgo Docs: https://derivativesindicators.com
 - GoCharting Help: https://gocharting.com/help
 
 ### Community
-- OpenAlgo GitHub: https://github.com/marketcalls/openalgo
-- Report Issues: https://github.com/marketcalls/openalgo/issues
+- OpenAlgo GitHub: https://github.com/derivativesindicators/the-bridge
+- Report Issues: https://github.com/derivativesindicators/the-bridge/issues
 
 ### Video Tutorials
-- Check OpenAlgo YouTube channel for video guides
+- Check derivativesindicators.com for video guides
 - GoCharting tutorials for alert setup
 
 ---

@@ -114,5 +114,12 @@
     "vite": "^8.3.4",
     "vitest": "^4.1.12",
     "vitest-axe": "^0.1.0"
-  }
+  },
+  "author": "Derivatives Indicators <admin@derivativesindicators.com>",
+  "homepage": "https://derivativesindicators.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/derivativesindicators/the-bridge.git"
+  },
+  "license": "AGPL-3.0"
 }

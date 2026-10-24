@@ -163,7 +163,7 @@ pub const TOOLS: &[ToolDef] = &[
                     (default 20) most-recent bars are returned (or `lookback_days` if given).
         end_date: End date (YYYY-MM-DD). Optional — defaults to today.
         source: 'api' (default) fetches from broker API. 'db' fetches from the local
-                OpenAlgo Historify DuckDB store (1m/D stored, other intervals computed via SQL).
+                The Bridge Historify DuckDB store (1m/D stored, other intervals computed via SQL).
         bars: Number of most-recent bars to return (default 20). The window is fetched
               server-side; only the last `bars` rows are sent back to keep the payload small.
               Increase only if you explicitly need more rows.
@@ -293,10 +293,10 @@ pub const TOOLS: &[ToolDef] = &[
         write: false,
         destructive: false,
         open_world: false,
-        description: r#"Get the OpenAlgo-standardized index symbols for NSE or BSE.
+        description: r#"Get the The Bridge-standardized index symbols for NSE or BSE.
 
     These are the common index names rolled out across all supported brokers via the
-    OpenAlgo symbol standardization. Use exchange code 'NSE_INDEX' / 'BSE_INDEX' when
+    The Bridge symbol standardization. Use exchange code 'NSE_INDEX' / 'BSE_INDEX' when
     placing orders or fetching quotes for these symbols.
 
     Args:

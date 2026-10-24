@@ -174,7 +174,7 @@ export function Navbar({ fluid = false }: NavbarProps = {}) {
                   )
                 })}
                 <a
-                  href="https://docs.openalgo.in"
+                  href="https://derivativesindicators.com"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm transition-colors min-h-[44px] touch-manipulation hover:bg-muted active:bg-muted"

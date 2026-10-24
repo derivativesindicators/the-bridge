@@ -194,7 +194,7 @@ export function AccountControls({ variant = 'navbar' }: { variant?: 'navbar' | '
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <a
-              href="https://docs.openalgo.in"
+              href="https://derivativesindicators.com"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2"

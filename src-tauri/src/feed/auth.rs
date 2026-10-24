@@ -30,8 +30,8 @@ pub enum AuthOutcome {
 /// The error frame's message while OpenAlgo is locked. Nothing was checked
 /// and nothing counts against the caller; the socket stays
 /// unauthenticated.
-pub const FEED_LOCKED: &str = "OpenAlgo is locked. Sign in to OpenAlgo to stream market data: \
-the feed is off after OpenAlgo starts and after you log out, until you sign in again.";
+pub const FEED_LOCKED: &str = "The Bridge is locked. Sign in to The Bridge to stream market data: \
+the feed is off after The Bridge starts and after you log out, until you sign in again.";
 
 #[async_trait::async_trait]
 pub trait FeedAuth: Send + Sync + 'static {

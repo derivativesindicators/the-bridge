@@ -38,7 +38,7 @@ pub const STORE_UNAVAILABLE: &str =
     "The Historify database is not available. Restart The Bridge and try again.";
 
 /// Trader-facing text after an unreplayable WAL was moved aside.
-pub const WAL_RECOVERED: &str = "OpenAlgo did not close cleanly last time, and some unsaved \
+pub const WAL_RECOVERED: &str = "The Bridge did not close cleanly last time, and some unsaved \
      Historify changes from that session could not be recovered. Historify has been reopened \
      with the data saved before then. Check your Historify watchlist and download any recent \
      data again if it is missing.";

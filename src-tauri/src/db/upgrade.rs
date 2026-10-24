@@ -210,22 +210,22 @@ impl Refusal {
     pub fn message(&self) -> String {
         match self {
             Refusal::Downgrade { recorded, current } => format!(
-                "Your OpenAlgo data was last opened by version {recorded}, which is newer than this copy ({current}). \
+                "Your The Bridge data was last opened by version {recorded}, which is newer than this copy ({current}). \
 Opening it with an older version could damage it, so nothing was opened or changed. \
-Install OpenAlgo Desktop {recorded} or newer from the release page."
+Install The Bridge {recorded} or newer from the release page."
             ),
             Refusal::InUse => "The Bridge is already running and has your data open. Close the other The Bridge window, then start it again.".into(),
-            Refusal::BackupFailed { .. } => "OpenAlgo backs up your data before an update changes it, and this backup could not be made, so nothing was changed. \
-Check that there is free disk space (about as much as your data folder) and that the backups folder inside the data folder is an ordinary folder, then start OpenAlgo again.".into(),
+            Refusal::BackupFailed { .. } => "The Bridge backs up your data before an update changes it, and this backup could not be made, so nothing was changed. \
+Check that there is free disk space (about as much as your data folder) and that the backups folder inside the data folder is an ordinary folder, then start The Bridge again.".into(),
             Refusal::Restored { from, current, cause } => format!(
-                "OpenAlgo Desktop {current} could not open your data ({cause}). So that nothing is lost, your data was put back exactly as it was before this version opened it. \
-Start OpenAlgo again to retry. If this happens again, install version {from} from the release page, which opens this data as before."
+                "The Bridge {current} could not open your data ({cause}). So that nothing is lost, your data was put back exactly as it was before this version opened it. \
+Start The Bridge again to retry. If this happens again, install version {from} from the release page, which opens this data as before."
             ),
-            Refusal::NotRecorded { .. } => "OpenAlgo writes a small file in your data folder (data-version.json) before it opens your data, so that an older version never opens data a newer one has changed. It could not write that file, so nothing was opened or changed. \
-Check that there is free disk space and that the data folder and that file are not read-only, then start OpenAlgo again.".into(),
+            Refusal::NotRecorded { .. } => "The Bridge writes a small file in your data folder (data-version.json) before it opens your data, so that an older version never opens data a newer one has changed. It could not write that file, so nothing was opened or changed. \
+Check that there is free disk space and that the data folder and that file are not read-only, then start The Bridge again.".into(),
             Refusal::RestoreFailed { backup, .. } => format!(
-                "OpenAlgo could not open your data after the update, and could not put back the copy it made just before. That copy, your data exactly as the previous version left it, is safe in {}. \
-Close OpenAlgo; in the data folder delete data-version.json and every file ending in -wal, -shm or .wal; copy the files from that folder into the data folder, replacing the ones there; then start OpenAlgo again.",
+                "The Bridge could not open your data after the update, and could not put back the copy it made just before. That copy, your data exactly as the previous version left it, is safe in {}. \
+Close The Bridge; in the data folder delete data-version.json and every file ending in -wal, -shm or .wal; copy the files from that folder into the data folder, replacing the ones there; then start The Bridge again.",
                 backup.display()
             ),
         }

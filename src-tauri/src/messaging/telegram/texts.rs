@@ -505,7 +505,7 @@ pub const HELP_TEXT: &str = "
 *Available Commands:*
 
 *Account Management:*
-/link `<api_key> <host_url>` - Link your OpenAlgo account
+/link `<api_key> <host_url>` - Link your The Bridge account
 /unlink - Unlink your account
 /status - Check connection status
 

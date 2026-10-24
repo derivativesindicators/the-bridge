@@ -195,7 +195,7 @@ export default function BrokerSelect() {
               </Link>
             </Button>
             <Button asChild variant="ghost" size="sm">
-              <a href="https://docs.openalgo.in" target="_blank" rel="noopener noreferrer">
+              <a href="https://derivativesindicators.com" target="_blank" rel="noopener noreferrer">
                 <BookOpen className="mr-2 h-4 w-4" />
                 Documentation
               </a>

@@ -17,7 +17,7 @@ pub const TOOLS: &[ToolDef] = &[
         description: r#"Run ANY of the 80+ openalgo.ta indicators over a symbol's historical OHLCV.
 
     History is fetched (db/api) and the indicator is computed entirely on the
-    OpenAlgo server; only compact results are returned — never the raw OHLCV.
+    The Bridge server; only compact results are returned — never the raw OHLCV.
 
     Args:
         symbol: Stock symbol (e.g., 'RELIANCE', 'NIFTY')

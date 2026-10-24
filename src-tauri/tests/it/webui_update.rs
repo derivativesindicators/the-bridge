@@ -151,7 +151,7 @@ async fn a_check_offers_the_update_and_nothing_downloads_before_update() {
     assert_eq!(d["offer"]["notes"], "Faster option chain.");
     assert_eq!(
         d["offer"]["release_url"],
-        "https://SOURCE-REPO-URL-PLACEHOLDER/releases/tag/v9.0.0"
+        "https://github.com/derivativesindicators/the-bridge/releases/tag/v9.0.0"
     );
     assert!(d["checked_at"].is_string());
     // Notify only: a check downloads nothing.

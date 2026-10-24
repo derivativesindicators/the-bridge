@@ -63,8 +63,8 @@ pub const SSE_BUSY_MESSAGE: &str =
 /// What an AI client is told while OpenAlgo is locked (KEY-01): its token
 /// is fine, OpenAlgo has nobody signed in. Sent with 503 and the error code
 /// [`LOCKED_ERROR`]; the stdio bridge shows it as it is.
-pub const LOCKED_MESSAGE: &str = "OpenAlgo is locked: nobody has signed in since it started, or \
-you logged out. Sign in to OpenAlgo Desktop on this computer, then try again.";
+pub const LOCKED_MESSAGE: &str = "The Bridge is locked: nobody has signed in since it started, or \
+you logged out. Sign in to The Bridge on this computer, then try again.";
 pub const LOCKED_ERROR: &str = "locked";
 
 pub const WRITES_DISABLED_MESSAGE: &str =

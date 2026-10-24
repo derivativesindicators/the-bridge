@@ -19,7 +19,7 @@ use super::ta;
 /// The text served in the `initialize` result, over HTTP and stdio.
 pub(crate) fn instructions() -> String {
     format!(
-        "OpenAlgo Desktop serves the tools of OpenAlgo web. Where it differs:\n\
+        "The Bridge serves the tools of The Bridge web. Where it differs:\n\
          \n\
          Indicators: calculate_indicator and the research tools compute {count} indicators: \
          {names}. Any other indicator name is refused with error_type \"not_available\".\n\
@@ -30,7 +30,7 @@ pub(crate) fn instructions() -> String {
          multi_timeframe_analysis at most {timeframes} intervals; bars, lookback_bars and limit \
          at most {bars}; lookback_days and a date range at most {days} days; one history fetch \
          at most {fetch} bars. Each token runs at most {per_token} research calls at once and \
-         OpenAlgo at most {slots} in all; a call waits up to {wait} seconds for its turn \
+         The Bridge at most {slots} in all; a call waits up to {wait} seconds for its turn \
          (error_type \"busy\" after that) and stops after {deadline} seconds.\n\
          \n\
          Rate limits per token: {read} calls a minute to market data tools and as many to \

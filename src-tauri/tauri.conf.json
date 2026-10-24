@@ -74,16 +74,18 @@
       "rpm": {
         "depends": []
       }
-    }
+    },
+    "publisher": "Derivatives Indicators",
+    "homepage": "https://derivativesindicators.com"
   },
   "plugins": {
     "shell": {
       "open": "^https?://"
     },
     "updater": {
-      "pubkey": "REPLACE_WITH_OUR_UPDATER_PUBKEY",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDQ4MzkzMERBNkZCQUNDQ0MKUldUTXpMcHYyakE1U0piZWEwNlFZNGNCYzF0Y1Zhb2cxeVJYRTl2NVF3eGpZM0lUcXVMaUFFR3QK",
       "endpoints": [
-        "https://UPDATE-SERVER-PLACEHOLDER.invalid/latest.json"
+        "https://github.com/derivativesindicators/the-bridge/releases/latest/download/latest.json"
       ],
       "requireSignedVersion": true,
       "windows": {

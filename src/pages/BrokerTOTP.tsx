@@ -621,7 +621,7 @@ export default function BrokerTOTP() {
 
             <div className="mt-6 flex items-center justify-center gap-4 text-sm">
               <a
-                href="https://docs.openalgo.in"
+                href="https://derivativesindicators.com"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-primary hover:underline inline-flex items-center gap-1"

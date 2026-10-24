@@ -301,7 +301,7 @@ export default function Diagnostics() {
                 >
                   The Bridge does not support Raspberry Pi. Run{' '}
                   <a
-                    href="https://github.com/marketcalls/openalgo"
+                    href="https://github.com/derivativesindicators/the-bridge"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="font-medium underline"

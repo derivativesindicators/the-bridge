@@ -44,10 +44,10 @@ pub const BOT_BUSY_MESSAGE: &str =
 /// Connection attempts before a start gives up (web `max_retries`).
 const START_MAX_RETRIES: u32 = 5;
 /// What a start is told when the started state could not be saved.
-pub const START_NOT_SAVED: &str = "The bot could not be started because OpenAlgo could not save \
+pub const START_NOT_SAVED: &str = "The bot could not be started because The Bridge could not save \
 that it is on. Try again in a moment; if it keeps happening, check the Logs page.";
 /// What a stop is told when the stopped state could not be saved.
-pub const STOP_NOT_SAVED: &str = "The bot is still running because OpenAlgo could not save that \
+pub const STOP_NOT_SAVED: &str = "The bot is still running because The Bridge could not save that \
 it is off. Try again in a moment; if it keeps happening, check the Logs page.";
 
 /// Timings, adjustable by tests.

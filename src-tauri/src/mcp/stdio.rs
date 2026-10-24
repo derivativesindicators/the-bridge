@@ -46,11 +46,11 @@ impl Default for Waits {
 }
 
 pub const NOT_RUNNING: &str =
-    "OpenAlgo Desktop is not running, so this request could not be sent. \
-Open OpenAlgo Desktop, sign in, and try again.";
+    "The Bridge is not running, so this request could not be sent. \
+Open The Bridge, sign in, and try again.";
 pub const BAD_TOKEN: &str =
-    "OpenAlgo did not accept this AI client's token: it was revoked or copied incorrectly. \
-Create a new token on the API Key page in OpenAlgo Desktop and update this client's configuration.";
+    "The Bridge did not accept this AI client's token: it was revoked or copied incorrectly. \
+Create a new token on the API Key page in The Bridge and update this client's configuration.";
 pub const BUSY: &str =
     "The Bridge is receiving too many requests from this AI client. Wait a minute and try again.";
 /// OpenAlgo Desktop is running and refused the request because nobody is
@@ -59,7 +59,7 @@ pub const LOCKED: &str = crate::mcp::http::LOCKED_MESSAGE;
 /// The request reached OpenAlgo Desktop and its answer was lost (N-03):
 /// never "could not be sent".
 pub const ANSWER_LOST: &str =
-    "OpenAlgo Desktop received this request, but its answer was lost. If the request placed, \
+    "The Bridge received this request, but its answer was lost. If the request placed, \
 changed or cancelled an order, it may have taken effect: check the order book (get_order_book) \
 before trying again. Do not retry blindly.";
 
@@ -68,12 +68,12 @@ pub const TOKEN_ENV: &str = "OPENALGO_MCP_TOKEN";
 
 pub const USAGE: &str = "Usage: openalgo-desktop mcp [--url http://127.0.0.1:5000]\n\
 The token is read from the OPENALGO_MCP_TOKEN environment variable, set in the AI client's \
-configuration. Create it on the API Key page in OpenAlgo Desktop, which shows the full configuration.";
+configuration. Create it on the API Key page in The Bridge, which shows the full configuration.";
 
 /// Shown when the client configuration does not supply the token.
 pub const MISSING_TOKEN: &str =
-    "OpenAlgo Desktop could not connect this AI client because no token was given. \
-Create a token on the API Key page in OpenAlgo Desktop, paste the configuration it shows into this \
+    "The Bridge could not connect this AI client because no token was given. \
+Create a token on the API Key page in The Bridge, paste the configuration it shows into this \
 AI client (it sets OPENALGO_MCP_TOKEN), then restart the client.";
 
 /// The forwarding server.
@@ -325,9 +325,9 @@ pub fn default_url_for(dev_override: Option<&str>, debug_build: bool) -> String 
 }
 
 /// Refused: the bearer token would cross the network unencrypted.
-pub const PLAIN_HTTP_REMOTE: &str = "OpenAlgo Desktop will not send the MCP token to another \
+pub const PLAIN_HTTP_REMOTE: &str = "The Bridge will not send the MCP token to another \
 computer over plain http, where anyone on the network could read it. Use an https address \
-(for example a tunnel), or http://127.0.0.1 for OpenAlgo Desktop on this computer.";
+(for example a tunnel), or http://127.0.0.1 for The Bridge on this computer.";
 
 /// Refused: not a web address the bridge can use.
 pub const BAD_URL: &str =
