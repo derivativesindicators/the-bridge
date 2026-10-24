@@ -62,7 +62,7 @@ export function BrokerSwitchConfirm({
                 session. Open positions and orders stay with {from}.
               </p>
               <p>
-                OpenAlgo stops placing stop-loss and target exits for {from}, and your trading
+                The Bridge stops placing stop-loss and target exits for {from}, and your trading
                 platforms and API clients can no longer trade through it. Close or protect open
                 positions at {from} first if you need to.{' '}
                 {newKeys

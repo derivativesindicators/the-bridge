@@ -164,7 +164,7 @@ export default function HistorifyCharts() {
     showToast.error(
       historifyError(
         catalog.error,
-        'Your downloaded data could not be listed. Reload the page, and check that OpenAlgo is still running if it keeps failing.'
+        'Your downloaded data could not be listed. Reload the page, and check that The Bridge is still running if it keeps failing.'
       ),
       'historify'
     )

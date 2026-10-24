@@ -362,7 +362,7 @@ pub fn resolve(
         }
     };
     let too_far = || {
-        "That date range is outside what OpenAlgo can analyse. Use dates between 1900 and 2100."
+        "That date range is outside what The Bridge can analyse. Use dates between 1900 and 2100."
             .to_string()
     };
     let (start, tail) = if let Some(s) = date("start_date") {

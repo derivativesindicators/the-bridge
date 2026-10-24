@@ -33,21 +33,21 @@ struct Wording {
 const UPDATE: Wording = Wording {
     resume: "after the update",
     before: "before you update",
-    live_intro: "Updating restarts OpenAlgo. Until it opens again (usually within a minute) and you sign in, nothing watches your Live trades:",
+    live_intro: "Updating restarts The Bridge. Until it opens again (usually within a minute) and you sign in, nothing watches your Live trades:",
     live_advice: "Update now only if that is acceptable. Otherwise choose Later and update after the market closes.",
-    sandbox_intro: "Updating restarts OpenAlgo. Your sandbox activity pauses until it opens again:",
+    sandbox_intro: "Updating restarts The Bridge. Your sandbox activity pauses until it opens again:",
     closing_note: None,
 };
 
 /// Quitting (ARCH-03). The keys are wiped at quit (KEY-01), so nothing
 /// that signs its requests is served until the next sign-in.
 const QUIT: Wording = Wording {
-    resume: "after you open OpenAlgo again",
+    resume: "after you open The Bridge again",
     before: "before you quit",
-    live_intro: "Quitting closes OpenAlgo. Until you open it again and sign in, nothing watches your Live trades:",
-    live_advice: "Quit now only if that is acceptable. Otherwise keep OpenAlgo open.",
-    sandbox_intro: "Quitting closes OpenAlgo. Your sandbox activity pauses until you open it again:",
-    closing_note: Some("OpenAlgo locks its keys when it closes: orders and data requests from your API clients, AI clients and webhook alerts (TradingView, Chartink and others) are refused until you open OpenAlgo and sign in again."),
+    live_intro: "Quitting closes The Bridge. Until you open it again and sign in, nothing watches your Live trades:",
+    live_advice: "Quit now only if that is acceptable. Otherwise keep The Bridge open.",
+    sandbox_intro: "Quitting closes The Bridge. Your sandbox activity pauses until you open it again:",
+    closing_note: Some("The Bridge locks its keys when it closes: orders and data requests from your API clients, AI clients and webhook alerts (TradingView, Chartink and others) are refused until you open The Bridge and sign in again."),
 };
 
 impl Warning {
@@ -111,7 +111,7 @@ impl Activity {
         let n = self.live_strategies;
         if n > 0 {
             items.push(format!(
-                "{}. {} not checked until OpenAlgo opens again; then {} resume.",
+                "{}. {} not checked until The Bridge opens again; then {} resume.",
                 count(n, "running Live strategy", "running Live strategies"),
                 pick(
                     n,
@@ -124,7 +124,7 @@ impl Activity {
         let n = self.live_openscript_runs;
         if n > 0 {
             items.push(format!(
-                "{}. {} paused when OpenAlgo closes; start {} again {}.",
+                "{}. {} paused when The Bridge closes; start {} again {}.",
                 count(
                     n,
                     "running Live OpenScript run",
@@ -138,7 +138,7 @@ impl Activity {
         let n = self.live_scalping_stops;
         if n > 0 {
             items.push(format!(
-                "{}. Stops and targets are not checked until OpenAlgo opens again; then protection resumes.",
+                "{}. Stops and targets are not checked until The Bridge opens again; then protection resumes.",
                 count(
                     n,
                     "Live position under scalping protection",
@@ -149,7 +149,7 @@ impl Activity {
         items.extend(self.order_items(words, &at));
         if self.checks_failed {
             items.push(format!(
-                "OpenAlgo could not check everything that is running. Check your strategies and positions {}.",
+                "The Bridge could not check everything that is running. Check your strategies and positions {}.",
                 words.before
             ));
         }
@@ -163,7 +163,7 @@ impl Activity {
         let n = self.live_open_orders;
         if n > 0 {
             items.push(format!(
-                "{}{}. {} at your broker; OpenAlgo follows {} again once it opens.",
+                "{}{}. {} at your broker; The Bridge follows {} again once it opens.",
                 count(n, "open order", "open orders"),
                 at,
                 pick(n, "It stays", "They stay"),
@@ -172,14 +172,14 @@ impl Activity {
         }
         if self.live_orders_unknown {
             items.push(format!(
-                "OpenAlgo could not read your open orders{}. Check your order book {}.",
+                "The Bridge could not read your open orders{}. Check your order book {}.",
                 at, words.before
             ));
         }
         let n = self.unsettled_orders;
         if n > 0 {
             items.push(format!(
-                "{}. OpenAlgo settles {} from your broker's order book once it opens again.",
+                "{}. The Bridge settles {} from your broker's order book once it opens again.",
                 count(
                     n,
                     "order whose outcome is not known yet",
@@ -257,9 +257,9 @@ fn waiting_warning() -> Warning {
     Warning {
         level: "waiting",
         title: "Strategies are waiting for alerts".into(),
-        intro: "Quitting closes OpenAlgo. Nothing it watches is open now, but until you open it again and sign in:".into(),
+        intro: "Quitting closes The Bridge. Nothing it watches is open now, but until you open it again and sign in:".into(),
         items: Vec::new(),
-        advice: "Quit now if these can wait. Otherwise keep OpenAlgo open.".into(),
+        advice: "Quit now if these can wait. Otherwise keep The Bridge open.".into(),
     }
 }
 
@@ -313,10 +313,10 @@ mod tests {
         assert_eq!(
             w.items,
             vec![
-                "2 running Live strategies. Their stops, targets and exits are not checked until OpenAlgo opens again; then they will resume.",
-                "1 running Live OpenScript run. It is paused when OpenAlgo closes; start it again after the update.",
-                "1 Live position under scalping protection. Stops and targets are not checked until OpenAlgo opens again; then protection resumes.",
-                "3 open orders at Zerodha. They stay at your broker; OpenAlgo follows them again once it opens.",
+                "2 running Live strategies. Their stops, targets and exits are not checked until The Bridge opens again; then they will resume.",
+                "1 running Live OpenScript run. It is paused when The Bridge closes; start it again after the update.",
+                "1 Live position under scalping protection. Stops and targets are not checked until The Bridge opens again; then protection resumes.",
+                "3 open orders at Zerodha. They stay at your broker; The Bridge follows them again once it opens.",
                 "Sandbox: 2 open sandbox orders. Nothing there is sent to your broker.",
             ]
         );
@@ -326,7 +326,7 @@ mod tests {
         };
         assert_eq!(
             unknown.warning(Some("Fyers")).unwrap().items,
-            vec!["OpenAlgo could not read your open orders at Fyers. Check your order book before you update."]
+            vec!["The Bridge could not read your open orders at Fyers. Check your order book before you update."]
         );
     }
 
@@ -368,22 +368,22 @@ mod tests {
         };
         let w = a.quit_warning(Some("Zerodha"), Vec::new()).unwrap();
         assert_eq!(w.level, "live");
-        assert!(w.intro.starts_with("Quitting closes OpenAlgo."));
+        assert!(w.intro.starts_with("Quitting closes The Bridge."));
         assert_eq!(
             w.items,
             vec![
-                "1 running Live strategy. Its stops, targets and exits are not checked until OpenAlgo opens again; then it will resume.",
-                "2 running Live OpenScript runs. They are paused when OpenAlgo closes; start them again after you open OpenAlgo again.",
-                "1 open order at Zerodha. It stays at your broker; OpenAlgo follows it again once it opens.",
-                "OpenAlgo could not check everything that is running. Check your strategies and positions before you quit.",
+                "1 running Live strategy. Its stops, targets and exits are not checked until The Bridge opens again; then it will resume.",
+                "2 running Live OpenScript runs. They are paused when The Bridge closes; start them again after you open The Bridge again.",
+                "1 open order at Zerodha. It stays at your broker; The Bridge follows it again once it opens.",
+                "The Bridge could not check everything that is running. Check your strategies and positions before you quit.",
                 "Sandbox: 1 sandbox position under scalping protection. Nothing there is sent to your broker.",
-                "OpenAlgo locks its keys when it closes: orders and data requests from your API clients, AI clients and webhook alerts (TradingView, Chartink and others) are refused until you open OpenAlgo and sign in again.",
+                "The Bridge locks its keys when it closes: orders and data requests from your API clients, AI clients and webhook alerts (TradingView, Chartink and others) are refused until you open The Bridge and sign in again.",
             ]
         );
         let text = w.dialog_text();
-        assert!(text.starts_with("Quitting closes OpenAlgo."));
+        assert!(text.starts_with("Quitting closes The Bridge."));
         assert!(text.contains("\n- 1 running Live strategy."));
-        assert!(text.ends_with("Otherwise keep OpenAlgo open."));
+        assert!(text.ends_with("Otherwise keep The Bridge open."));
 
         let sandbox = Activity {
             sandbox_openscript_runs: 1,
@@ -393,9 +393,9 @@ mod tests {
         assert_eq!(w.level, "sandbox");
         assert_eq!(
             w.items[0],
-            "1 sandbox OpenScript run (paused; start it again after you open OpenAlgo again)."
+            "1 sandbox OpenScript run (paused; start it again after you open The Bridge again)."
         );
-        assert!(w.items[1].starts_with("OpenAlgo locks its keys when it closes"));
+        assert!(w.items[1].starts_with("The Bridge locks its keys when it closes"));
         assert_eq!(Activity::default().quit_warning(None, Vec::new()), None);
         // The update's restart is worded as before, without the note.
         assert!(a
@@ -411,7 +411,7 @@ mod tests {
     #[test]
     fn the_quit_warning_lists_what_waits_for_alerts() {
         let waiting = vec![
-            "Chartink alerts for Breakout are refused until you open OpenAlgo and sign in again."
+            "Chartink alerts for Breakout are refused until you open The Bridge and sign in again."
                 .to_string(),
         ];
         let w = Activity::default()
@@ -420,7 +420,7 @@ mod tests {
         assert_eq!(w.level, "waiting");
         assert_eq!(w.title, "Strategies are waiting for alerts");
         assert_eq!(w.items[0], waiting[0]);
-        assert!(w.items[1].starts_with("OpenAlgo locks its keys"));
+        assert!(w.items[1].starts_with("The Bridge locks its keys"));
         let live = Activity {
             live_scalping_stops: 1,
             ..Default::default()

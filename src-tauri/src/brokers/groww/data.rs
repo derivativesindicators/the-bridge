@@ -658,7 +658,7 @@ pub fn history_target(
     }
     let not_fno = || {
         AppError::Validation(format!(
-            "{} is not in OpenAlgo F&O format; download the master contract again.",
+            "{} is not in The Bridge F&O format; download the master contract again.",
             key.symbol
         ))
     };

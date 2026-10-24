@@ -709,7 +709,7 @@ async fn run_calendar(ctx: &Arc<AppState>, name: &str, a: &Args) -> Option<Outpu
 fn run_utility(name: &str) -> Option<Output> {
     Some(match name {
         "get_openalgo_version" => {
-            Output::Text(format!("OpenAlgo version: {}", env!("CARGO_PKG_VERSION")))
+            Output::Text(format!("The Bridge version: {}", env!("CARGO_PKG_VERSION")))
         }
         "validate_order_constants" => json!({
             "exchanges": {

@@ -318,7 +318,7 @@ pub(crate) async fn read_envelope<T: DeserializeOwned>(
                 ));
             }
             Err(AppError::Broker(
-                "Angel One sent a response OpenAlgo could not read. Try again shortly.".into(),
+                "Angel One sent a response The Bridge could not read. Try again shortly.".into(),
             ))
         }
     }

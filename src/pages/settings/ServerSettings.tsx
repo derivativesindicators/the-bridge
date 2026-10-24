@@ -170,7 +170,7 @@ export default function ServerSettings() {
             <div>
               <CardTitle>Server Settings</CardTitle>
               <CardDescription>
-                Where OpenAlgo Desktop listens for the app, the API, broker logins and the market
+                Where The Bridge listens for the app, the API, broker logins and the market
                 data feed. Your trading platforms, the Python SDK and broker redirect URLs use these
                 addresses.
               </CardDescription>
@@ -207,7 +207,7 @@ export default function ServerSettings() {
                 <div className="space-y-1">
                   <Label htmlFor="lan-enabled">Allow access from other devices</Label>
                   <p className="text-xs text-muted-foreground">
-                    Off keeps OpenAlgo Desktop reachable only from this computer. Turn it on to
+                    Off keeps The Bridge reachable only from this computer. Turn it on to
                     reach it from another device on your network.
                   </p>
                 </div>
@@ -220,7 +220,7 @@ export default function ServerSettings() {
                   <AlertTitle>Anyone on your network can reach the login page</AlertTitle>
                   <AlertDescription>
                     Traffic to other devices is not encrypted: use this only on a network you trust,
-                    or reach OpenAlgo through a tunnel with https. Use a strong password and turn on
+                    or reach The Bridge through a tunnel with https. Use a strong password and turn on
                     two-factor login in your profile. Leave this off on public or shared networks.
                   </AlertDescription>
                 </Alert>

@@ -24,7 +24,7 @@ use serde_json::Value;
 
 /// What a Live book answers without a broker session whose account is
 /// known: unavailable, never empty.
-const BOOK_UNAVAILABLE: &str = "This strategy's orders and positions at your broker cannot be read without a broker login whose account OpenAlgo knows. Log in to your broker, then look again.";
+const BOOK_UNAVAILABLE: &str = "This strategy's orders and positions at your broker cannot be read without a broker login whose account The Bridge knows. Log in to your broker, then look again.";
 
 /// The rows `destination` owns.
 pub(super) fn owned_by(

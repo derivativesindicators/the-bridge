@@ -50,7 +50,7 @@ pub const BRIDGE_UPDATE_CAP: usize = 8192;
 /// A subscribe item's error when the session's broker has no live feed in
 /// the desktop (WS-01).
 pub const NO_LIVE_FEED: &str =
-    "This broker has no live market data feed in OpenAlgo Desktop, so nothing can be streamed.";
+    "This broker has no live market data feed in The Bridge, so nothing can be streamed.";
 /// A subscribe item's error when the session's live feed did not start.
 pub const FEED_NOT_STARTED: &str = "The live market data feed did not start for this broker \
 session. Log in to your broker again to resume streaming.";

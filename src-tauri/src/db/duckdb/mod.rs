@@ -35,7 +35,7 @@ use std::sync::Arc;
 
 /// Trader-facing text when the store cannot be used.
 pub const STORE_UNAVAILABLE: &str =
-    "The Historify database is not available. Restart OpenAlgo and try again.";
+    "The Historify database is not available. Restart The Bridge and try again.";
 
 /// Trader-facing text after an unreplayable WAL was moved aside.
 pub const WAL_RECOVERED: &str = "OpenAlgo did not close cleanly last time, and some unsaved \

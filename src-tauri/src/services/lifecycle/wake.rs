@@ -86,7 +86,7 @@ pub fn start(ctx: &Arc<AppState>) {
 /// Redo what a sleep of `slept` left stale.
 pub async fn woke(ctx: &AppState, slept: Duration) {
     tracing::info!(
-        "OpenAlgo was suspended for about {} min (the computer slept, or the app was held up): reconnecting market data and checking orders",
+        "The Bridge was suspended for about {} min (the computer slept, or the app was held up): reconnecting market data and checking orders",
         slept.as_secs().div_ceil(60)
     );
     ctx.websocket.reconnect();

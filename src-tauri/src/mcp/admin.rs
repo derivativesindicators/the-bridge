@@ -433,7 +433,7 @@ mod tests {
             mount.to_string_lossy()
         );
         assert_eq!(
-            mcp_executable(Some(mount), Some(Path::new("OpenAlgo.AppImage")), yes),
+            mcp_executable(Some(mount), Some(Path::new("The Bridge.AppImage")), yes),
             mount.to_string_lossy()
         );
         assert_eq!(mcp_executable(None, None, yes), "");

@@ -383,7 +383,7 @@ impl JobEngine {
         if self.inner.closed.load(Ordering::SeqCst) {
             return Reply::error(
                 503,
-                "OpenAlgo is shutting down. Start the download again after restarting.",
+                "The Bridge is shutting down. Start the download again after restarting.",
             );
         }
         let job_id = uuid::Uuid::new_v4().to_string()[..8].to_string();
@@ -427,7 +427,7 @@ impl JobEngine {
                 .await;
                 return Reply::error(
                     503,
-                    "OpenAlgo is shutting down. Start the download again after restarting.",
+                    "The Bridge is shutting down. Start the download again after restarting.",
                 );
             }
         }

@@ -107,7 +107,7 @@ pub async fn authenticate(b: &IiflCapitalBroker, creds: BrokerCredentials) -> Re
     let (client_id, auth_code) = split_code(&code, &creds);
     if auth_code.is_empty() || client_id.is_empty() {
         return Err(AppError::Auth(
-            "IIFL Capital did not complete the sign-in. Check that the callback URL registered with IIFL matches OpenAlgo's exactly, then try again."
+            "IIFL Capital did not complete the sign-in. Check that the callback URL registered with IIFL matches The Bridge's exactly, then try again."
                 .into(),
         ));
     }

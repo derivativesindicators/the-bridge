@@ -10,7 +10,7 @@ const heldKey = (order: HeldOrder) => `${order.owner}:${order.id}`
 
 /** What stays true whatever the page could read. */
 const STILL_HELD =
-  "An order OpenAlgo holds stays held and is not sent again. Refresh to try again; until then, check the broker's order book."
+  "An order The Bridge holds stays held and is not sent again. Refresh to try again; until then, check the broker's order book."
 
 /**
  * Desktop: live orders the broker did not confirm and does not show, held
@@ -123,7 +123,7 @@ function UnconfirmedNotKnown({ read }: { read: HealthRead<HeldOrder[]> }) {
         </CardTitle>
         <CardDescription>
           {read.data === null
-            ? 'OpenAlgo could not read the orders waiting for your decision, so this page cannot show whether there are any.'
+            ? 'The Bridge could not read the orders waiting for your decision, so this page cannot show whether there are any.'
             : `There were none when last read at ${readTime(read.readAt)}, but the refresh at ${readTime(read.failedAt)} failed, so a newer one may not show.`}{' '}
           {STILL_HELD}
         </CardDescription>

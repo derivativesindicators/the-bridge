@@ -427,7 +427,7 @@ async fn read_envelope(resp: reqwest::Response, path: &str) -> Result<Envelope> 
             Err(AppError::Broker(if status.is_server_error() {
                 "Delta Exchange's servers are not responding normally. Try again shortly.".into()
             } else {
-                "Delta Exchange sent a response OpenAlgo could not read. Try again shortly.".into()
+                "Delta Exchange sent a response The Bridge could not read. Try again shortly.".into()
             }))
         }
     }
@@ -485,7 +485,7 @@ fn decode_result<T: DeserializeOwned>(env: Envelope, path: &str) -> Result<T> {
     serde_json::from_value(env.result).map_err(|e| {
         tracing::warn!("Unexpected Delta Exchange result on {}: {}", path, e);
         AppError::Broker(
-            "Delta Exchange sent a response OpenAlgo could not read. Try again shortly.".into(),
+            "Delta Exchange sent a response The Bridge could not read. Try again shortly.".into(),
         )
     })
 }

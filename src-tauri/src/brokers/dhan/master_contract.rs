@@ -286,7 +286,7 @@ pub fn parse_scrip_master(csv: &str, variant: Variant) -> Result<Vec<SymToken>> 
     }
     if dropped > 0 {
         tracing::info!(
-            "Dhan master contract: {} rows with no OpenAlgo exchange dropped",
+            "Dhan master contract: {} rows with no The Bridge exchange dropped",
             dropped
         );
     }

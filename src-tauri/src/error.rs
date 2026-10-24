@@ -211,10 +211,10 @@ impl AppError {
                     .to_string()
             }
             AppError::Locked => {
-                "Sign in to OpenAlgo to unlock your saved broker credentials.".to_string()
+                "Sign in to The Bridge to unlock your saved broker credentials.".to_string()
             }
             AppError::Keychain(_) => {
-                "OpenAlgo could not use the system keychain. Restart the app and try again."
+                "The Bridge could not use the system keychain. Restart the app and try again."
                     .to_string()
             }
             AppError::KeychainUnavailable => KEYCHAIN_UNAVAILABLE_MESSAGE.to_string(),

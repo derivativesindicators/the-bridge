@@ -312,7 +312,7 @@ impl BrokerAuthService {
         };
         let Some(pending) = pending else {
             return Err(AppError::Auth(
-                "This broker sign-in was not started from OpenAlgo or has expired. Start the broker login again from OpenAlgo."
+                "This broker sign-in was not started from The Bridge or has expired. Start the broker login again from The Bridge."
                     .into(),
             ));
         };
@@ -322,7 +322,7 @@ impl BrokerAuthService {
             if !pending.binding_matches(&id) {
                 tracing::warn!(broker, "Broker sign-in refused: the consent does not match");
                 return Err(AppError::Auth(
-                    "This broker sign-in does not match the one started from OpenAlgo. Start the broker login again from OpenAlgo."
+                    "This broker sign-in does not match the one started from The Bridge. Start the broker login again from The Bridge."
                         .into(),
                 ));
             }
@@ -515,7 +515,7 @@ impl BrokerAuthService {
                     "Broker sign-in refused: it belongs to a different account than the one configured"
                 );
                 return Err(AppError::Auth(format!(
-                    "This sign-in is for a different {} account than the one set up in OpenAlgo. Nothing was changed. Log in with your own account; to switch accounts, log out and save the broker settings again first.",
+                    "This sign-in is for a different {} account than the one set up in The Bridge. Nothing was changed. Log in with your own account; to switch accounts, log out and save the broker settings again first.",
                     name
                 )));
             }

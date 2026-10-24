@@ -32,18 +32,18 @@ export function Footer({ className }: FooterProps) {
       <div className="container mx-auto px-4 py-6">
         <div className="flex flex-col md:flex-row items-center justify-center gap-2 md:gap-4 text-sm text-muted-foreground">
           <div className="flex items-center gap-2">
-            <span>Copyright 2026</span>
+            <span>Copyright 2026 Derivatives Indicators</span>
             <span className="hidden md:inline">|</span>
             <a
-              href="https://www.openalgo.in"
+              href="https://derivativesindicators.com"
               className="text-primary hover:underline font-medium"
               target="_blank"
               rel="noopener noreferrer"
-            >
-              www.openalgo.in
-            </a>
+            >derivativesindicators.com</a>
           </div>
-          <span className="text-center">Open Source Algo Platform for Everyone</span>
+          <span className="text-center">Based on OpenAlgo (AGPL-3.0)</span>
+          <a href="https://github.com/marketcalls/openalgo-desktop" className="text-primary hover:underline" target="_blank" rel="noopener noreferrer">Upstream</a>
+          <a data-rebrand="source" href="https://SOURCE-REPO-URL-PLACEHOLDER" className="text-primary hover:underline" target="_blank" rel="noopener noreferrer">Source code</a>
           {version && (
             <>
               <span className="hidden md:inline">|</span>

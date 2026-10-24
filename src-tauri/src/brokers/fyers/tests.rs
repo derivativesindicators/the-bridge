@@ -732,7 +732,7 @@ fn hsm_request_has_no_authorization_header_and_checks_expiry() {
     let req = f.ws_request().unwrap();
     assert_eq!(req.uri().to_string(), HSM_URL);
     assert!(req.headers().get("authorization").is_none());
-    assert_eq!(req.headers()["user-agent"], "OpenAlgo-HSM/1.0");
+    assert_eq!(req.headers()["user-agent"], "The Bridge-HSM/1.0");
     let expired = AuthToken::new(format!("APPID-100:{}", jwt(1_000)));
     assert!(HsmFeed::new(HSM_URL, &expired, master()).is_err());
     assert!(HsmFeed::new(HSM_URL, &AuthToken::new("APPID-100:notajwt"), master()).is_err());

@@ -37,7 +37,7 @@ pub async fn get_funds(b: &HdfcSkyBroker, auth: &AuthToken) -> Result<Funds> {
     // no proof the stored session still works).
     if !data.get("values").is_some_and(Value::is_array) {
         return Err(AppError::Broker(
-            "HDFC Sky sent funds in a form OpenAlgo could not read. Try again shortly.".into(),
+            "HDFC Sky sent funds in a form The Bridge could not read. Try again shortly.".into(),
         ));
     }
     Ok(funds_from_view(&data))

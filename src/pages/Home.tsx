@@ -129,8 +129,8 @@ export default function Home() {
                   <SheetDescription>Main navigation and quick access links</SheetDescription>
                 </SheetHeader>
                 <div className="flex items-center gap-2 mb-8">
-                  <img src="/logo.png" alt="OpenAlgo" className="h-8 w-8" />
-                  <span className="text-xl font-semibold">OpenAlgo</span>
+                  <img src="/logo.png" alt="The Bridge" className="h-8 w-8" />
+                  <span className="text-xl font-semibold">The Bridge</span>
                 </div>
                 <div className="flex flex-col gap-2">
                   <Link
@@ -211,8 +211,8 @@ export default function Home() {
             </Sheet>
 
             <Link to="/" className="flex items-center gap-2">
-              <img src="/logo.png" alt="OpenAlgo" className="h-8 w-8" />
-              <span className="text-xl font-bold hidden sm:inline">OpenAlgo</span>
+              <img src="/logo.png" alt="The Bridge" className="h-8 w-8" />
+              <span className="text-xl font-bold hidden sm:inline">The Bridge</span>
             </Link>
           </div>
 
@@ -365,7 +365,7 @@ export default function Home() {
           </div>
 
           <div className="grid gap-6 md:grid-cols-2 max-w-6xl mx-auto">
-            {/* OpenAlgo MCP card */}
+            {/* The Bridge MCP card */}
             <Card className="group transition-colors hover:border-purple-400/40">
               <CardContent className="space-y-4">
                 <div className="flex items-start gap-4">
@@ -374,7 +374,7 @@ export default function Home() {
                   </div>
                   <div>
                     <h3 className="text-xl font-bold flex items-center gap-2">
-                      OpenAlgo MCP
+                      The Bridge MCP
                       <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-0.5" />
                     </h3>
                     <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mt-1">
@@ -383,7 +383,7 @@ export default function Home() {
                   </div>
                 </div>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  Connect your OpenAlgo account to Claude, Cursor, Windsurf, or ChatGPT. Place
+                  Connect your The Bridge account to Claude, Cursor, Windsurf, or ChatGPT. Place
                   orders, check positions, and pull live prices by simply asking - no dashboards, no
                   clicks.
                 </p>
@@ -404,7 +404,7 @@ export default function Home() {
               </CardContent>
             </Card>
 
-            {/* OpenAlgo Skills card */}
+            {/* The Bridge Skills card */}
             <Card className="group transition-colors hover:border-emerald-400/40">
               <CardContent className="space-y-4">
                 <div className="flex items-start gap-4">
@@ -413,7 +413,7 @@ export default function Home() {
                   </div>
                   <div>
                     <h3 className="text-xl font-bold flex items-center gap-2">
-                      OpenAlgo Skills
+                      The Bridge Skills
                       <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-0.5" />
                     </h3>
                     <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mt-1">

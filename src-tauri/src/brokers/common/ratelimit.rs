@@ -33,7 +33,7 @@ pub const ORDERS_PER_SECOND: f64 = 10.0;
 
 /// What the trader reads when a request is refused before sending because
 /// its turn was too far away (web `BROKER_BUSY_MESSAGE`).
-pub const BUSY_MESSAGE: &str = "OpenAlgo is pacing requests to stay within your broker's rate limit, and this one would have had to wait too long for its turn. Try again in a few seconds.";
+pub const BUSY_MESSAGE: &str = "The Bridge is pacing requests to stay within your broker's rate limit, and this one would have had to wait too long for its turn. Try again in a few seconds.";
 
 /// Minimum-interval limiter for one request category.
 ///

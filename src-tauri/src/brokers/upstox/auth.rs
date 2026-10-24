@@ -107,7 +107,7 @@ pub async fn authenticate(b: &UpstoxBroker, creds: BrokerCredentials) -> Result<
     Err(
         if detail.contains("redirect") || detail.contains("Redirect") {
             AppError::Auth(
-            "Upstox refused the login because the redirect URL does not match your Upstox app. Set the app's redirect URL to the one shown in OpenAlgo, then log in again."
+            "Upstox refused the login because the redirect URL does not match your Upstox app. Set the app's redirect URL to the one shown in The Bridge, then log in again."
                 .into(),
         )
         } else if detail.is_empty() {

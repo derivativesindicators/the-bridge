@@ -965,8 +965,8 @@ export function StrategiesPanel({ getChartContext }: Props) {
         <p className="mt-auto text-[10px] leading-relaxed text-muted-foreground">
           Pause ends a strategy and leaves its position for you to manage. Stop closes what it is
           holding first, which spends a spread and cannot be taken back, so it asks before it does.
-          A run lives in a hidden window of OpenAlgo, not in this page: leaving this page, or
-          closing it in a browser, stops nothing, but closing or quitting OpenAlgo, signing out or
+          A run lives in a hidden window of The Bridge, not in this page: leaving this page, or
+          closing it in a browser, stops nothing, but closing or quitting The Bridge, signing out or
           restarting for an update pauses every run and leaves its positions as they are. A run
           trades on the side it was started on, with your broker if it started in live mode and
           against the sandbox if it started in analyzer mode; switching the mode later does not move

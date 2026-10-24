@@ -56,8 +56,8 @@ const FEED_NAMES: Record<string, string> = {
 }
 
 const GAP_CAUSES: Record<string, string> = {
-  event_loss: 'an order update could not be delivered inside OpenAlgo',
-  relay_lagged: "the broker's order updates came faster than OpenAlgo could relay them",
+  event_loss: 'an order update could not be delivered inside The Bridge',
+  relay_lagged: "the broker's order updates came faster than The Bridge could relay them",
   order_feed_reconnected: "the broker's order feed reconnected",
 }
 
@@ -143,7 +143,7 @@ function NotKnownCard({ title }: { title: string }) {
     <AppCard
       title={title}
       level="unknown"
-      note="OpenAlgo could not read this check. Refresh to try again."
+      note="The Bridge could not read this check. Refresh to try again."
     >
       <Row label="Status" value="Not known" />
     </AppCard>
@@ -246,13 +246,13 @@ export function MarketDataCard({ data, stale }: { data: MarketDataLosses; stale?
       pricesMissed > 0 &&
         'Strategies, scalping stops or sandbox orders skipped some prices because they had fallen behind the feed; each acted on the next price. Holding fewer symbols helps.',
       orderUpdatesSkipped > 0 &&
-        "Some order updates from the broker were skipped; OpenAlgo re-checks the broker's order book.",
+        "Some order updates from the broker were skipped; The Bridge re-checks the broker's order book.",
       appsMissed > 0 &&
         'Apps on the market data feed missed some updates because they read too slowly.',
     ]
       .filter(Boolean)
       .join(' ') || null
-  const note = `Missed and replaced counts are since OpenAlgo started.${
+  const note = `Missed and replaced counts are since The Bridge started.${
     apps.coalesced > 0
       ? ' A slow app gets the newest price instead of every update; a replaced update is not a missed one.'
       : ''
@@ -303,7 +303,7 @@ export function RecordsCard({ data, stale }: { data: RecordLosses; stale?: strin
       stale={stale}
       warning={
         data.status === 'warn'
-          ? 'Some records were not saved, so a log page may miss entries since OpenAlgo started. Orders themselves were not affected.'
+          ? 'Some records were not saved, so a log page may miss entries since The Bridge started. Orders themselves were not affected.'
           : null
       }
     >
@@ -324,7 +324,7 @@ function strategyTicksWarning(data: StrategyTicks): string | null {
   const notes: string[] = []
   if (data.exits_slow && data.oldest_exit_wait_s !== null) {
     notes.push(
-      `A strategy exit decided ${data.oldest_exit_wait_s.toLocaleString('en-IN')} seconds ago is not placed yet: the broker or OpenAlgo's database is answering slowly. Check that strategy's positions with your broker.`
+      `A strategy exit decided ${data.oldest_exit_wait_s.toLocaleString('en-IN')} seconds ago is not placed yet: the broker or The Bridge's database is answering slowly. Check that strategy's positions with your broker.`
     )
   }
   if (data.ticks_missed > 0) {
@@ -382,7 +382,7 @@ export function OrderTrackingCard({ data, stale }: { data: OrderFacts; stale?: s
       stale={stale}
       warning={
         data.gaps.length > 0
-          ? `Some order updates may have been missed (${gapReasons(data.gaps)}). OpenAlgo is re-checking the broker's order book; new strategy entries wait until it has.`
+          ? `Some order updates may have been missed (${gapReasons(data.gaps)}). The Bridge is re-checking the broker's order book; new strategy entries wait until it has.`
           : null
       }
     >

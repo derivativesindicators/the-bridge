@@ -19,7 +19,7 @@ use crate::services::order_reconciler::{BookSnapshot, Found, HeldOrder};
 use crate::strategy::dispatch::RunMode;
 
 /// What the row reads once the trader has checked it at their broker.
-const CHECKED: &str = "You checked this order at your broker; OpenAlgo does not follow it";
+const CHECKED: &str = "You checked this order at your broker; The Bridge does not follow it";
 
 /// Whether `o` is a Live row whose account was never recorded.
 pub(super) fn is_unowned_live(o: &store::OrderRow) -> bool {

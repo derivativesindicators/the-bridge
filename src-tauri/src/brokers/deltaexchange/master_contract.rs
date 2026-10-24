@@ -229,7 +229,7 @@ pub async fn download(b: &DeltaBroker) -> Result<MasterContract> {
         let env = b.public_envelope("/v2/products", &params).await?;
         let Some(batch) = env.result.as_array() else {
             return Err(AppError::Broker(
-                "Delta Exchange sent a product list OpenAlgo could not read. The existing master contract was kept."
+                "Delta Exchange sent a product list The Bridge could not read. The existing master contract was kept."
                     .into(),
             ));
         };

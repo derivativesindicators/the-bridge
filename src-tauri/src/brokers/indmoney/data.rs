@@ -89,7 +89,7 @@ pub(crate) async fn market_get(
     let v = r.json;
     if v.is_null() {
         return Err(MarketError::broker(
-            "INDmoney sent market data OpenAlgo could not read.",
+            "INDmoney sent market data The Bridge could not read.",
         ));
     }
     if v.get("success") == Some(&Value::Bool(true)) || has_valid_data(&v) {

@@ -43,7 +43,7 @@ pub fn feed_url_from_config(configs: &Value, data_center: &str) -> (Option<Strin
     };
     if source == "hs" {
         tracing::warn!(
-            "Kotak data centre {} selects the legacy HSM feed, which OpenAlgo cannot read. Streaming from SFeed instead; if quotes do not arrive, this is why.",
+            "Kotak data centre {} selects the legacy HSM feed, which The Bridge cannot read. Streaming from SFeed instead; if quotes do not arrive, this is why.",
             data_center
         );
     }

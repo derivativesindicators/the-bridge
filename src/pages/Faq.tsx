@@ -34,27 +34,27 @@ const faqData = [
     category: 'General',
     questions: [
       {
-        question: 'What is OpenAlgo?',
+        question: 'What is The Bridge?',
         answer:
-          'OpenAlgo is an open-source algorithmic trading platform that provides a unified API layer across 36 broker plugins: 35 securities integrations and Delta Exchange for crypto derivatives. It enables seamless integration with TradingView, Amibroker, Excel, Python, and AI agents, allowing traders to automate their trading strategies without being locked into a single broker.',
+          'The Bridge is an open-source algorithmic trading platform that provides a unified API layer across 36 broker plugins: 35 securities integrations and Delta Exchange for crypto derivatives. It enables seamless integration with TradingView, Amibroker, Excel, Python, and AI agents, allowing traders to automate their trading strategies without being locked into a single broker.',
       },
       {
         question: 'Which brokers are supported?',
         answer:
-          'OpenAlgo supports 36 broker plugins: 5 Paisa, 5 Paisa (XTS), Alice Blue, Angel One, Arrow, CompositEdge, Definedge, Delta Exchange, Dhan, Dhan (Sandbox), Firstock, Flattrade, Fyers, Groww, HDFC Securities, HDFC Sky, Ibulls, IIFL, IIFL Capital, IndMoney, JainamXts, Kotak Securities, Motilal Oswal, mStock by Mirae Asset, Nubra, Paytm Money, Pocketful, RMoney, Samco, Shoonya (Finvasia), TradeSmart, Tradejini, Upstox, Wisdom Capital, Zebu and Zerodha. Delta Exchange is a crypto exchange; the rest are Indian brokers. New brokers are being added regularly.',
+          'The Bridge supports 36 broker plugins: 5 Paisa, 5 Paisa (XTS), Alice Blue, Angel One, Arrow, CompositEdge, Definedge, Delta Exchange, Dhan, Dhan (Sandbox), Firstock, Flattrade, Fyers, Groww, HDFC Securities, HDFC Sky, Ibulls, IIFL, IIFL Capital, IndMoney, JainamXts, Kotak Securities, Motilal Oswal, mStock by Mirae Asset, Nubra, Paytm Money, Pocketful, RMoney, Samco, Shoonya (Finvasia), TradeSmart, Tradejini, Upstox, Wisdom Capital, Zebu and Zerodha. Delta Exchange is a crypto exchange; the rest are Indian brokers. New brokers are being added regularly.',
       },
       {
         question: 'What are the system requirements?',
         answer:
           // Desktop: the app is installed, not deployed; no Python or Node.js is needed.
           // Raspberry Pi is not supported (2026-10-16); Pi users run OpenAlgo web.
-          'OpenAlgo Desktop runs on Windows 10/11, macOS (Intel and Apple Silicon) and 64-bit Linux (x64 or ARM64). It does not support Raspberry Pi: run OpenAlgo web on your Pi instead. Install it like any other app; there is nothing else to set up. We recommend at least 4GB RAM and a stable internet connection.',
+          'The Bridge runs on Windows 10/11, macOS (Intel and Apple Silicon) and 64-bit Linux (x64 or ARM64). It does not support Raspberry Pi: run The Bridge web on your Pi instead. Install it like any other app; there is nothing else to set up. We recommend at least 4GB RAM and a stable internet connection.',
       },
       {
-        question: 'Where does OpenAlgo Desktop run?',
+        question: 'Where does The Bridge run?',
         answer:
           // Desktop: single-user app on the trader's own computer.
-          'OpenAlgo Desktop runs on your own computer, for one user. Every setting and credential is entered inside the app. To run OpenAlgo on a VPS or in the cloud for round-the-clock access, use OpenAlgo web instead.',
+          'The Bridge runs on your own computer, for one user. Every setting and credential is entered inside the app. To run The Bridge on a VPS or in the cloud for round-the-clock access, use The Bridge web instead.',
       },
     ],
   },
@@ -67,17 +67,17 @@ const faqData = [
           'OpenAlgo is completely free and open-source under the AGPL license. There are no licensing fees, subscription costs, or hidden charges. You only pay for your hosting infrastructure (if using cloud/VPS) and standard brokerage charges from your broker. Self-hosting on your own computer is completely free.',
       },
       {
-        question: 'How secure is OpenAlgo?',
+        question: 'How secure is The Bridge?',
         answer:
           // Desktop: the web's answer said "HTTPS for all communications"; the
           // desktop serves plain HTTP and WebSocket, so it says which link is
           // encrypted and which is not, as Server Settings does (NEW-SEC-03).
-          "OpenAlgo Desktop keeps your broker credentials, API key and two-factor secret encrypted on your computer, locked with your OpenAlgo password. Its connections to your broker use the broker's own secure (https and wss) addresses. The app itself serves your browser and your tools over plain http and ws on this computer (127.0.0.1), which never leaves the machine. If you allow access from other devices in Server Settings, that traffic is not encrypted: use it only on a network you trust, or reach OpenAlgo through a tunnel with https. It also uses CSRF protection, rate limiting and secure sessions. Use a strong password and turn on two-factor login.",
+          "The Bridge keeps your broker credentials, API key and two-factor secret encrypted on your computer, locked with your The Bridge password. Its connections to your broker use the broker's own secure (https and wss) addresses. The app itself serves your browser and your tools over plain http and ws on this computer (127.0.0.1), which never leaves the machine. If you allow access from other devices in Server Settings, that traffic is not encrypted: use it only on a network you trust, or reach The Bridge through a tunnel with https. It also uses CSRF protection, rate limiting and secure sessions. Use a strong password and turn on two-factor login.",
       },
       {
         question: 'Why do I need to login daily?',
         answer:
-          'Daily login is required by Indian brokers for security compliance. Broker sessions typically expire at the end of each trading day or after a set period (usually around 3 AM IST). This is a regulatory requirement, not an OpenAlgo limitation. The platform makes re-authentication quick and easy with TOTP support for most brokers.',
+          'Daily login is required by Indian brokers for security compliance. Broker sessions typically expire at the end of each trading day or after a set period (usually around 3 AM IST). This is a regulatory requirement, not an The Bridge limitation. The platform makes re-authentication quick and easy with TOTP support for most brokers.',
       },
     ],
   },
@@ -85,24 +85,24 @@ const faqData = [
     category: 'Features & Integration',
     questions: [
       {
-        question: 'Which platforms can I integrate with OpenAlgo?',
+        question: 'Which platforms can I integrate with The Bridge?',
         answer:
-          'OpenAlgo integrates with TradingView (via webhooks), Amibroker (via AFL), GoCharting, ChartInk, MetaTrader, Excel, Google Sheets, Python, Node.js, Go, N8N, and any platform that can send HTTP webhooks. You can also use the REST API directly from any programming language.',
+          'The Bridge integrates with TradingView (via webhooks), Amibroker (via AFL), GoCharting, ChartInk, MetaTrader, Excel, Google Sheets, Python, Node.js, Go, N8N, and any platform that can send HTTP webhooks. You can also use the REST API directly from any programming language.',
       },
       {
-        question: 'Does OpenAlgo support sandbox trading?',
+        question: 'Does The Bridge support sandbox trading?',
         answer:
-          'Yes! OpenAlgo includes an Analyzer/Sandbox mode with sandbox capital of Rs. 1 Crore. This allows you to test strategies in a realistic environment with proper margin calculations, auto square-off at exchange timings, and complete isolation from live trading. Perfect for testing before going live.',
+          'Yes! The Bridge includes an Analyzer/Sandbox mode with sandbox capital of Rs. 1 Crore. This allows you to test strategies in a realistic environment with proper margin calculations, auto square-off at exchange timings, and complete isolation from live trading. Perfect for testing before going live.',
       },
       {
         question: 'Can I run multiple strategies simultaneously?',
         answer:
-          'Yes, OpenAlgo supports running multiple strategies simultaneously. You can create different webhook endpoints for different strategies, manage them independently, and monitor their performance through the dashboard. The Action Center allows you to control execution modes for each strategy.',
+          'Yes, The Bridge supports running multiple strategies simultaneously. You can create different webhook endpoints for different strategies, manage them independently, and monitor their performance through the dashboard. The Action Center allows you to control execution modes for each strategy.',
       },
       {
-        question: 'Does OpenAlgo provide real-time market data?',
+        question: 'Does The Bridge provide real-time market data?',
         answer:
-          'Yes, OpenAlgo includes a unified WebSocket server that streams real-time market data from your broker. This data is used for live position tracking, P&L updates, and can be accessed by your strategies. The data is normalized across all brokers for consistent handling.',
+          'Yes, The Bridge includes a unified WebSocket server that streams real-time market data from your broker. This data is used for live position tracking, P&L updates, and can be accessed by your strategies. The data is normalized across all brokers for consistent handling.',
       },
     ],
   },
@@ -110,24 +110,24 @@ const faqData = [
     category: 'Licensing & Usage',
     questions: [
       {
-        question: 'Can I use OpenAlgo for my proprietary trading strategies?',
+        question: 'Can I use The Bridge for my proprietary trading strategies?',
         answer:
           'Yes, you can use OpenAlgo for your personal or proprietary trading strategies. The AGPL license allows free use for personal trading. However, if you modify OpenAlgo and provide it as a service to others, you must make your modifications open source.',
       },
       {
-        question: 'Can I rebrand OpenAlgo for commercial use?',
+        question: 'Can I rebrand The Bridge for commercial use?',
         answer:
           'Under the AGPL license, you can modify OpenAlgo, but any derivative work must also be open source and credit the original project. For commercial licensing options that allow rebranding without open-source requirements, please contact the OpenAlgo team.',
       },
       {
-        question: 'Can I charge others for using my OpenAlgo setup?',
+        question: 'Can I charge others for using my The Bridge setup?',
         answer:
           'If you provide OpenAlgo as a service to others (even if modified), the AGPL license requires you to share your source code. For commercial service offerings without this requirement, commercial licensing options are available.',
       },
       {
-        question: 'Can I integrate OpenAlgo with GPT/AI assistants?',
+        question: 'Can I integrate The Bridge with GPT/AI assistants?',
         answer:
-          'Yes! OpenAlgo provides REST APIs that can be called from AI assistants, chatbots, or any automated system. You can build AI-powered trading assistants that use OpenAlgo to execute trades based on natural language commands or AI analysis.',
+          'Yes! The Bridge provides REST APIs that can be called from AI assistants, chatbots, or any automated system. You can build AI-powered trading assistants that use The Bridge to execute trades based on natural language commands or AI analysis.',
       },
     ],
   },
@@ -165,8 +165,8 @@ export default function Faq() {
                   <SheetDescription>Main navigation and quick access links</SheetDescription>
                 </SheetHeader>
                 <div className="flex items-center gap-2 mb-8">
-                  <img src="/logo.png" alt="OpenAlgo" className="h-8 w-8" />
-                  <span className="text-xl font-semibold">OpenAlgo</span>
+                  <img src="/logo.png" alt="The Bridge" className="h-8 w-8" />
+                  <span className="text-xl font-semibold">The Bridge</span>
                 </div>
                 <div className="flex flex-col gap-2">
                   <Link
@@ -238,8 +238,8 @@ export default function Faq() {
             </Sheet>
 
             <Link to="/" className="flex items-center gap-2">
-              <img src="/logo.png" alt="OpenAlgo" className="h-8 w-8" />
-              <span className="text-xl font-bold hidden sm:inline">OpenAlgo</span>
+              <img src="/logo.png" alt="The Bridge" className="h-8 w-8" />
+              <span className="text-xl font-bold hidden sm:inline">The Bridge</span>
             </Link>
           </div>
 
@@ -286,7 +286,7 @@ export default function Faq() {
           <div className="text-center mb-12">
             <h1 className="text-4xl lg:text-5xl font-bold mb-4">Frequently Asked Questions</h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Find answers to common questions about OpenAlgo, its features, security, and
+              Find answers to common questions about The Bridge, its features, security, and
               licensing.
             </p>
           </div>
@@ -298,7 +298,7 @@ export default function Faq() {
                 <CardHeader>
                   <CardTitle>{category.category}</CardTitle>
                   <CardDescription>
-                    {category.category === 'General' && 'Basic information about OpenAlgo'}
+                    {category.category === 'General' && 'Basic information about The Bridge'}
                     {category.category === 'Costs & Security' &&
                       'Pricing, security, and compliance details'}
                     {category.category === 'Features & Integration' &&

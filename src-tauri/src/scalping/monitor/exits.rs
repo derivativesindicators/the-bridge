@@ -111,7 +111,7 @@ impl RiskMonitor {
             key,
             "unknown_position",
             format!(
-                "Scalping stop for {} {}: the broker's position book does not show this position{}, so OpenAlgo cannot tell whether it is still open. The stop stays and no exit is sent until the book shows it. Check the position at the broker.",
+                "Scalping stop for {} {}: the broker's position book does not show this position{}, so The Bridge cannot tell whether it is still open. The stop stays and no exit is sent until the book shows it. Check the position at the broker.",
                 sl.symbol,
                 sl.exchange,
                 if unreadable { " with a readable quantity" } else { "" }

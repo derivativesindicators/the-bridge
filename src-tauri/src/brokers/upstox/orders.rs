@@ -278,7 +278,7 @@ pub async fn close_all_positions(b: &UpstoxBroker, auth: &AuthToken) -> Result<C
         }
         let Some(row) = symbols.by_token(&p.exchange, &p.instrument_token) else {
             tracing::warn!(
-                "No OpenAlgo symbol for Upstox instrument {} on {}; position skipped",
+                "No The Bridge symbol for Upstox instrument {} on {}; position skipped",
                 p.instrument_token,
                 p.exchange
             );

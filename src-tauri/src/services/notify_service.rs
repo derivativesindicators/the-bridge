@@ -76,7 +76,7 @@ pub async fn whatsapp(ctx: &Arc<AppState>, data: &Map<String, Value>) -> Reply {
         return Reply::error(
             409,
             svc.unavailable_reason().unwrap_or(
-                "WhatsApp is not paired or not connected. Pair the device first from the /whatsapp page in OpenAlgo before sending.",
+                "WhatsApp is not paired or not connected. Pair the device first from the /whatsapp page in The Bridge before sending.",
             ),
         );
     }

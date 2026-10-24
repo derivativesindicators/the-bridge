@@ -516,7 +516,7 @@ impl SymbolResolver {
         match self.oa_symbol(brsymbol, exchange) {
             Some(s) => s,
             None => {
-                tracing::debug!("No OpenAlgo symbol for {}:{}", exchange, brsymbol);
+                tracing::debug!("No The Bridge symbol for {}:{}", exchange, brsymbol);
                 brsymbol.to_string()
             }
         }

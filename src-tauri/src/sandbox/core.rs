@@ -182,7 +182,7 @@ where
         Err(e) => {
             tracing::error!("Sandbox task failed: {}", e);
             Err(SandboxError::internal(
-                "The sandbox could not complete this request. Try again; if it keeps failing, restart OpenAlgo.",
+                "The sandbox could not complete this request. Try again; if it keeps failing, restart The Bridge.",
             ))
         }
     }

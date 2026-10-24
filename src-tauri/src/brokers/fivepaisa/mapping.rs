@@ -245,7 +245,7 @@ pub fn place_body(o: &ResolvedOrder, price: f64) -> Value {
         "DisQty": o.disclosed_quantity,
         "IsIntraday": o.product == Product::Mis,
         "AHPlaced": "N",
-        "RemoteOrderID": "OpenAlgo",
+        "RemoteOrderID": "The Bridge",
     })
 }
 

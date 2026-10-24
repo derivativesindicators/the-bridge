@@ -190,10 +190,10 @@ describe('Option Chain expiry discovery', () => {
       name: 'a busy server (429)',
       answer: {
         status: 429,
-        data: { status: 'error', message: 'OpenAlgo is busy. Try again in a few seconds.' },
+        data: { status: 'error', message: 'The Bridge is busy. Try again in a few seconds.' },
       },
       title: 'Expiry dates could not be loaded',
-      text: 'OpenAlgo is busy. Try again in a few seconds.',
+      text: 'The Bridge is busy. Try again in a few seconds.',
     },
     {
       name: 'an unreachable server',

@@ -47,7 +47,7 @@ static CLIENT: OnceLock<Option<reqwest::Client>> = OnceLock::new();
 
 /// What the trader reads when the broker client could not be configured
 /// (BR-04).
-pub const UNAVAILABLE: &str = "OpenAlgo could not set up secure connections to brokers on this computer, so it is not contacting your broker. Restart OpenAlgo; if this keeps happening, reinstall it.";
+pub const UNAVAILABLE: &str = "The Bridge could not set up secure connections to brokers on this computer, so it is not contacting your broker. Restart The Bridge; if this keeps happening, reinstall it.";
 
 /// The shared client's settings (tests build from them too).
 pub(super) fn builder() -> reqwest::ClientBuilder {
@@ -152,14 +152,14 @@ pub async fn read_json<T: DeserializeOwned>(
             }
             if status.is_client_error() {
                 return Err(super::outcome::refusal(
-                    "The broker sent a response OpenAlgo could not read. Try again shortly.",
+                    "The broker sent a response The Bridge could not read. Try again shortly.",
                 ));
             }
             if status.is_server_error() {
                 return Err(AppError::Broker(SERVER_ERROR.into()));
             }
             Err(AppError::Broker(
-                "The broker sent a response OpenAlgo could not read. Try again shortly.".into(),
+                "The broker sent a response The Bridge could not read. Try again shortly.".into(),
             ))
         }
     }

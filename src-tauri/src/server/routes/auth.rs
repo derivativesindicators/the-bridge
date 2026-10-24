@@ -51,7 +51,7 @@ pub async fn check_setup(State(ctx): Ctx) -> Response {
 
 /// GET /auth/app-info
 pub async fn app_info() -> Response {
-    ok(json!({"status": "success", "version": env!("CARGO_PKG_VERSION"), "name": "OpenAlgo"}))
+    ok(json!({"status": "success", "version": env!("CARGO_PKG_VERSION"), "name": "The Bridge"}))
 }
 
 /// POST /setup (form: username, email, password[, confirm_password]).
@@ -63,7 +63,7 @@ pub async fn setup(State(ctx): Ctx, Src(source): Src, form: FormData) -> Respons
         tracing::warn!("Account setup refused: request did not come from this computer");
         return error(
             StatusCode::FORBIDDEN,
-            "Create your account on the computer where OpenAlgo Desktop is installed.",
+            "Create your account on the computer where The Bridge is installed.",
         );
     }
     let username = form.non_empty("username").unwrap_or_default();
@@ -508,7 +508,7 @@ pub async fn logout(
     // navigation came from OpenAlgo itself (or was typed); the app's own
     // sign-out is a CSRF-checked POST.
     if signed_in && method == Method::GET && !same_origin_navigation(&ctx, &headers) {
-        tracing::warn!("Sign-out link not opened from OpenAlgo; nothing was ended");
+        tracing::warn!("Sign-out link not opened from The Bridge; nothing was ended");
         return redirect("/");
     }
     let mut revoke_pending = false;

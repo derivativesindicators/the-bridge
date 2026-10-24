@@ -69,10 +69,10 @@ function UpdateBanner() {
   const percent = percentOf(status)
   const headline =
     status.state === 'downloading'
-      ? `Downloading OpenAlgo Desktop ${offer.version}${percent === null ? '' : `: ${percent}%`}`
+      ? `Downloading The Bridge ${offer.version}${percent === null ? '' : `: ${percent}%`}`
       : status.state === 'ready'
-        ? `OpenAlgo Desktop ${offer.version} is ready to install.`
-        : `OpenAlgo Desktop ${offer.version} is available.`
+        ? `The Bridge ${offer.version} is ready to install.`
+        : `The Bridge ${offer.version} is available.`
   return (
     <section
       aria-label="Update available"
@@ -149,8 +149,8 @@ function UpdateDialog() {
   if (s.pending) {
     const live = s.pending.warning.level === 'live'
     const pending = s.pending
-    title = offer ? `Update to ${offer.version}?` : 'Update OpenAlgo Desktop?'
-    description = 'Installing the update restarts OpenAlgo.'
+    title = offer ? `Update to ${offer.version}?` : 'Update The Bridge?'
+    description = 'Installing the update restarts The Bridge.'
     body = <WarningView pending={pending} />
     footer = (
       <>
@@ -172,9 +172,9 @@ function UpdateDialog() {
     )
   } else if (!status || status.state === 'checking' || (s.busy && !offer)) {
     title = 'Checking for updates'
-    description = 'OpenAlgo is asking for the newest version.'
+    description = 'The Bridge is asking for the newest version.'
   } else if (status.state === 'up_to_date' || status.state === 'not_checked') {
-    title = 'OpenAlgo Desktop is up to date'
+    title = 'The Bridge is up to date'
     description =
       status.state === 'up_to_date'
         ? `You are on the latest version, ${status.current_version}.`
@@ -227,8 +227,8 @@ function UpdateDialog() {
   } else if (status.state === 'ready') {
     title = `Version ${offer.version} is ready`
     description = desktop
-      ? 'The update is downloaded and its signature checked. Restart OpenAlgo to install it.'
-      : 'The update is downloaded. Open OpenAlgo Desktop on this computer to install it.'
+      ? 'The update is downloaded and its signature checked. Restart The Bridge to install it.'
+      : 'The update is downloaded. Open The Bridge on this computer to install it.'
     footer = (
       <>
         <Button variant="outline" onClick={s.later}>
@@ -242,12 +242,12 @@ function UpdateDialog() {
       </>
     )
   } else if (status.state === 'restarting') {
-    title = 'Restarting OpenAlgo'
-    description = 'OpenAlgo is restarting to finish the update.'
+    title = 'Restarting The Bridge'
+    description = 'The Bridge is restarting to finish the update.'
     footer = null
   } else {
     // available, or a failed download with the offer kept.
-    title = `OpenAlgo Desktop ${offer.version} is available`
+    title = `The Bridge ${offer.version} is available`
     description = `You have version ${status.current_version}.`
     body = (
       <div className="space-y-3">
@@ -255,8 +255,8 @@ function UpdateDialog() {
         {status.can_install ? (
           <p className="text-muted-foreground text-sm">
             {desktop
-              ? 'Update downloads the new version, checks its signature, installs it and restarts OpenAlgo. Nothing is downloaded until you choose Update.'
-              : 'Open OpenAlgo Desktop on this computer to install it.'}
+              ? 'Update downloads the new version, checks its signature, installs it and restarts The Bridge. Nothing is downloaded until you choose Update.'
+              : 'Open The Bridge on this computer to install it.'}
           </p>
         ) : (
           <p className="text-sm">{status.manual_reason}</p>

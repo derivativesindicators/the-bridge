@@ -42,7 +42,7 @@ export function ResetAccountCard() {
         Start over with a new account instead?
       </h2>
       <p className="text-muted-foreground">
-        Reset account removes your OpenAlgo login, API key and saved broker keys, ends your broker
+        Reset account removes your The Bridge login, API key and saved broker keys, ends your broker
         session, stops AI client tokens, unlinks Telegram and WhatsApp, and gives your strategy and
         Chartink webhooks new addresses. Your trade and strategy history stays. You then create a
         new account and connect your broker again.
@@ -59,7 +59,7 @@ export function ResetAccountCard() {
         </Button>
       ) : (
         <p>
-          For your safety this works only in the OpenAlgo Desktop window on the computer where it is
+          For your safety this works only in the The Bridge window on the computer where it is
           installed. Open the app there and choose Reset account on this page.
         </p>
       )}

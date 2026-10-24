@@ -242,7 +242,7 @@ fn position_book_must_be_confirmed() {
     let e = strict_rows(&failed).unwrap_err();
     assert_eq!(
         e.client_message(),
-        "OpenAlgo could not read your open position from 5 Paisa, so no order was sent. Check your positions and try again."
+        "The Bridge could not read your open position from 5 Paisa, so no order was sent. Check your positions and try again."
     );
     let said_empty = json!({"head":{"statusDescription":"Failure"},"body":{"Status":1,"Message":"No Data Found"}});
     assert!(strict_rows(&said_empty).unwrap().is_empty());
@@ -354,7 +354,7 @@ fn place_body_matches_the_web_literal() {
         place_body(&o, 812.0),
         json!({"OrderType":"B","Exchange":"N","ExchangeType":"C","ScripCode":"3045",
                "Price":812.0,"Qty":10,"StopLossPrice":810.0,"DisQty":0,"IsIntraday":true,
-               "AHPlaced":"N","RemoteOrderID":"OpenAlgo"})
+               "AHPlaced":"N","RemoteOrderID":"The Bridge"})
     );
     let f = order("NIFTY27OCT26FUT", "NFO", "LIMIT", "NRML");
     let b = place_body(&f, 25000.0);

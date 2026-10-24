@@ -40,7 +40,7 @@ describe('StartFreshCard (KEY-01)', () => {
     render(<StartFreshCard reason="keychain" onDone={vi.fn()} />)
     expect(screen.getByRole('heading', { name: 'Start fresh' })).toBeInTheDocument()
     expect(screen.queryByLabelText('New password')).toBeNull()
-    expect(screen.getByText(/only in the OpenAlgo Desktop window/)).toBeInTheDocument()
+    expect(screen.getByText(/only in the The Bridge window/)).toBeInTheDocument()
   })
 
   it('asks the desktop shell only once the new password meets the rules and matches', async () => {
@@ -84,12 +84,12 @@ describe('StartFreshCard (KEY-01)', () => {
     tauri.inShell = true
     tauri.invoke.mockRejectedValue({
       code: 'AUTH_ERROR',
-      message: 'A new password can be set only from the OpenAlgo Desktop window on this computer.',
+      message: 'A new password can be set only from the The Bridge window on this computer.',
     })
     render(<StartFreshCard reason="forgot" onDone={vi.fn()} />)
     await typePasswords(GOOD, GOOD)
     await userEvent.click(screen.getByRole('button', { name: 'Set new password' }))
-    expect(await screen.findByRole('alert')).toHaveTextContent(/only from the OpenAlgo Desktop/)
+    expect(await screen.findByRole('alert')).toHaveTextContent(/only from the The Bridge/)
   })
 
   it('checks the web password rules', () => {

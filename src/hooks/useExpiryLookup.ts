@@ -66,8 +66,8 @@ export const EXPIRY_TEXT = {
   master:
     'Expiry dates are not available until the master contract is loaded. Open Master Contract to download it, then retry.',
   signin: 'Your session could not be confirmed. Sign in again, then retry.',
-  timeout: 'Loading expiry dates took too long. Check that OpenAlgo is running, then retry.',
-  unreachable: 'Could not reach OpenAlgo to load expiry dates. Retry in a moment.',
+  timeout: 'Loading expiry dates took too long. Check that The Bridge is running, then retry.',
+  unreachable: 'Could not reach The Bridge to load expiry dates. Retry in a moment.',
   failed: 'Could not load expiry dates. Retry in a moment.',
   empty: (underlying: string, exchange: string) =>
     `No live expiry dates are listed for ${underlying} on ${exchange}. Choose another underlying, or download the master contract again if you expected some.`,

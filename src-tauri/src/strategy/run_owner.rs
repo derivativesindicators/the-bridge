@@ -14,7 +14,7 @@ use super::StrategyModule;
 use crate::services::live_owner::LiveOwner;
 
 /// What an order of a run answers when the run's owner cannot be read.
-const OWNER_UNREADABLE: &str = "OpenAlgo could not read which broker account this run belongs to, so the order was not sent. Try again.";
+const OWNER_UNREADABLE: &str = "The Bridge could not read which broker account this run belongs to, so the order was not sent. Try again.";
 
 impl StrategyModule {
     /// Why an order of this run must not go through the session connected

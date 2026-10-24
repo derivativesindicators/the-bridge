@@ -109,7 +109,7 @@ describe('PlaceOrderDialog', () => {
   })
 
   it('shows the route refusal and keeps the ticket open', async () => {
-    const reason = 'caller expects live mode but the OpenAlgo server is in analyzer mode'
+    const reason = 'caller expects live mode but the The Bridge server is in analyzer mode'
     const place = vi.fn(async () => {
       throw new Error(reason)
     })

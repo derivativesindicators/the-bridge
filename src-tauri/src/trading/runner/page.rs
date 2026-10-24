@@ -129,7 +129,7 @@ impl Runner {
     /// the run's log and on the Health page, once per wait (NEW-TR-04).
     fn tell_stuck(&self, entry: &RunEntry) {
         let message = format!(
-            "OpenScript {} on {}: an order of this strategy has had no answer from OpenAlgo for over a minute, so whether it was placed is not known. Until it is, this strategy sends nothing new, its own exits included. Check your order book{}.",
+            "OpenScript {} on {}: an order of this strategy has had no answer from The Bridge for over a minute, so whether it was placed is not known. Until it is, this strategy sends nothing new, its own exits included. Check your order book{}.",
             entry.info.script,
             entry.info.symbol,
             if entry.info.mode == crate::strategy::dispatch::RunMode::Live {
@@ -202,7 +202,7 @@ impl Runner {
         }
         let Some(runner) = self.me.upgrade() else {
             return Some(Ok(
-                json!({"status": "error", "message": "OpenAlgo is shutting down."}),
+                json!({"status": "error", "message": "The Bridge is shutting down."}),
             ));
         };
         let answer =

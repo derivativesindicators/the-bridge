@@ -54,7 +54,7 @@ pub fn says_no_positions(v: &Value, fields: &[&str]) -> bool {
 /// the broker's display name.
 pub fn unread(display_name: &str) -> AppError {
     AppError::Broker(format!(
-        "OpenAlgo could not read your open position from {}, so no order was sent. Check your positions and try again.",
+        "The Bridge could not read your open position from {}, so no order was sent. Check your positions and try again.",
         display_name
     ))
 }
@@ -86,7 +86,7 @@ mod tests {
         ));
         assert_eq!(
             unread("Samco").client_message(),
-            "OpenAlgo could not read your open position from Samco, so no order was sent. Check your positions and try again."
+            "The Bridge could not read your open position from Samco, so no order was sent. Check your positions and try again."
         );
     }
 }

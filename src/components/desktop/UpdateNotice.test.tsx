@@ -90,7 +90,7 @@ describe('UpdateNotice', () => {
     render(<UpdateNotice />)
 
     const banner = await screen.findByRole('region', { name: 'Update available' })
-    expect(banner).toHaveTextContent('OpenAlgo Desktop 1.1.0 is available.')
+    expect(banner).toHaveTextContent('The Bridge 1.1.0 is available.')
     expect(banner).toHaveTextContent('You have version 1.0.0.')
 
     await user.click(within(banner).getByRole('button', { name: 'See what is new' }))
@@ -112,7 +112,7 @@ describe('UpdateNotice', () => {
         warning: {
           level: 'live',
           title: 'Live trading is running',
-          intro: 'Updating restarts OpenAlgo.',
+          intro: 'Updating restarts The Bridge.',
           items: ['1 running Live strategy.', '2 open orders at Zerodha.'],
           advice: 'Update now only if that is acceptable.',
         },
@@ -178,7 +178,7 @@ describe('UpdateNotice', () => {
         warning: {
           level: 'live',
           title: 'Live trading is running',
-          intro: 'Updating restarts OpenAlgo.',
+          intro: 'Updating restarts The Bridge.',
           items: ['2 open orders at Zerodha.'],
           advice: 'Update now only if that is acceptable.',
         },
@@ -202,7 +202,7 @@ describe('UpdateNotice', () => {
       warning: {
         level: 'sandbox',
         title: 'Sandbox activity is running',
-        intro: 'Updating restarts OpenAlgo.',
+        intro: 'Updating restarts The Bridge.',
         items: ['1 open sandbox order.'],
         advice: 'Nothing is sent to your broker.',
       },
@@ -222,7 +222,7 @@ describe('UpdateNotice', () => {
         package: 'linux_deb',
         can_install: false,
         manual_reason:
-          'This copy was installed from a .deb package, which OpenAlgo cannot update by itself.',
+          'This copy was installed from a .deb package, which The Bridge cannot update by itself.',
       })
     )
     const user = userEvent.setup()
@@ -267,7 +267,7 @@ describe('UpdateNotice', () => {
     render(<UpdateNotice />)
     await user.click(await screen.findByRole('button', { name: 'See what is new' }))
     const dialog = await screen.findByRole('dialog')
-    expect(dialog).toHaveTextContent('Open OpenAlgo Desktop on this computer to install it.')
+    expect(dialog).toHaveTextContent('Open The Bridge on this computer to install it.')
     expect(within(dialog).queryByRole('button', { name: 'Update' })).toBeNull()
   })
 })

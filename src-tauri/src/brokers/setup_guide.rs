@@ -128,7 +128,7 @@ const MARKET_SECRET: KeyField = KeyField {
 
 const REDIRECT_REGISTER: &str =
     "Register this exact address as the redirect URL in your broker app.";
-const REDIRECT_SENT: &str = "OpenAlgo sends this address with each login. If your broker app asks for a redirect URL, register this exact address.";
+const REDIRECT_SENT: &str = "The Bridge sends this address with each login. If your broker app asks for a redirect URL, register this exact address.";
 
 /// XTS brokers whose saved keys are all a sign-in needs.
 const fn xts_saved_keys(name: &'static str, banner: &'static str) -> SetupGuide {
@@ -182,7 +182,7 @@ fn guide_a_to_d(broker: &str) -> Option<SetupGuide> {
                     "Your Alice Blue User ID. Each login is checked against it.",
                 ),
             ] },
-            banner: "Login with Alice Blue takes you to Alice Blue's login page. Log in there and Alice Blue sends you back to OpenAlgo, which checks it is the User ID you saved.",
+            banner: "Login with Alice Blue takes you to Alice Blue's login page. Log in there and Alice Blue sends you back to The Bridge, which checks it is the User ID you saved.",
             redirect_hint: REDIRECT_REGISTER,
         },
         "angel" => SetupGuide {
@@ -191,7 +191,7 @@ fn guide_a_to_d(broker: &str) -> Option<SetupGuide> {
                 "SmartAPI Key",
                 "The API key of your SmartAPI app at smartapi.angelbroking.com. Angel One needs no secret.",
             )] },
-            banner: "Login with Angel One opens a short form in OpenAlgo. Each time, enter your Angel One Client ID, PIN and the 6-digit TOTP from your authenticator app.",
+            banner: "Login with Angel One opens a short form in The Bridge. Each time, enter your Angel One Client ID, PIN and the 6-digit TOTP from your authenticator app.",
             redirect_hint: "",
         },
         "arrow" => SetupGuide {
@@ -204,7 +204,7 @@ fn guide_a_to_d(broker: &str) -> Option<SetupGuide> {
                     "Your Arrow trading account ID. Each login is checked against it.",
                 ),
             ] },
-            banner: "Login with Arrow takes you to Arrow's login page. Log in there and Arrow sends you back to OpenAlgo, which checks it is the client ID you saved.",
+            banner: "Login with Arrow takes you to Arrow's login page. Log in there and Arrow sends you back to The Bridge, which checks it is the client ID you saved.",
             redirect_hint: REDIRECT_REGISTER,
         },
         "compositedge" => SetupGuide {
@@ -221,7 +221,7 @@ fn guide_a_to_d(broker: &str) -> Option<SetupGuide> {
                 MARKET_KEY,
                 MARKET_SECRET,
             ] },
-            banner: "Login with CompositEdge takes you to CompositEdge's login page. Log in there and CompositEdge sends you back to OpenAlgo; your Market Data keys are then used for quotes and the live feed.",
+            banner: "Login with CompositEdge takes you to CompositEdge's login page. Log in there and CompositEdge sends you back to The Bridge; your Market Data keys are then used for quotes and the live feed.",
             redirect_hint: REDIRECT_SENT,
         },
         "definedge" => SetupGuide {
@@ -230,7 +230,7 @@ fn guide_a_to_d(broker: &str) -> Option<SetupGuide> {
                 key("API Token", "The API token from your Definedge Integrate account."),
                 secret("API Secret", "The API secret from your Definedge Integrate account."),
             ] },
-            banner: "Login with Definedge opens a short form in OpenAlgo and sends a one-time code to your registered mobile or email. Enter that OTP to sign in.",
+            banner: "Login with Definedge opens a short form in The Bridge and sends a one-time code to your registered mobile or email. Enter that OTP to sign in.",
             redirect_hint: "",
         },
         "deltaexchange" => SetupGuide {
@@ -257,7 +257,7 @@ fn guide_d_to_g(broker: &str) -> Option<SetupGuide> {
                 ),
                 secret("API Secret", "The API secret of your Dhan app."),
             ] },
-            banner: "Login with Dhan takes you to Dhan's login page. Log in and approve, and Dhan sends you back to OpenAlgo. Market data needs an active Dhan Data API subscription.",
+            banner: "Login with Dhan takes you to Dhan's login page. Log in and approve, and Dhan sends you back to The Bridge. Market data needs an active Dhan Data API subscription.",
             redirect_hint: REDIRECT_REGISTER,
         },
         "dhan_sandbox" => SetupGuide {
@@ -278,7 +278,7 @@ fn guide_d_to_g(broker: &str) -> Option<SetupGuide> {
                 key("Vendor Code", "Your Firstock vendor code."),
                 secret("API Key", "Your Firstock API key."),
             ] },
-            banner: "Login with Firstock opens a short form in OpenAlgo. Each time, enter your Firstock user ID, password and TOTP.",
+            banner: "Login with Firstock opens a short form in The Bridge. Each time, enter your Firstock user ID, password and TOTP.",
             redirect_hint: "",
         },
         "fivepaisa" => SetupGuide {
@@ -290,7 +290,7 @@ fn guide_d_to_g(broker: &str) -> Option<SetupGuide> {
                 ),
                 secret("Encryption Key", "The encryption key of your 5paisa app."),
             ] },
-            banner: "Login with 5 Paisa opens a short form in OpenAlgo. Each time, enter your 5paisa login, PIN and the TOTP from your authenticator app.",
+            banner: "Login with 5 Paisa opens a short form in The Bridge. Each time, enter your 5paisa login, PIN and the TOTP from your authenticator app.",
             redirect_hint: "",
         },
         "fivepaisaxts" => xts_saved_keys(
@@ -306,7 +306,7 @@ fn guide_d_to_g(broker: &str) -> Option<SetupGuide> {
                 ),
                 secret("API Secret", "The API secret of your Flattrade app."),
             ] },
-            banner: "Login with Flattrade takes you to Flattrade's login page. Log in there and Flattrade sends you back to OpenAlgo.",
+            banner: "Login with Flattrade takes you to Flattrade's login page. Log in there and Flattrade sends you back to The Bridge.",
             redirect_hint: REDIRECT_REGISTER,
         },
         "fyers" => SetupGuide {
@@ -315,7 +315,7 @@ fn guide_d_to_g(broker: &str) -> Option<SetupGuide> {
                 key("App ID", "The App ID of your app at myapi.fyers.in."),
                 secret("App Secret", "The secret of that app."),
             ] },
-            banner: "Login with Fyers takes you to Fyers' login page. Log in there and Fyers sends you back to OpenAlgo.",
+            banner: "Login with Fyers takes you to Fyers' login page. Log in there and Fyers sends you back to The Bridge.",
             redirect_hint: REDIRECT_REGISTER,
         },
         "groww" => SetupGuide {
@@ -327,7 +327,7 @@ fn guide_d_to_g(broker: &str) -> Option<SetupGuide> {
                     "Needed when your key uses Groww's approval flow. Leave it empty for a TOTP key.",
                 ),
             ] },
-            banner: "Login with Groww opens a short form in OpenAlgo. For a TOTP key, enter the current code from your authenticator app; otherwise OpenAlgo signs in with the API key and secret you saved.",
+            banner: "Login with Groww opens a short form in The Bridge. For a TOTP key, enter the current code from your authenticator app; otherwise The Bridge signs in with the API key and secret you saved.",
             redirect_hint: "",
         },
         _ => return None,
@@ -346,7 +346,7 @@ fn guide_h_to_m(broker: &str) -> Option<SetupGuide> {
                     "Your HDFC Securities client ID. Each login is checked against it.",
                 ),
             ] },
-            banner: "Login with HDFC Securities takes you to HDFC Securities' login page. Log in there and you are sent back to OpenAlgo, which checks it is the client ID you saved.",
+            banner: "Login with HDFC Securities takes you to HDFC Securities' login page. Log in there and you are sent back to The Bridge, which checks it is the client ID you saved.",
             redirect_hint: REDIRECT_REGISTER,
         },
         "hdfcsky" => SetupGuide {
@@ -359,7 +359,7 @@ fn guide_h_to_m(broker: &str) -> Option<SetupGuide> {
                     "Your HDFC Sky client ID. Each login is checked against it.",
                 ),
             ] },
-            banner: "Login with HDFC Sky takes you to HDFC Sky's login page. Log in there and you are sent back to OpenAlgo, which checks it is the client ID you saved.",
+            banner: "Login with HDFC Sky takes you to HDFC Sky's login page. Log in there and you are sent back to The Bridge, which checks it is the client ID you saved.",
             redirect_hint: REDIRECT_REGISTER,
         },
         "ibulls" => xts_saved_keys(
@@ -376,7 +376,7 @@ fn guide_h_to_m(broker: &str) -> Option<SetupGuide> {
                 key("App Key", "The app key of your IIFL Capital app."),
                 secret("App Secret", "The app secret of that app."),
             ] },
-            banner: "Login with IIFL Capital takes you to IIFL Capital's login page. Log in there and IIFL sends you back to OpenAlgo.",
+            banner: "Login with IIFL Capital takes you to IIFL Capital's login page. Log in there and IIFL sends you back to The Bridge.",
             redirect_hint: "Register this exact address as the redirect URL with IIFL Capital; it must be whitelisted on your app.",
         },
         "indmoney" => SetupGuide {
@@ -391,7 +391,7 @@ fn guide_h_to_m(broker: &str) -> Option<SetupGuide> {
                     "Leave empty to log in with your MPIN and TOTP (recommended). A pasted access token is used as is and lasts 24 hours.",
                 ),
             ] },
-            banner: "Login with IndMoney opens a short form in OpenAlgo. Each time, enter your INDstocks MPIN and a fresh TOTP; a new code can be requested once a minute.",
+            banner: "Login with IndMoney opens a short form in The Bridge. Each time, enter your INDstocks MPIN and a fresh TOTP; a new code can be requested once a minute.",
             redirect_hint: "",
         },
         "jainamxts" => xts_saved_keys(
@@ -407,7 +407,7 @@ fn guide_h_to_m(broker: &str) -> Option<SetupGuide> {
                     "The Neo API access token from Kotak's developer portal.",
                 ),
             ] },
-            banner: "Login with Kotak Securities opens a short form in OpenAlgo. Each time, enter your registered mobile number, the TOTP from the Kotak Neo app and your MPIN.",
+            banner: "Login with Kotak Securities opens a short form in The Bridge. Each time, enter your registered mobile number, the TOTP from the Kotak Neo app and your MPIN.",
             redirect_hint: "",
         },
         "motilal" => SetupGuide {
@@ -419,7 +419,7 @@ fn guide_h_to_m(broker: &str) -> Option<SetupGuide> {
                     "The API secret of that app, if it has one.",
                 ),
             ] },
-            banner: "Login with Motilal Oswal opens a short form in OpenAlgo. Each time, enter your user ID, password, date of birth and, if you use one, your TOTP.",
+            banner: "Login with Motilal Oswal opens a short form in The Bridge. Each time, enter your user ID, password, date of birth and, if you use one, your TOTP.",
             redirect_hint: "",
         },
         _ => return None,
@@ -434,7 +434,7 @@ fn guide_m_to_p(broker: &str) -> Option<SetupGuide> {
                 key("Client Code", "Your mStock client code (your login ID)."),
                 secret("API Key", "The API key of your mStock app."),
             ] },
-            banner: "Login with mStock by Mirae Asset opens a short form in OpenAlgo. Each time, enter your mStock password and TOTP.",
+            banner: "Login with mStock by Mirae Asset opens a short form in The Bridge. Each time, enter your mStock password and TOTP.",
             redirect_hint: "",
         },
         "nubra" => SetupGuide {
@@ -446,7 +446,7 @@ fn guide_m_to_p(broker: &str) -> Option<SetupGuide> {
                 ),
                 secret("MPIN", "Your Nubra MPIN."),
             ] },
-            banner: "Login with Nubra opens a short form in OpenAlgo and texts a one-time code to your registered mobile. Enter it, and OpenAlgo uses your saved MPIN to finish.",
+            banner: "Login with Nubra opens a short form in The Bridge and texts a one-time code to your registered mobile. Enter it, and The Bridge uses your saved MPIN to finish.",
             redirect_hint: "",
         },
         "paytm" => SetupGuide {
@@ -455,7 +455,7 @@ fn guide_m_to_p(broker: &str) -> Option<SetupGuide> {
                 key("API Key", "The API key of your Paytm Money app."),
                 secret("API Secret", "The API secret of that app."),
             ] },
-            banner: "Login with Paytm Money takes you to Paytm Money's login page. Log in there and you are sent back to OpenAlgo.",
+            banner: "Login with Paytm Money takes you to Paytm Money's login page. Log in there and you are sent back to The Bridge.",
             redirect_hint: REDIRECT_REGISTER,
         },
         "pocketful" => SetupGuide {
@@ -467,7 +467,7 @@ fn guide_m_to_p(broker: &str) -> Option<SetupGuide> {
                 ),
                 secret("Client Secret", "The client secret of that app."),
             ] },
-            banner: "Login with Pocketful takes you to Pocketful's login page. Log in and approve, and Pocketful sends you back to OpenAlgo.",
+            banner: "Login with Pocketful takes you to Pocketful's login page. Log in and approve, and Pocketful sends you back to The Bridge.",
             redirect_hint: REDIRECT_SENT,
         },
         _ => return None,
@@ -486,7 +486,7 @@ fn guide_r_to_t(broker: &str) -> Option<SetupGuide> {
                 MARKET_KEY,
                 MARKET_SECRET,
             ] },
-            banner: "Login with RMoney takes you to RMoney's login page. Log in there and RMoney sends you back to OpenAlgo; your Market Data keys are then used for quotes and the live feed.",
+            banner: "Login with RMoney takes you to RMoney's login page. Log in there and RMoney sends you back to The Bridge; your Market Data keys are then used for quotes and the live feed.",
             redirect_hint: REDIRECT_SENT,
         },
         "rupeezy" => SetupGuide {
@@ -498,14 +498,14 @@ fn guide_r_to_t(broker: &str) -> Option<SetupGuide> {
                 ),
                 secret(
                     "API Key",
-                    "The API key of that Vortex app. OpenAlgo sends it with every request and uses it to finish each login.",
+                    "The API key of that Vortex app. The Bridge sends it with every request and uses it to finish each login.",
                 ),
                 client_id(
                     "Client ID",
                     "Your Rupeezy client code. Each login is checked against it.",
                 ),
             ] },
-            banner: "Login with Rupeezy takes you to Rupeezy's login page. Log in there and Rupeezy sends you back to OpenAlgo, which checks it is the client ID you saved.",
+            banner: "Login with Rupeezy takes you to Rupeezy's login page. Log in there and Rupeezy sends you back to The Bridge, which checks it is the client ID you saved.",
             redirect_hint: REDIRECT_REGISTER,
         },
         "samco" => SetupGuide {
@@ -532,7 +532,7 @@ fn guide_r_to_t(broker: &str) -> Option<SetupGuide> {
                 ),
                 secret("Secret Key", "The secret key of your Shoonya app."),
             ] },
-            banner: "Login with Shoonya takes you to Shoonya's login page. Log in there and Shoonya sends you back to OpenAlgo.",
+            banner: "Login with Shoonya takes you to Shoonya's login page. Log in there and Shoonya sends you back to The Bridge.",
             redirect_hint: REDIRECT_REGISTER,
         },
         "tradejini" => SetupGuide {
@@ -541,7 +541,7 @@ fn guide_r_to_t(broker: &str) -> Option<SetupGuide> {
                 "API Key",
                 "The API key of your individual app in the Tradejini developer portal. Tradejini needs no secret; calls must come from the static IP whitelisted on that app.",
             )] },
-            banner: "Login with Tradejini opens a short form in OpenAlgo. Each time, enter your CubePlus login PIN and TOTP.",
+            banner: "Login with Tradejini opens a short form in The Bridge. Each time, enter your CubePlus login PIN and TOTP.",
             redirect_hint: "",
         },
         _ => return None,
@@ -559,7 +559,7 @@ fn guide_t_to_z(broker: &str) -> Option<SetupGuide> {
                 ),
                 secret("Secret Key", "The secret key of your TradeSmart app."),
             ] },
-            banner: "Login with TradeSmart takes you to TradeSmart's login page. Log in there and TradeSmart sends you back to OpenAlgo.",
+            banner: "Login with TradeSmart takes you to TradeSmart's login page. Log in there and TradeSmart sends you back to The Bridge.",
             redirect_hint: REDIRECT_REGISTER,
         },
         "upstox" => SetupGuide {
@@ -568,7 +568,7 @@ fn guide_t_to_z(broker: &str) -> Option<SetupGuide> {
                 key("API Key", "The API key of your Upstox app."),
                 secret("API Secret", "The API secret of that app."),
             ] },
-            banner: "Login with Upstox takes you to Upstox's login page. Log in there and Upstox sends you back to OpenAlgo.",
+            banner: "Login with Upstox takes you to Upstox's login page. Log in there and Upstox sends you back to The Bridge.",
             redirect_hint: "Register this exact address as the redirect URL in your Upstox app; it must match character for character (localhost is not 127.0.0.1).",
         },
         "wisdom" => xts_saved_keys(
@@ -584,7 +584,7 @@ fn guide_t_to_z(broker: &str) -> Option<SetupGuide> {
                 ),
                 secret("Secret Key", "The secret key of your Zebu app."),
             ] },
-            banner: "Login with Zebu takes you to Zebu's login page. Log in there and Zebu sends you back to OpenAlgo.",
+            banner: "Login with Zebu takes you to Zebu's login page. Log in there and Zebu sends you back to The Bridge.",
             redirect_hint: REDIRECT_REGISTER,
         },
         "zerodha" => SetupGuide {
@@ -593,7 +593,7 @@ fn guide_t_to_z(broker: &str) -> Option<SetupGuide> {
                 key("API Key", "The API key of your Kite Connect app at developers.kite.trade."),
                 secret("API Secret", "The API secret of that app."),
             ] },
-            banner: "Login with Zerodha takes you to Zerodha's Kite login page. Log in there and Zerodha sends you back to OpenAlgo. Market data needs an active Kite Connect subscription.",
+            banner: "Login with Zerodha takes you to Zerodha's Kite login page. Log in there and Zerodha sends you back to The Bridge. Market data needs an active Kite Connect subscription.",
             redirect_hint: REDIRECT_REGISTER,
         },
         _ => return None,
@@ -606,8 +606,8 @@ fn generic_guide(broker: &str) -> SetupGuide {
         name: "",
         fields: GENERIC_FIELDS,
         banner: match catalog::sign_in(broker) {
-            SignIn::Redirect => "Login takes you to your broker's login page. Log in there and your broker sends you back to OpenAlgo.",
-            SignIn::Form => "Login opens a short form in OpenAlgo for the details your broker asks for at each login.",
+            SignIn::Redirect => "Login takes you to your broker's login page. Log in there and your broker sends you back to The Bridge.",
+            SignIn::Form => "Login opens a short form in The Bridge for the details your broker asks for at each login.",
             SignIn::SavedKeys => "Login signs you in with one click using the keys you saved.",
         },
         redirect_hint: REDIRECT_REGISTER,

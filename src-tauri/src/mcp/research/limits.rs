@@ -285,7 +285,7 @@ Wait for one to finish and try again.",
     let slots = ctx.mcp.research_slots();
     let Ok(Ok(slot)) = tokio::time::timeout(SLOT_WAIT, slots.acquire_owned()).await else {
         return Err(busy(
-            "OpenAlgo is busy with other analysis requests, so this one was not run. Try again in a moment.",
+            "The Bridge is busy with other analysis requests, so this one was not run. Try again in a moment.",
         ));
     };
     if let Some(b) = &budget {

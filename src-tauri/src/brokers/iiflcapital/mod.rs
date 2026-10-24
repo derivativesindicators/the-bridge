@@ -81,7 +81,7 @@ const MAX_RETRY_WAIT: Duration = Duration::from_secs(10);
 
 /// What a trader reads when IIFL answers an order write with a throttle
 /// (web `order_api._UNCONFIRMED_WRITE_MESSAGE`).
-pub const UNCONFIRMED_WRITE_MESSAGE: &str = "IIFL Capital did not confirm this request and asked for it to be tried again later. OpenAlgo did not send it again, because the first one may already have reached IIFL Capital. Check the order book before sending it again.";
+pub const UNCONFIRMED_WRITE_MESSAGE: &str = "IIFL Capital did not confirm this request and asked for it to be tried again later. The Bridge did not send it again, because the first one may already have reached IIFL Capital. Check the order book before sending it again.";
 
 /// Marks the stand-in body `call` builds for an answer that was not JSON:
 /// such an answer says nothing about an order (LOG-08).

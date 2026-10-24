@@ -589,7 +589,7 @@ impl AuthService {
             .map_err(|e| AppError::Internal(format!("account reset task: {}", e)))??;
         Self::forget_adapter_state(ctx).await;
         ctx.bus.publish(crate::events::Event::ForceLogout {
-            message: "OpenAlgo was reset on this computer. Create a new account to continue."
+            message: "The Bridge was reset on this computer. Create a new account to continue."
                 .into(),
         });
         tracing::info!("Account reset from the desktop window");

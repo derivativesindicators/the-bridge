@@ -347,7 +347,7 @@ pub(crate) async fn download(b: &XtsBroker) -> Result<Vec<SymToken>> {
         let (_, v): (_, Value) = http::read_json(b.cfg.id, resp).await?;
         let Some(body) = v.get("result").and_then(Value::as_str) else {
             return Err(AppError::Broker(format!(
-                "{} sent an instrument list OpenAlgo could not read. Try again shortly.",
+                "{} sent an instrument list The Bridge could not read. Try again shortly.",
                 b.cfg.name
             )));
         };

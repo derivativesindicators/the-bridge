@@ -745,7 +745,7 @@ impl BrokerRegistry {
         }
         self.get(id).ok_or_else(|| {
             AppError::Validation(format!(
-                "Signing in to {} is not available in this version of OpenAlgo Desktop yet.",
+                "Signing in to {} is not available in this version of The Bridge yet.",
                 setup_guide::display_name(id)
             ))
         })

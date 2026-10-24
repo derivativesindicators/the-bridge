@@ -124,7 +124,7 @@ pub fn refusal(state: &AppState, live_broker: &str) -> Option<String> {
         Err(e) => {
             tracing::warn!("Could not check what depends on the broker session: {}", e);
             Some(format!(
-                "OpenAlgo could not check whether anything still runs on {}. Nothing was changed. Try again.",
+                "The Bridge could not check whether anything still runs on {}. Nothing was changed. Try again.",
                 name
             ))
         }

@@ -208,7 +208,7 @@ impl Runner {
                 return Err(Refusal::new(
                     409,
                     format!(
-                        "{} was not started, because OpenAlgo could not read whether analyzer mode is on. Restart OpenAlgo, then start it again.",
+                        "{} was not started, because The Bridge could not read whether analyzer mode is on. Restart The Bridge, then start it again.",
                         saved.script
                     ),
                 ));
@@ -246,7 +246,7 @@ impl Runner {
                     Refusal::new(
                         409,
                         format!(
-                            "{} was not started, because OpenAlgo could not tell which broker account it would trade through. Log in to your broker again, then start it.",
+                            "{} was not started, because The Bridge could not tell which broker account it would trade through. Log in to your broker again, then start it.",
                             saved.script
                         ),
                     )

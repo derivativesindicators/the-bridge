@@ -67,7 +67,7 @@ export interface StrategyLeg {
   side: Side
   lots: number
   lotSize: number
-  expiry: string // OpenAlgo format, e.g. 28APR26
+  expiry: string // The Bridge format, e.g. 28APR26
   strike?: number // required for options
   optionType?: OptionType // required for options
   /** Live / entry premium (per share, not per lot). 0 if unknown. */

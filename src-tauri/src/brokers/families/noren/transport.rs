@@ -249,7 +249,7 @@ pub fn as_list(name: &str, endpoint: &str, v: Value) -> Result<Vec<Value>> {
         Value::Null => {
             tracing::warn!(broker = name, "{} answered {} with null", name, endpoint);
             Err(AppError::Broker(format!(
-                "OpenAlgo could not read the answer from {}. Try again shortly.",
+                "The Bridge could not read the answer from {}. Try again shortly.",
                 name
             )))
         }

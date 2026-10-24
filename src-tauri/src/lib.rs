@@ -86,12 +86,12 @@ fn show_data_refusal(
     refusal: db::upgrade::Refusal,
 ) -> std::result::Result<(), Box<dyn std::error::Error>> {
     tracing::error!(
-        "OpenAlgo did not open its data folder: {}",
+        "The Bridge did not open its data folder: {}",
         refusal.detail()
     );
     app.manage(commands::DataRefusal(refusal.message()));
     WebviewWindowBuilder::new(app, "main", WebviewUrl::App("index.html".into()))
-        .title("OpenAlgo Desktop")
+        .title("The Bridge")
         .inner_size(900.0, 640.0)
         .min_inner_size(640.0, 480.0)
         .center()
@@ -108,6 +108,8 @@ fn open_data_folder(
     app: &mut tauri::App,
 ) -> std::result::Result<Option<Arc<AppState>>, Box<dyn std::error::Error>> {
     let data_dir = app.path().app_data_dir()?;
+    // REBRAND: first run under the new app id adopts the old OpenAlgo data folder (copy, original kept).
+    migrate_legacy_data_dir(&data_dir);
     let lock = match db::upgrade::DataFolderLock::acquire(&data_dir) {
         Ok(lock) => lock,
         Err(refusal) => {
@@ -159,7 +161,7 @@ fn init_logging() {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     init_logging();
-    tracing::info!("Starting OpenAlgo Desktop {}", env!("CARGO_PKG_VERSION"));
+    tracing::info!("Starting The Bridge {}", env!("CARGO_PKG_VERSION"));
 
     let app = tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
@@ -175,7 +177,7 @@ pub fn run() {
     let app = match app {
         Ok(a) => a,
         Err(e) => {
-            tracing::error!("OpenAlgo Desktop could not start: {}", e);
+            tracing::error!("The Bridge could not start: {}", e);
             return;
         }
     };
@@ -277,12 +279,12 @@ fn open_main_window(app: &tauri::App, ctx: &Arc<AppState>, url: WebviewUrl) -> t
                 port.is_some_and(|p| commands::main_window_may_load(to, p, cfg!(debug_assertions)));
             if !ok {
                 tracing::warn!(
-                    "Kept the OpenAlgo window from loading a page on another local port"
+                    "Kept the The Bridge window from loading a page on another local port"
                 );
             }
             ok
         })
-        .title("OpenAlgo Desktop")
+        .title("The Bridge")
         .inner_size(1400.0, 900.0)
         .min_inner_size(1024.0, 768.0)
         .center()
@@ -340,14 +342,14 @@ fn on_run_event(handle: &tauri::AppHandle, event: RunEvent) {
                     .ctx
                     .trading
                     .runner
-                    .pause_all("Paused because OpenAlgo is closing");
+                    .pause_all("Paused because The Bridge is closing");
             }
         }
     }
     if let RunEvent::Exit = event {
         if handle.try_state::<ShellState>().is_some() {
             tauri::async_runtime::block_on(commands::stop_app(handle));
-            tracing::info!("OpenAlgo Desktop stopped");
+            tracing::info!("The Bridge stopped");
         }
     }
 }
@@ -381,5 +383,27 @@ mod tests {
         // The app opens with exactly these.
         let app = super::open_options().brokers;
         assert_eq!(app.ids(), given.ids());
+    }
+}
+
+/// REBRAND: copy the upstream OpenAlgo data folder into the new app-id folder once.
+fn migrate_legacy_data_dir(new_dir: &std::path::Path) {
+    fn copy(src: &std::path::Path, dst: &std::path::Path) -> std::io::Result<()> {
+        std::fs::create_dir_all(dst)?;
+        for e in std::fs::read_dir(src)? {
+            let e = e?;
+            let (s, d) = (e.path(), dst.join(e.file_name()));
+            if e.file_type()?.is_dir() { copy(&s, &d)? } else if e.file_name() != "LOCK" && !e.file_name().to_string_lossy().ends_with(".lock") { std::fs::copy(&s, &d)?; }
+        }
+        Ok(())
+    }
+    if new_dir.exists() { return; }
+    let Some(parent) = new_dir.parent() else { return };
+    let old = parent.join("com.openalgo.desktop");
+    if old.is_dir() && old != new_dir {
+        match copy(&old, new_dir) {
+            Ok(()) => tracing::info!("Copied legacy data folder {:?} to {:?}", old, new_dir),
+            Err(e) => { tracing::error!("Legacy data copy failed: {}", e); let _ = std::fs::remove_dir_all(new_dir); }
+        }
     }
 }

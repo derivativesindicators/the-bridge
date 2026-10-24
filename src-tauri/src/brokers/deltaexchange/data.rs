@@ -40,7 +40,7 @@ async fn ticker(b: &DeltaBroker, br: &str) -> Result<Value> {
         Value::Object(_) => Ok(t),
         Value::Null => Ok(Value::Object(Default::default())),
         _ => Err(AppError::Broker(
-            "Delta Exchange sent a quote OpenAlgo could not read. Try again shortly.".into(),
+            "Delta Exchange sent a quote The Bridge could not read. Try again shortly.".into(),
         )),
     }
 }
@@ -242,7 +242,7 @@ pub async fn get_history(b: &DeltaBroker, req: &HistoryRequest) -> Result<Vec<Ca
         let rows: Value = b.public("/v2/history/candles", &params).await?;
         let Some(rows) = rows.as_array() else {
             return Err(AppError::Broker(
-                "Delta Exchange sent history OpenAlgo could not read. Try again shortly.".into(),
+                "Delta Exchange sent history The Bridge could not read. Try again shortly.".into(),
             ));
         };
         all.extend(rows.iter().filter_map(parse_candle));

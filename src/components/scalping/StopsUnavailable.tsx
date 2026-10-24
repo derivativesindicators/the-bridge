@@ -5,7 +5,7 @@
  * protected" while the server keeps enforcing the stops it holds.
  */
 export const STOPS_UNAVAILABLE_TEXT =
-  'Saved stop-losses could not be read; the stops shown may be out of date. OpenAlgo keeps enforcing the ones it holds.'
+  'Saved stop-losses could not be read; the stops shown may be out of date. The Bridge keeps enforcing the ones it holds.'
 
 export function StopsUnavailable({ show }: { show: boolean }) {
   if (!show) return null

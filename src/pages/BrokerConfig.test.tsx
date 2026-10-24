@@ -322,7 +322,7 @@ describe('Broker Configuration', () => {
     const plan = await screen.findByLabelText('API plan')
     expect(plan).toHaveValue('standard')
     expect(screen.getByTestId('rate-plan-hint')).toHaveTextContent(
-      'Market data: 5 requests a second. OpenAlgo paces Fyers requests to stay within these limits.'
+      'Market data: 5 requests a second. The Bridge paces Fyers requests to stay within these limits.'
     )
     fireEvent.change(plan, { target: { value: 'prime' } })
     expect(

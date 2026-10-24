@@ -342,7 +342,7 @@ impl From<rusqlite::Error> for SandboxError {
     fn from(e: rusqlite::Error) -> Self {
         tracing::error!("Sandbox database error: {}", e);
         SandboxError::internal(
-            "The sandbox could not save this change. Try again; if it keeps failing, restart OpenAlgo.",
+            "The sandbox could not save this change. Try again; if it keeps failing, restart The Bridge.",
         )
     }
 }
@@ -351,7 +351,7 @@ impl From<crate::error::AppError> for SandboxError {
     fn from(e: crate::error::AppError) -> Self {
         tracing::error!("Sandbox error: {}", e);
         SandboxError::internal(
-            "The sandbox could not complete this request. Try again; if it keeps failing, restart OpenAlgo.",
+            "The sandbox could not complete this request. Try again; if it keeps failing, restart The Bridge.",
         )
     }
 }

@@ -98,7 +98,7 @@ pub async fn initiate_oauth(
     }
     if !crate::server::middleware::same_origin_navigation(&ctx, &headers) {
         tracing::info!(
-            "Not starting the {} sign-in: the page was not opened from OpenAlgo",
+            "Not starting the {} sign-in: the page was not opened from The Bridge",
             broker
         );
         return redirect("/broker");
@@ -132,7 +132,7 @@ async fn form_login_open(
     if signed_in && catalog::sends_login_otp(broker) {
         if !crate::server::middleware::same_origin_navigation(ctx, headers) {
             tracing::info!(
-                "Not sending the {} login OTP: the page was not opened from OpenAlgo",
+                "Not sending the {} login OTP: the page was not opened from The Bridge",
                 broker
             );
             return redirect(&format!("/broker/{}/totp?otp=send", broker));
@@ -255,7 +255,7 @@ pub async fn callback_post(
     let Some(s) = sess.as_ref().filter(|s| s.user.is_some()) else {
         return error(
             StatusCode::UNAUTHORIZED,
-            "Sign in to OpenAlgo first, then log in to your broker.",
+            "Sign in to The Bridge first, then log in to your broker.",
         );
     };
     if !crate::server::middleware::write_allowed(
@@ -266,7 +266,7 @@ pub async fn callback_post(
     ) {
         return error(
             StatusCode::FORBIDDEN,
-            "This sign-in did not come from OpenAlgo. Reload the page and try again.",
+            "This sign-in did not come from The Bridge. Reload the page and try again.",
         );
     }
     form_login(ctx, broker, ip, form).await

@@ -27,7 +27,7 @@ const MAX_PAGES: usize = 100;
 pub const LTP_BATCH: usize = 50;
 /// A smart order whose position could not be read (web
 /// `utils/position_read.py`): nothing is sent.
-pub const POSITION_UNREAD: &str = "OpenAlgo could not read your open position from Groww, so no order was sent. Check your positions and try again.";
+pub const POSITION_UNREAD: &str = "The Bridge could not read your open position from Groww, so no order was sent. Check your positions and try again.";
 
 /// The `/v1/order/create` body (web `direct_place_order_api`). SL is a
 /// stop-limit order: it carries both its limit price and its trigger.

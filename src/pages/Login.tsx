@@ -141,7 +141,7 @@ export default function Login() {
       const keyRecovery = keyRecoveryOf(data)
       if (!response.ok && keyRecovery) {
         setRecovery(keyRecovery)
-        setKeysMessage(data.message || 'OpenAlgo could not open the keys for your account.')
+        setKeysMessage(data.message || 'The Bridge could not open the keys for your account.')
         setStep('keys')
         return
       }
@@ -253,10 +253,10 @@ export default function Login() {
         <Card className="w-full shadow-xl">
           <CardHeader className="text-center">
             <div className="flex justify-center mb-4">
-              <img src="/logo.png" alt="OpenAlgo" className="h-16 w-16" />
+              <img src="/logo.png" alt="The Bridge" className="h-16 w-16" />
             </div>
             <CardTitle className="text-2xl">
-              <h1>OpenAlgo</h1>
+              <h1>The Bridge</h1>
             </CardTitle>
             <CardDescription>Sign in to your account</CardDescription>
           </CardHeader>
@@ -478,7 +478,7 @@ export default function Login() {
         </Card>
         {/* Desktop: the keys are locked until sign-in (KEY-01). */}
         <p className="mt-4 text-center text-xs text-muted-foreground">
-          OpenAlgo keeps your saved keys locked with your password. Until you sign in, the API,
+          The Bridge keeps your saved keys locked with your password. Until you sign in, the API,
           market data, webhooks, AI clients and your broker connection stay off, and they go off
           again when you log out.
         </p>

@@ -177,10 +177,10 @@ pub fn port_in_use_message(port: u16) -> String {
     let mac = if cfg!(target_os = "macos") && port == 5000 {
         " On a Mac this is usually AirPlay Receiver: open System Settings, General, AirDrop and Handoff, turn off AirPlay Receiver, then choose Try again."
     } else {
-        " Close the other program (for example another copy of OpenAlgo or OpenAlgo web), then choose Try again."
+        " Close the other program (for example another copy of The Bridge or The Bridge web), then choose Try again."
     };
     format!(
-        "OpenAlgo could not start because port {} is already used by another program.{} You can also choose a different port.",
+        "The Bridge could not start because port {} is already used by another program.{} You can also choose a different port.",
         port, mac
     )
 }
@@ -238,7 +238,7 @@ pub async fn start(ctx: Arc<AppState>) -> Result<ServerHandle, ServerStatus> {
             tracing::error!("Could not bind {}: {}", addr, e);
             let st = ServerStatus::Failed {
                 message: format!(
-                    "OpenAlgo could not open port {}. Choose a different port and try again.",
+                    "The Bridge could not open port {}. Choose a different port and try again.",
                     cfg.http_port
                 ),
             };
@@ -277,12 +277,12 @@ pub async fn start(ctx: Arc<AppState>) -> Result<ServerHandle, ServerStatus> {
                 *st = match r {
                     Ok(()) => ServerStatus::Starting,
                     Err(_) => ServerStatus::Failed {
-                        message: "The OpenAlgo server stopped. Restart it from Settings.".into(),
+                        message: "The The Bridge server stopped. Restart it from Settings.".into(),
                     },
                 };
             }
         }
     });
-    tracing::info!("OpenAlgo server listening on http://{}", addr);
+    tracing::info!("The Bridge server listening on http://{}", addr);
     Ok(ServerHandle { addr, token, join })
 }

@@ -109,7 +109,7 @@ describe('signInWithSavedKeys', () => {
     await expect(signInWithSavedKeys('deltaexchange')).resolves.toBe('Check your API key.')
   })
 
-  it('says OpenAlgo could not be reached when the request fails', async () => {
+  it('says The Bridge could not be reached when the request fails', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn(async (url: string) => {
@@ -118,7 +118,7 @@ describe('signInWithSavedKeys', () => {
       })
     )
     await expect(signInWithSavedKeys('wisdom')).resolves.toBe(
-      'Could not reach OpenAlgo. Try again.'
+      'Could not reach The Bridge. Try again.'
     )
   })
 })

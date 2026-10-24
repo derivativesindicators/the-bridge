@@ -30,7 +30,7 @@ fn waiting(ctx: &AppState) -> Vec<String> {
     let mut unread = false;
     match ctx.strategy.store.alert_strategy_names() {
         Ok(n) if !n.is_empty() => items.push(format!(
-            "Webhook alerts for {} (TradingView and other senders) are refused until you open OpenAlgo and sign in again.",
+            "Webhook alerts for {} (TradingView and other senders) are refused until you open The Bridge and sign in again.",
             names(&n)
         )),
         Ok(_) => {}
@@ -48,7 +48,7 @@ fn waiting(ctx: &AppState) -> Vec<String> {
                 .collect();
             if !active.is_empty() {
                 items.push(format!(
-                    "Chartink alerts for {} are refused until you open OpenAlgo and sign in again.",
+                    "Chartink alerts for {} are refused until you open The Bridge and sign in again.",
                     names(&active)
                 ));
             }
@@ -61,12 +61,12 @@ fn waiting(ctx: &AppState) -> Vec<String> {
     let starts = scheduled_starts(ctx, &mut unread);
     if !starts.is_empty() {
         items.push(format!(
-            "Scheduled starts for {} do not run while OpenAlgo is closed.",
+            "Scheduled starts for {} do not run while The Bridge is closed.",
             names(&starts)
         ));
     }
     if unread {
-        items.push("OpenAlgo could not check which strategies wait for alerts or schedules. Check them before you quit.".into());
+        items.push("The Bridge could not check which strategies wait for alerts or schedules. Check them before you quit.".into());
     }
     items
 }

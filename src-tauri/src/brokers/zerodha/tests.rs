@@ -874,7 +874,7 @@ mod http_round_trip {
                 .await
                 .unwrap_err()
                 .client_message(),
-            "OpenAlgo could not read your open position from Zerodha, so no order was sent. Check your positions and try again."
+            "The Bridge could not read your open position from Zerodha, so no order was sent. Check your positions and try again."
         );
         for bad in [
             serde_json::json!({"status": "success", "data": null}),

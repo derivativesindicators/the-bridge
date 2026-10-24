@@ -339,7 +339,7 @@ export function ExecuteBasketDialog({
         </div>
 
         {/* Leg rows — compact rectangular grid. Symbol + side badges share
-            one flex cell so the OpenAlgo symbol has the maximum possible
+            one flex cell so the The Bridge symbol has the maximum possible
             width and wraps rather than truncates on narrow viewports. */}
         <div className="overflow-hidden rounded-lg border">
           {/* Header */}
@@ -380,7 +380,7 @@ export function ExecuteBasketDialog({
                       />
                     </div>
 
-                    {/* Symbol cell — side/type badges inline, full OpenAlgo
+                    {/* Symbol cell — side/type badges inline, full The Bridge
                         symbol wraps onto a second line if needed (break-all)
                         instead of truncating. */}
                     <div className="min-w-0 flex-col">

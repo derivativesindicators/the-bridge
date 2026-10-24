@@ -141,7 +141,7 @@ fn refused_login() -> String {
 }
 
 fn invalid_address() -> AppError {
-    AppError::Broker("Upstox sent a live data address OpenAlgo could not use. Try again.".into())
+    AppError::Broker("Upstox sent a live data address The Bridge could not use. Try again.".into())
 }
 
 /// An authorize endpoint and the token it is called with. Each call hands

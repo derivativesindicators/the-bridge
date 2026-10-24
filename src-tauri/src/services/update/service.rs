@@ -193,7 +193,7 @@ impl UpdateService {
                 let mut inner = self.inner.lock();
                 if !inner.phase.busy() {
                     inner.phase = Phase::Failed {
-                        message: "This copy of OpenAlgo cannot check for updates. Download the newest version from the release page.".into(),
+                        message: "This copy of The Bridge cannot check for updates. Download the newest version from the release page.".into(),
                     };
                 }
             }
@@ -400,7 +400,7 @@ impl UpdateService {
         let paused = ctx
             .trading
             .runner
-            .pause_all("Paused because OpenAlgo restarted to install an update");
+            .pause_all("Paused because The Bridge restarted to install an update");
         if !paused.is_empty() {
             tracing::info!("Paused {} OpenScript run(s) for the update", paused.len());
         }
@@ -430,9 +430,9 @@ impl UpdateService {
 fn refusal_for(inner: &Inner) -> String {
     match (&inner.phase, &inner.offer) {
         (Phase::Downloading { .. }, _) => "The update is already downloading.".into(),
-        (Phase::Restarting, _) => "OpenAlgo is already restarting to install the update.".into(),
-        (Phase::Ready, _) => "The update is downloaded. Restart OpenAlgo to install it.".into(),
-        (Phase::Checking, _) => "OpenAlgo is checking for updates. Try again in a moment.".into(),
+        (Phase::Restarting, _) => "The Bridge is already restarting to install the update.".into(),
+        (Phase::Ready, _) => "The update is downloaded. Restart The Bridge to install it.".into(),
+        (Phase::Checking, _) => "The Bridge is checking for updates. Try again in a moment.".into(),
         (Phase::Available | Phase::Failed { .. }, Some(_)) => {
             "Download the update first: choose Update.".into()
         }

@@ -261,7 +261,7 @@ impl MotilalBroker {
             .header("osversion", "10.0.19041")
             .header("devicemodel", "AHV")
             .header("manufacturer", "DELL")
-            .header("productname", "OpenAlgo")
+            .header("productname", "The Bridge")
             .header("productversion", "1.0.0")
             .header("browsername", "Chrome")
             .header("browserversion", "120.0");
@@ -327,7 +327,7 @@ impl MotilalBroker {
                     return Err(session_expired());
                 }
                 Err(AppError::Broker(
-                    "Motilal Oswal sent a response OpenAlgo could not read. Try again shortly."
+                    "Motilal Oswal sent a response The Bridge could not read. Try again shortly."
                         .into(),
                 ))
             }

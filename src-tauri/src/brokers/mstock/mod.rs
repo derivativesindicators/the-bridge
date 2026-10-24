@@ -264,7 +264,7 @@ pub(crate) async fn read_payload(resp: reqwest::Response) -> Result<Value> {
                 return Err(unavailable());
             }
             Err(AppError::Broker(
-                "mStock sent a response OpenAlgo could not read. Try again shortly.".into(),
+                "mStock sent a response The Bridge could not read. Try again shortly.".into(),
             ))
         }
     }

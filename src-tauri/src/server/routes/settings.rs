@@ -96,7 +96,7 @@ pub fn port_problem(host: &str, port: u16, own: &[u16]) -> Option<String> {
             let hint = if cfg!(target_os = "macos") && port == 5000 {
                 " On a Mac this is usually AirPlay Receiver: turn it off in System Settings, General, AirDrop and Handoff, or choose another port."
             } else {
-                " Close the program using it (for example OpenAlgo web), or choose another port."
+                " Close the program using it (for example The Bridge web), or choose another port."
             };
             Some(format!(
                 "Port {} is already used by another program.{}",
@@ -104,7 +104,7 @@ pub fn port_problem(host: &str, port: u16, own: &[u16]) -> Option<String> {
             ))
         }
         Err(_) => Some(format!(
-            "OpenAlgo cannot use port {} on this computer. Choose another port between 1024 and 65535.",
+            "The Bridge cannot use port {} on this computer. Choose another port between 1024 and 65535.",
             port
         )),
     }
@@ -163,13 +163,13 @@ pub fn save_effect(
     let mut message = String::from("Saved.");
     if !applied.is_empty() {
         message.push_str(&format!(
-            " Live market data moves to {}:{} within a few seconds: trading platforms and SDK scripts that stream from OpenAlgo are disconnected and must reconnect to the new address.",
+            " Live market data moves to {}:{} within a few seconds: trading platforms and SDK scripts that stream from The Bridge are disconnected and must reconnect to the new address.",
             now.0, now.1
         ));
     }
     if !pending.is_empty() {
         message.push_str(&format!(
-            " The app address changes to {}:{} when you restart OpenAlgo.",
+            " The app address changes to {}:{} when you restart The Bridge.",
             after.bind_host, after.http_port
         ));
     }

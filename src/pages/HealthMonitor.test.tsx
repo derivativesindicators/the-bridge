@@ -165,7 +165,7 @@ describe('Health Monitor', () => {
       metrics({
         overall_status: 'unknown',
         sample_age_s: 180,
-        reason: 'The latest health sample is 3 minutes old, so the state of OpenAlgo is unknown.',
+        reason: 'The latest health sample is 3 minutes old, so the state of The Bridge is unknown.',
       })
     )
     render(<HealthMonitor />)
@@ -239,7 +239,7 @@ describe('Health Monitor', () => {
 
   // The resolve endpoint existed with nothing calling it: an alert only the
   // trader settles (lost records) stayed on the page for good.
-  it('resolves an alert only the trader settles, and offers no Resolve on one OpenAlgo clears', async () => {
+  it('resolves an alert only the trader settles, and offers no Resolve on one The Bridge clears', async () => {
     api.getActiveAlerts.mockResolvedValue([
       alert(7, 'records_not_saved', true),
       alert(8, 'fd_count_warn', false),
@@ -333,7 +333,7 @@ describe('Health Monitor', () => {
 
     expect(await screen.findByText(/System Status: FAIL/)).toBeInTheDocument()
     expect(
-      screen.getByText(/an order update could not be delivered inside OpenAlgo/)
+      screen.getByText(/an order update could not be delivered inside The Bridge/)
     ).toBeInTheDocument()
     expect(screen.getByText('17 not saved')).toBeInTheDocument()
     expect(screen.getByText(/Strategy risk management missed some prices/)).toBeInTheDocument()
@@ -431,7 +431,7 @@ describe('Health Monitor when a read fails', () => {
     expect(screen.getByText(/System Status: UNKNOWN/)).toBeInTheDocument()
     expect(
       screen.getByText(
-        /^Could not refresh the health figures at .* IST; shown as read at .* IST\. OpenAlgo tries again every 10 seconds while Auto is on, or choose Refresh\.$/
+        /^Could not refresh the health figures at .* IST; shown as read at .* IST\. The Bridge tries again every 10 seconds while Auto is on, or choose Refresh\.$/
       )
     ).toBeInTheDocument()
     expect(screen.getByText('Records Saved')).toBeInTheDocument()
@@ -463,7 +463,7 @@ describe('Health Monitor when a read fails', () => {
     expect(await screen.findByText(/System Status: UNKNOWN/)).toBeInTheDocument()
     expect(
       screen.getByText(
-        'Could not read the health figures. OpenAlgo tries again every 10 seconds while Auto is on, or choose Refresh.'
+        'Could not read the health figures. The Bridge tries again every 10 seconds while Auto is on, or choose Refresh.'
       )
     ).toBeInTheDocument()
     expect(screen.getByText('Order Tracking')).toBeInTheDocument()
@@ -491,7 +491,7 @@ describe('Health Monitor when a read fails', () => {
 
     expect(
       await screen.findByText(
-        'Could not read the alerts. OpenAlgo tries again every 10 seconds while Auto is on, or choose Refresh.'
+        'Could not read the alerts. The Bridge tries again every 10 seconds while Auto is on, or choose Refresh.'
       )
     ).toBeInTheDocument()
     expect(screen.getByText('Active Alerts')).toBeInTheDocument()

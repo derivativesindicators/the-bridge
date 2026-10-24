@@ -238,10 +238,10 @@ export default function ApiKey() {
               </Button>
             </div>
 
-            {/* Desktop: the API answers only while OpenAlgo is unlocked (KEY-01). */}
+            {/* Desktop: the API answers only while The Bridge is unlocked (KEY-01). */}
             <p className="text-sm text-muted-foreground">
-              Programs using this key work while you are signed in to OpenAlgo. After OpenAlgo
-              starts, and after you log out, they are told: Sign in to OpenAlgo to use the API.
+              Programs using this key work while you are signed in to The Bridge. After The Bridge
+              starts, and after you log out, they are told: Sign in to The Bridge to use the API.
             </p>
 
             {/* Divider */}
@@ -326,7 +326,7 @@ export default function ApiKey() {
               API Playground
             </CardTitle>
             <CardDescription>
-              Test and explore OpenAlgo REST APIs directly in your browser. Send requests, view
+              Test and explore The Bridge REST APIs directly in your browser. Send requests, view
               responses, and experiment with all available endpoints without writing any code.
             </CardDescription>
           </CardHeader>

@@ -218,7 +218,7 @@ impl FirstockBroker {
                         return Err(session_expired());
                     }
                     Err(AppError::Broker(
-                        "Firstock sent a response OpenAlgo could not read. Try again shortly."
+                        "Firstock sent a response The Bridge could not read. Try again shortly."
                             .into(),
                     ))
                 }

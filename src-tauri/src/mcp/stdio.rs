@@ -52,7 +52,7 @@ pub const BAD_TOKEN: &str =
     "OpenAlgo did not accept this AI client's token: it was revoked or copied incorrectly. \
 Create a new token on the API Key page in OpenAlgo Desktop and update this client's configuration.";
 pub const BUSY: &str =
-    "OpenAlgo is receiving too many requests from this AI client. Wait a minute and try again.";
+    "The Bridge is receiving too many requests from this AI client. Wait a minute and try again.";
 /// OpenAlgo Desktop is running and refused the request because nobody is
 /// signed in (KEY-01). Nothing was done.
 pub const LOCKED: &str = crate::mcp::http::LOCKED_MESSAGE;
@@ -139,12 +139,12 @@ impl Bridge {
             Ok(r) => r,
             // Only a connection that never opened proves nothing was sent.
             Err(e) if e.is_connect() || e.is_builder() => {
-                tracing::warn!("OpenAlgo Desktop not reachable at {}: {}", self.endpoint, e);
+                tracing::warn!("The Bridge not reachable at {}: {}", self.endpoint, e);
                 return Err(Failure::Message(NOT_RUNNING.into()));
             }
             Err(e) => {
                 tracing::warn!(
-                    "OpenAlgo Desktop's answer to an MCP request was lost: {}",
+                    "The Bridge's answer to an MCP request was lost: {}",
                     e
                 );
                 return Err(Failure::Message(ANSWER_LOST.into()));
@@ -180,7 +180,7 @@ impl Bridge {
             }
             other => {
                 // The app answered: the request was sent, and may have run.
-                tracing::warn!("OpenAlgo Desktop answered {} to an MCP request", other);
+                tracing::warn!("The Bridge answered {} to an MCP request", other);
                 Err(Failure::Message(ANSWER_LOST.into()))
             }
         }
@@ -198,7 +198,7 @@ async fn read_capped(mut resp: reqwest::Response) -> Option<Value> {
         match resp.chunk().await {
             Ok(Some(c)) => {
                 if buf.len() + c.len() > MAX_REPLY_BYTES {
-                    tracing::warn!("OpenAlgo Desktop sent an MCP reply over the size limit");
+                    tracing::warn!("The Bridge sent an MCP reply over the size limit");
                     return None;
                 }
                 buf.extend_from_slice(&c);
@@ -248,7 +248,7 @@ impl ServerHandler for Bridge {
         let result = reply.get("result").cloned().unwrap_or(json!({"tools": []}));
         serde_json::from_value(result).map_err(|e| {
             tracing::error!("Unreadable tools/list reply: {}", e);
-            internal("OpenAlgo Desktop sent a tool list this client could not read.")
+            internal("The Bridge sent a tool list this client could not read.")
         })
     }
 
@@ -276,7 +276,7 @@ impl ServerHandler for Bridge {
         let result = reply.get("result").cloned().unwrap_or(Value::Null);
         let r: CallToolResult = serde_json::from_value(result).map_err(|e| {
             tracing::error!("Unreadable tools/call reply: {}", e);
-            internal("OpenAlgo Desktop sent a reply this client could not read.")
+            internal("The Bridge sent a reply this client could not read.")
         })?;
         Ok(r.into())
     }

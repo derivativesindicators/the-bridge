@@ -630,7 +630,7 @@ async fn history_chunk(
             Err(_) => {
                 tracing::warn!(status = status.as_u16(), "Kotak history answer is not JSON");
                 return Err(AppError::Broker(
-                    "Kotak sent a history answer OpenAlgo could not read. Try again shortly."
+                    "Kotak sent a history answer The Bridge could not read. Try again shortly."
                         .into(),
                 ));
             }
@@ -638,7 +638,7 @@ async fn history_chunk(
     };
     if !v.is_object() {
         return Err(AppError::Broker(
-            "Kotak sent a history answer OpenAlgo could not read. Try again shortly.".into(),
+            "Kotak sent a history answer The Bridge could not read. Try again shortly.".into(),
         ));
     }
     let fault = v

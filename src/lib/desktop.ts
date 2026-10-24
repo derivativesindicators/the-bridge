@@ -89,7 +89,7 @@ export function brokerSignInTarget(
  */
 export async function signInWithSavedKeys(broker: string): Promise<string | null> {
   const csrf = await csrfToken()
-  if (!csrf) return 'Could not reach OpenAlgo. Try again.'
+  if (!csrf) return 'Could not reach The Bridge. Try again.'
   const form = new FormData()
   form.append('csrf_token', csrf)
   try {
@@ -103,7 +103,7 @@ export async function signInWithSavedKeys(broker: string): Promise<string | null
     if (res.ok && body?.status === 'success') return null
     return body?.message || 'Could not sign in to your broker. Try again.'
   } catch {
-    return 'Could not reach OpenAlgo. Try again.'
+    return 'Could not reach The Bridge. Try again.'
   }
 }
 
@@ -321,7 +321,7 @@ async function csrfToken(): Promise<string | undefined> {
 
 async function mcpWrite(url: string, method: 'POST' | 'DELETE', body?: unknown) {
   const csrf = await csrfToken()
-  if (!csrf) throw new Error('Could not reach OpenAlgo. Try again.')
+  if (!csrf) throw new Error('Could not reach The Bridge. Try again.')
   const res = await fetch(url, {
     method,
     credentials: 'include',
@@ -373,14 +373,14 @@ export interface ResetAccountOutcome {
  */
 export async function resetAccountFromDesktop(): Promise<ResetAccountOutcome> {
   if (!isDesktopShell()) {
-    throw new Error('Open OpenAlgo Desktop on this computer to reset your account.')
+    throw new Error('Open The Bridge on this computer to reset your account.')
   }
   try {
     return await invoke<ResetAccountOutcome>('reset_account')
   } catch (e) {
     const message =
       typeof e === 'object' && e !== null && 'message' in e ? String(e.message) : undefined
-    throw new Error(message || 'Your account could not be reset. Restart OpenAlgo and try again.')
+    throw new Error(message || 'Your account could not be reset. Restart The Bridge and try again.')
   }
 }
 
@@ -415,7 +415,7 @@ export async function startFreshFromDesktop(
   reason: StartFreshReason
 ): Promise<StartFreshOutcome> {
   if (!isDesktopShell()) {
-    throw new Error('Open OpenAlgo Desktop on this computer to set a new password.')
+    throw new Error('Open The Bridge on this computer to set a new password.')
   }
   try {
     return await invoke<StartFreshOutcome>('start_fresh', {
@@ -427,7 +427,7 @@ export async function startFreshFromDesktop(
     const message =
       typeof e === 'object' && e !== null && 'message' in e ? String(e.message) : undefined
     throw new Error(
-      message || 'Your new password could not be set. Restart OpenAlgo and try again.'
+      message || 'Your new password could not be set. Restart The Bridge and try again.'
     )
   }
 }
@@ -500,7 +500,7 @@ export async function restartToUpdate(confirmed?: UpdateActivity | null): Promis
   if (!isDesktopShell()) {
     return {
       status: 'refused',
-      message: 'Open OpenAlgo Desktop on this computer to finish the update.',
+      message: 'Open The Bridge on this computer to finish the update.',
       activity: null,
       warning: null,
     }
@@ -512,7 +512,7 @@ export async function restartToUpdate(confirmed?: UpdateActivity | null): Promis
       typeof e === 'object' && e !== null && 'message' in e ? String(e.message) : undefined
     return {
       status: 'failed',
-      message: message || 'OpenAlgo could not restart to install the update. Try again.',
+      message: message || 'The Bridge could not restart to install the update. Try again.',
       activity: null,
       warning: null,
     }

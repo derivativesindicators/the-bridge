@@ -12,7 +12,7 @@ use base64::Engine;
 use std::path::{Path, PathBuf};
 
 pub const FILE_NAME: &str = "secrets.dat";
-const OBFUSCATION: &[u8] = b"OpenAlgo-Desktop-v1.0-SecretKey!";
+const OBFUSCATION: &[u8] = b"The Bridge-Desktop-v1.0-SecretKey!";
 
 pub fn path(data_dir: &Path) -> PathBuf {
     data_dir.join(FILE_NAME)

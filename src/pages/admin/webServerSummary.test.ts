@@ -43,7 +43,7 @@ describe('webServerRows on the default eventlet install', () => {
   it('still shows what eventlet does have', () => {
     expect(rows['Open streams']).toBe('0')
     expect(rows['Browser sessions']).toBe('1')
-    expect(rows['Market data proxy']).toBe('Separate process started by OpenAlgo')
+    expect(rows['Market data proxy']).toBe('Separate process started by The Bridge')
     expect(rows['Broker connections']).toBe('None opened yet')
     expect(rows['Process threads']).toBe('17')
   })
@@ -135,7 +135,7 @@ describe('webServerRows on the development server', () => {
     )
     expect(rows).not.toHaveProperty('gunicorn')
     expect(rows).not.toHaveProperty('Started by launcher')
-    expect(rows['Market data proxy']).toBe('Inside the OpenAlgo process')
+    expect(rows['Market data proxy']).toBe('Inside the The Bridge process')
   })
 })
 
@@ -149,8 +149,8 @@ describe('webServerRows on a server from before these fields', () => {
 
 describe('the market data proxy', () => {
   it.each([
-    ['subprocess', 'Separate process started by OpenAlgo'],
-    ['thread', 'Inside the OpenAlgo process'],
+    ['subprocess', 'Separate process started by The Bridge'],
+    ['thread', 'Inside the The Bridge process'],
     ['external', 'Separate service (Docker or standalone mode)'],
     [null, 'Not detected'],
   ])('describes %s', (mode, text) => {
@@ -170,7 +170,7 @@ describe('the market data proxy', () => {
       },
     })
     expect(rows['Market data proxy status']).toBe(
-      'Running, restarted 2 times since OpenAlgo started'
+      'Running, restarted 2 times since The Bridge started'
     )
   })
 
@@ -208,8 +208,8 @@ describe('webServerKind', () => {
 
 describe('webServerNotes', () => {
   it('drops blanks and anything that is not text', () => {
-    const runtime = { notes: ['', '  ', 'Restart OpenAlgo after 23:30 IST.', 7] } as unknown
-    expect(webServerNotes(runtime as SystemRuntime)).toEqual(['Restart OpenAlgo after 23:30 IST.'])
+    const runtime = { notes: ['', '  ', 'Restart The Bridge after 23:30 IST.', 7] } as unknown
+    expect(webServerNotes(runtime as SystemRuntime)).toEqual(['Restart The Bridge after 23:30 IST.'])
   })
 })
 

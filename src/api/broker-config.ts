@@ -107,7 +107,7 @@ export class BrokerConfigError extends Error {
   }
 }
 
-const UNREACHABLE = 'Could not reach OpenAlgo. Try again.'
+const UNREACHABLE = 'Could not reach The Bridge. Try again.'
 
 async function csrfToken(): Promise<string> {
   const res = await fetch('/auth/csrf-token', { credentials: 'include' }).catch(() => null)

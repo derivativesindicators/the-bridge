@@ -30,7 +30,7 @@ fn holding_line(at: &Destination, h: &store::Holding) -> String {
         )
     } else {
         format!(
-            "This strategy also holds {} at your broker, placed before this version recorded which account it went through, so OpenAlgo does not manage or close it. Close it at your broker.",
+            "This strategy also holds {} at your broker, placed before this version recorded which account it went through, so The Bridge does not manage or close it. Close it at your broker.",
             what
         )
     }
@@ -65,7 +65,7 @@ fn working_line(at: &Destination, o: &store::OrderRow) -> String {
         )
     } else {
         format!(
-            "An order of this strategy may still be working at your broker, placed before this version recorded which account it went through: {}. OpenAlgo does not follow or cancel it: cancel it at your broker if it should not fill.",
+            "An order of this strategy may still be working at your broker, placed before this version recorded which account it went through: {}. The Bridge does not follow or cancel it: cancel it at your broker if it should not fill.",
             what
         )
     }
@@ -131,7 +131,7 @@ impl Runner {
                 lines.insert(
                     0,
                     format!(
-                        "This strategy trades through {}, but OpenAlgo is signed in elsewhere now, so nothing of it is read or sent until you sign in to {} again.",
+                        "This strategy trades through {}, but The Bridge is signed in elsewhere now, so nothing of it is read or sent until you sign in to {} again.",
                         info.destination.describe(),
                         info.destination.describe()
                     ),

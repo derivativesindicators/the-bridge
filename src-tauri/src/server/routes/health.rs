@@ -64,7 +64,7 @@ pub async fn status(State(ctx): Ctx) -> Response {
     json_response(
         code,
         with_freshness(
-            json!({"status": o.status, "version": "1.0", "serviceId": "openalgo", "description": "OpenAlgo Trading Platform"}),
+            json!({"status": o.status, "version": "1.0", "serviceId": "openalgo", "description": "The Bridge Trading Platform"}),
             &o,
         ),
     )
@@ -118,7 +118,7 @@ pub async fn check(State(ctx): Ctx) -> Response {
         },
         with_freshness(
             json!({"status": st, "version": "1.0", "serviceId": "openalgo",
-                   "description": "OpenAlgo Trading Platform", "checks": checks}),
+                   "description": "The Bridge Trading Platform", "checks": checks}),
             &o,
         ),
     )

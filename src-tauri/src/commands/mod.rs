@@ -68,7 +68,7 @@ pub async fn stop_app(handle: &AppHandle) {
 /// The guard every non-bootstrap command calls first.
 pub fn require_user(ctx: &AppState) -> Result<String> {
     ctx.signed_in_user()
-        .ok_or_else(|| AppError::Auth("Sign in to OpenAlgo first.".into()))
+        .ok_or_else(|| AppError::Auth("Sign in to The Bridge first.".into()))
 }
 
 /// Permissions of the app's own pages served by the local server: window
@@ -248,7 +248,7 @@ pub async fn retry_server(
 ) -> Result<ServerStatus> {
     let mut guard = shell.server.lock().await;
     if guard.is_some() {
-        return Err(AppError::Validation("OpenAlgo is already running.".into()));
+        return Err(AppError::Validation("The Bridge is already running.".into()));
     }
     if let Some(p) = port {
         crate::services::settings_service::save_server(
@@ -335,7 +335,7 @@ fn require_app_window(
     if reset_caller_allowed(window.label(), &url, ctx.live_port()) {
         return Ok(());
     }
-    tracing::warn!("{} refused: not requested from the OpenAlgo window", what);
+    tracing::warn!("{} refused: not requested from the The Bridge window", what);
     Err(AppError::Auth(refusal.into()))
 }
 
@@ -391,10 +391,10 @@ pub async fn reset_account(
         &window,
         &shell.ctx,
         "Account reset",
-        "Reset account works only from the OpenAlgo Desktop window on this computer.",
+        "Reset account works only from the The Bridge window on this computer.",
     )?;
     let question = Question {
-        title: "Reset your OpenAlgo account?",
+        title: "Reset your The Bridge account?",
         message: "This removes your OpenAlgo login, API key and saved broker keys, ends your \
 broker session, stops every AI client (MCP) token, unlinks Telegram and WhatsApp, and gives \
 your strategy and Chartink webhooks new addresses. Your trade and strategy history stays. You \
@@ -426,7 +426,7 @@ pub fn window_proof(window: tauri::WebviewWindow, shell: State<'_, ShellState>) 
         &window,
         &shell.ctx,
         "Window proof",
-        "This works only in the OpenAlgo Desktop window on this computer.",
+        "This works only in the The Bridge window on this computer.",
     )?;
     Ok(shell
         .ctx
@@ -489,7 +489,7 @@ pub async fn start_fresh(
         &window,
         &shell.ctx,
         "Fresh start",
-        "A new password can be set only from the OpenAlgo Desktop window on this computer.",
+        "A new password can be set only from the The Bridge window on this computer.",
     )?;
     let new = crate::security::Secret::new(new_password);
     let confirm = crate::security::Secret::new(confirm_password);
@@ -568,10 +568,10 @@ pub async fn restart_to_update(
         &window,
         &shell.ctx,
         "Update restart",
-        "Updates are installed only from the OpenAlgo Desktop window on this computer.",
+        "Updates are installed only from the The Bridge window on this computer.",
     )?;
     let Some(backend) = app.try_state::<Arc<crate::updater::PluginBackend<tauri::Wry>>>() else {
-        let m = "This copy of OpenAlgo cannot install updates.";
+        let m = "This copy of The Bridge cannot install updates.";
         return Ok(RestartOutcome::of("refused", Some(m.into())));
     };
     let ctx = shell.ctx.clone();

@@ -131,7 +131,7 @@ export default function ChartinkIndex() {
           <AlertDescription>
             Chartink cannot send alerts to localhost. Use <strong>ngrok</strong>,{' '}
             <strong>Cloudflare Tunnel</strong>, <strong>VS Code Dev Tunnel</strong>, or a{' '}
-            <strong>custom domain</strong> to expose OpenAlgo Desktop to the internet, then enter
+            <strong>custom domain</strong> to expose The Bridge to the internet, then enter
             that address as the Host Server URL on the Broker tab of your Profile.
           </AlertDescription>
         </Alert>

@@ -584,21 +584,21 @@ impl OrderReconciler {
             .await
             .map_err(|e| {
                 tracing::warn!("Order book unreadable while checking a held order: {}", e);
-                "OpenAlgo could not read the broker's order book to check this order. Nothing was changed. Try again.".to_string()
+                "The Bridge could not read the broker's order book to check this order. Nothing was changed. Try again.".to_string()
             })?;
         let ids = rows.iter().map(|r| r.order_id.clone()).collect();
         let owned = owners::owned(&self.owners(), ids).await;
         let bound = |oid: &str| owned.contains(oid);
         // Tags are not relied on here: any row of the same order counts.
         if !matches!(find_placed(&rows, &u, &bound, false), Found::Absent) {
-            return Err("The broker's order book now shows an order that matches it, so it was not marked. OpenAlgo picks it up from the book; check the order book.".into());
+            return Err("The broker's order book now shows an order that matches it, so it was not marked. The Bridge picks it up from the book; check the order book.".into());
         }
         let trades = self
             .gateway
             .book(RunMode::Live, crate::strategy::dispatch::Book::Trades)
             .await
             .map_err(|_| {
-                "OpenAlgo could not read the broker's trade book to check this order. Nothing was changed. Try again.".to_string()
+                "The Bridge could not read the broker's trade book to check this order. Nothing was changed. Try again.".to_string()
             })?;
         if Corroboration::from_books(&trades, &Value::Null).trade_seen(&u) {
             return Err("The broker's trade book shows a matching trade, so it was not marked. Check the position at the broker.".into());

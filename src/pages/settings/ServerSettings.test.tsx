@@ -127,7 +127,7 @@ describe('Server Settings page', () => {
 
 describe('market data feed status', () => {
   const taken =
-    'Live market data for your trading platforms and the Python SDK could not start because port 8765 is already used by another program. Close the other program (for example OpenAlgo web or another copy of OpenAlgo), or choose a different market data port in Server Settings. Live market data starts by itself once the port is free.'
+    'Live market data for your trading platforms and the Python SDK could not start because port 8765 is already used by another program. Close the other program (for example The Bridge web or another copy of The Bridge), or choose a different market data port in Server Settings. Live market data starts by itself once the port is free.'
 
   it('shows a taken market data port with its cause and fix', async () => {
     api.get.mockResolvedValue({

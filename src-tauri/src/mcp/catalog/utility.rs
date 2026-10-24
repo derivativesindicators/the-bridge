@@ -7,14 +7,14 @@ use crate::mcp::{Risk, Scope, ToolDef};
 pub const TOOLS: &[ToolDef] = &[
     ToolDef {
         name: "get_openalgo_version",
-        title: "Get OpenAlgo Version",
+        title: "Get The Bridge Version",
         toolset: "utility",
         scope: Scope::ReadMarket,
         risk: Risk::BrokerStructured,
         write: false,
         destructive: false,
         open_world: false,
-        description: r#"Get the OpenAlgo library version."#,
+        description: r#"Get the The Bridge library version."#,
         params: &[],
     },
     ToolDef {

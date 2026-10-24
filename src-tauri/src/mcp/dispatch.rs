@@ -272,12 +272,12 @@ pub fn transport_reply(t: Transport) -> Value {
         }),
         Transport::NoReply => json!({
             "status": "error",
-            "message": "OpenAlgo received the request, but no answer came back.",
+            "message": "The Bridge received the request, but no answer came back.",
             "error_type": UNKNOWN_OUTCOME,
         }),
         Transport::Budget => json!({
             "status": "error",
-            "message": "This AI client has made too many requests to OpenAlgo in the last minute. Wait a minute and try again.",
+            "message": "This AI client has made too many requests to The Bridge in the last minute. Wait a minute and try again.",
             "error_type": "rate_limited",
         }),
     }

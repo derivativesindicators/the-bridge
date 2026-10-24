@@ -43,7 +43,7 @@ const NETWORK = /failed to fetch|networkerror|network request failed|load failed
  */
 export function traderReason(raw: string): string {
   if (NETWORK.test(raw)) {
-    return 'OpenAlgo could not be reached. Check that the server is running and the network is up'
+    return 'The Bridge could not be reached. Check that the server is running and the network is up'
   }
   const text = raw
     .replace(/^\s*(?:history error|[a-z]*error)\s*:\s*/i, '')

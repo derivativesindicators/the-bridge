@@ -286,7 +286,7 @@ fn symbol_for(symbols: &SymbolResolver, token: &str, exchange: &str, fallback: &
             return r.symbol;
         }
         tracing::debug!(
-            "No OpenAlgo symbol for INDmoney token {} on {}",
+            "No The Bridge symbol for INDmoney token {} on {}",
             token,
             exchange
         );

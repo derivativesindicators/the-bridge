@@ -41,7 +41,7 @@ describe('ResetAccountCard', () => {
     renderCard()
     expect(screen.getByText(/Start over with a new account instead/)).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /reset account/i })).toBeNull()
-    expect(screen.getByText(/only in the OpenAlgo Desktop window/)).toBeInTheDocument()
+    expect(screen.getByText(/only in the The Bridge window/)).toBeInTheDocument()
   })
 
   it('in the desktop window asks the shell and goes to setup after a reset', async () => {
@@ -69,11 +69,11 @@ describe('ResetAccountCard', () => {
     tauri.inShell = true
     tauri.invoke.mockRejectedValue({
       code: 'AUTH_ERROR',
-      message: 'Reset account works only from the OpenAlgo Desktop window on this computer.',
+      message: 'Reset account works only from the The Bridge window on this computer.',
     })
     renderCard()
     await userEvent.click(screen.getByRole('button', { name: /reset account/i }))
-    expect(await screen.findByRole('alert')).toHaveTextContent(/works only from the OpenAlgo/)
+    expect(await screen.findByRole('alert')).toHaveTextContent(/works only from the The Bridge/)
     expect(navigate).not.toHaveBeenCalled()
   })
 })

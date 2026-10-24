@@ -199,7 +199,7 @@ impl PaytmBroker {
                         leaf
                     );
                     return Err(AppError::Broker(
-                        "Paytm Money sent a response OpenAlgo could not read. Try again shortly."
+                        "Paytm Money sent a response The Bridge could not read. Try again shortly."
                             .into(),
                     ));
                 }

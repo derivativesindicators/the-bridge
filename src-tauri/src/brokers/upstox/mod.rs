@@ -274,7 +274,7 @@ fn non_json_error(status: StatusCode) -> AppError {
             "Upstox's servers are not responding normally. Try again shortly.".into(),
         );
     }
-    AppError::Broker("Upstox sent a response OpenAlgo could not read. Try again shortly.".into())
+    AppError::Broker("Upstox sent a response The Bridge could not read. Try again shortly.".into())
 }
 
 /// `data` of a success envelope, or the trader-facing error.

@@ -14,7 +14,7 @@ export function FreezeQtyDesktopNote() {
     <Alert>
       <Info className="h-4 w-4" />
       <AlertDescription>
-        NSE's freeze quantities for NFO are built into OpenAlgo Desktop and updated with each
+        NSE's freeze quantities for NFO are built into The Bridge and updated with each
         release, so this list holds only your own entries. An entry replaces the built-in limit for
         its symbol at once: scalping order checks and exits, and the freeze quantity shown in symbol
         and option lookups, use it. Delete the entry to go back to the built-in limit.

@@ -1516,7 +1516,7 @@ export default function ProfilePage() {
             <AlertDialogDescription className="space-y-3">
               {/* Desktop: settings are stored in-app; a restart means quitting the app. */}
               <p>Your configuration has been saved.</p>
-              <p>To apply these changes, quit OpenAlgo Desktop and open it again.</p>
+              <p>To apply these changes, quit The Bridge and open it again.</p>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

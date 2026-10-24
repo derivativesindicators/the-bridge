@@ -220,7 +220,7 @@ describe('App health cards', () => {
       '8: scalping stops 7, sandbox orders 1'
     )
     expect(screen.getByRole('status')).toHaveTextContent(/skipped some prices/)
-    expect(screen.getByText(/counts are since OpenAlgo started/)).toBeInTheDocument()
+    expect(screen.getByText(/counts are since The Bridge started/)).toBeInTheDocument()
   })
 
   // PROD-REL-05: what the bridge skipped relaying the deeper book to apps
@@ -371,7 +371,7 @@ describe('App health cards', () => {
     )
     expect(notes).toContainEqual(
       expect.stringMatching(
-        /Live since 20 Oct, 10:00:00 am IST: the broker's order feed reconnected; Sandbox since 20 Oct, 10:01:00 am IST: an order update could not be delivered inside OpenAlgo.*re-checking the broker's order book/
+        /Live since 20 Oct, 10:00:00 am IST: the broker's order feed reconnected; Sandbox since 20 Oct, 10:01:00 am IST: an order update could not be delivered inside The Bridge.*re-checking the broker's order book/
       )
     )
   })

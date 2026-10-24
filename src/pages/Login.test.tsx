@@ -140,7 +140,7 @@ describe('Keys of an earlier build', () => {
     body: {
       status: 'error',
       code: 'keychain_unreadable',
-      message: 'OpenAlgo needs to read your keys from the system keychain one last time.',
+      message: 'The Bridge needs to read your keys from the system keychain one last time.',
       recovery: ['retry_keychain', 'start_fresh'],
     },
   }

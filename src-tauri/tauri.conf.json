@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2.0.0",
-  "productName": "OpenAlgo Desktop",
+  "productName": "The Bridge",
   "version": "1.0.2",
-  "identifier": "com.openalgo.desktop",
+  "identifier": "com.derivativesindicators.thebridge",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:5173",
@@ -23,7 +23,9 @@
         "object-src": "'none'",
         "base-uri": "'self'"
       },
-      "capabilities": ["default"]
+      "capabilities": [
+        "default"
+      ]
     }
   },
   "bundle": {
@@ -38,9 +40,9 @@
     ],
     "resources": [],
     "category": "Finance",
-    "shortDescription": "Open Source Algorithmic Trading Platform",
-    "longDescription": "OpenAlgo Desktop is an open-source algorithmic trading platform that allows you to connect with multiple Indian brokers and execute trades via TradingView webhooks and APIs.",
-    "copyright": "Copyright 2024 OpenAlgo",
+    "shortDescription": "Algorithmic Trading Platform",
+    "longDescription": "The Bridge by Derivatives Indicators, based on OpenAlgo Desktop (AGPL-3.0). Connects to Indian brokers and executes trades via webhooks and APIs.",
+    "copyright": "Copyright 2024 OpenAlgo; Modifications Copyright 2026 Derivatives Indicators. AGPL-3.0.",
     "macOS": {
       "entitlements": null,
       "exceptionDomain": "",
@@ -79,9 +81,9 @@
       "open": "^https?://"
     },
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDEzMzc5QTJBRTVDMEFCNzEKUldSeHE4RGxLcG8zRXllUlJUVll3VmR6ckMxZzY5QXFqaGxpc3VLMTEzSEcyaDRGeEluODdXTFEK",
+      "pubkey": "REPLACE_WITH_OUR_UPDATER_PUBKEY",
       "endpoints": [
-        "https://github.com/marketcalls/openalgo-desktop/releases/latest/download/latest.json"
+        "https://UPDATE-SERVER-PLACEHOLDER.invalid/latest.json"
       ],
       "requireSignedVersion": true,
       "windows": {

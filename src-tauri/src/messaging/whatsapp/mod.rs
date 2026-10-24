@@ -50,7 +50,7 @@ use tasks::{bot_task, pair_task};
 pub const CONNECTING_MESSAGE: &str =
     "WhatsApp is still connecting. Check the status in a few seconds.";
 pub const SEND_ABANDONED_ERROR: &str = "WhatsApp disconnected before this message was sent.";
-pub const LOGGED_OUT_MESSAGE: &str = "WhatsApp logged this device out, so alerts cannot be sent. Pair it again from the /whatsapp page in OpenAlgo.";
+pub const LOGGED_OUT_MESSAGE: &str = "WhatsApp logged this device out, so alerts cannot be sent. Pair it again from the /whatsapp page in The Bridge.";
 pub const NOT_PAIRED_MESSAGE: &str = "Device not paired. Pair from /whatsapp first.";
 pub const PAIR_TIMEOUT_MESSAGE: &str = "Pairing timed out — please try again";
 /// Most recipients one send reaches (web `MAX_RECIPIENTS`).
@@ -195,7 +195,7 @@ enum Raw {
 
 /// What a sender of a slash command is told when it is not the owner.
 pub const OWNER_ONLY: &str =
-    "This WhatsApp bot answers only the OpenAlgo account it is paired with.";
+    "This WhatsApp bot answers only the The Bridge account it is paired with.";
 
 /// The decision of the command gate.
 #[derive(Debug, PartialEq, Eq)]

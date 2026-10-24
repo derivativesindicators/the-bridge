@@ -46,7 +46,7 @@ export function readTime(ms: number | null, now: number = Date.now()): string {
 }
 
 /** What happens next after a read failed, and what the trader can do. */
-const RETRY = `OpenAlgo tries again every ${REFRESH_INTERVAL_MS / 1000} seconds while Auto is on, or choose Refresh.`
+const RETRY = `The Bridge tries again every ${REFRESH_INTERVAL_MS / 1000} seconds while Auto is on, or choose Refresh.`
 
 /** What the trader reads about a part of the page whose latest read failed. */
 export function notRefreshedText(read: HealthRead<unknown>, what: string): string {
@@ -126,7 +126,7 @@ export function sampleFreshness(
     : notRefreshed
       ? notRefreshedText(read, 'the health figures')
       : (currentMetrics?.reason ??
-        `No health sample${sampleAge === null ? '' : ` for ${formatAge(sampleAge).replace(' ago', '')}`}. Health sampling may have stopped; restart OpenAlgo if this continues.`)
+        `No health sample${sampleAge === null ? '' : ` for ${formatAge(sampleAge).replace(' ago', '')}`}. Health sampling may have stopped; restart The Bridge if this continues.`)
   const cardStatus = (status: HealthLevel | undefined): HealthLevel =>
     stale ? 'unknown' : status || 'unknown'
   return {

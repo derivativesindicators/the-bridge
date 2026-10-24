@@ -186,7 +186,7 @@ pub async fn cancel_all_orders(b: &TradejiniBroker, auth: &AuthToken) -> Result<
 
 /// A smart order whose position could not be read (web
 /// `utils/position_read.py`): nothing is sent.
-pub const POSITION_UNREAD: &str = "OpenAlgo could not read your open position from Tradejini, so no order was sent. Check your positions and try again.";
+pub const POSITION_UNREAD: &str = "The Bridge could not read your open position from Tradejini, so no order was sent. Check your positions and try again.";
 
 /// web `get_open_position` over the strict position read (#2116): the
 /// first non-zero row of this symbol on this exchange. The web matches on

@@ -375,7 +375,7 @@ pub(crate) fn unwrap_account(path: &str, r: &Reply) -> Result<Value> {
     }
     if r.json.is_null() {
         return Err(AppError::Broker(
-            "INDmoney sent a response OpenAlgo could not read. Try again shortly.".into(),
+            "INDmoney sent a response The Bridge could not read. Try again shortly.".into(),
         ));
     }
     if r.json.get("success") == Some(&Value::Bool(false)) {

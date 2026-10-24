@@ -52,16 +52,16 @@ impl Package {
         match self {
             Package::MacApp | Package::WindowsNsis | Package::LinuxAppImage => None,
             Package::LinuxDeb => Some(
-                "This copy was installed from a .deb package, which OpenAlgo cannot update by itself. Download the new .deb from the release page and install it over this one. Your data and settings are kept.",
+                "This copy was installed from a .deb package, which The Bridge cannot update by itself. Download the new .deb from the release page and install it over this one. Your data and settings are kept.",
             ),
             Package::LinuxRpm => Some(
-                "This copy was installed from an .rpm package, which OpenAlgo cannot update by itself. Download the new version from the release page and install it over this one. Your data and settings are kept.",
+                "This copy was installed from an .rpm package, which The Bridge cannot update by itself. Download the new version from the release page and install it over this one. Your data and settings are kept.",
             ),
             Package::Development => Some(
-                "This copy of OpenAlgo was built from source, so it does not update itself. Build the new version, or install it from the release page.",
+                "This copy of The Bridge was built from source, so it does not update itself. Build the new version, or install it from the release page.",
             ),
             Package::Unknown => Some(
-                "OpenAlgo cannot tell how this copy was installed, so it does not update itself. Download the new version from the release page and install it over this one. Your data and settings are kept.",
+                "The Bridge cannot tell how this copy was installed, so it does not update itself. Download the new version from the release page and install it over this one. Your data and settings are kept.",
             ),
         }
     }
@@ -121,7 +121,7 @@ impl UpdateFailure {
     pub fn download_message(&self, current: &str) -> String {
         match self {
             UpdateFailure::Network(_) => format!(
-                "The update could not be downloaded. OpenAlgo is still on version {}. Check your internet connection and choose Update again.",
+                "The update could not be downloaded. The Bridge is still on version {}. Check your internet connection and choose Update again.",
                 current
             ),
             other => other.message(current),
@@ -131,15 +131,15 @@ impl UpdateFailure {
     /// The trader's message, naming the cause and the next step.
     pub fn message(&self, current: &str) -> String {
         match self {
-            UpdateFailure::Network(_) => "OpenAlgo could not reach the update server. Check your internet connection and try again.".into(),
-            UpdateFailure::Manifest(_) => "OpenAlgo could not read the update information. Try again later, or download the newest version from the release page.".into(),
+            UpdateFailure::Network(_) => "The Bridge could not reach the update server. Check your internet connection and try again.".into(),
+            UpdateFailure::Manifest(_) => "The Bridge could not read the update information. Try again later, or download the newest version from the release page.".into(),
             UpdateFailure::NoPlatform(_) => "The newest version has no update for this computer yet. Try again later, or download it from the release page.".into(),
             UpdateFailure::Signature(_) => format!(
-                "The downloaded update failed its signature check, so it was not installed. OpenAlgo is still on version {}. Try again later; if this keeps happening, download the installer from the release page.",
+                "The downloaded update failed its signature check, so it was not installed. The Bridge is still on version {}. Try again later; if this keeps happening, download the installer from the release page.",
                 current
             ),
             UpdateFailure::Install(_) => format!(
-                "The update could not be installed. OpenAlgo is still on version {}. Download the installer from the release page and run it.",
+                "The update could not be installed. The Bridge is still on version {}. Download the installer from the release page and run it.",
                 current
             ),
         }
@@ -231,7 +231,7 @@ mod tests {
         assert!(Package::LinuxDeb
             .manual_reason()
             .unwrap()
-            .contains(".deb package, which OpenAlgo cannot update by itself"));
+            .contains(".deb package, which The Bridge cannot update by itself"));
     }
 
     #[test]

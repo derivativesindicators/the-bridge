@@ -108,7 +108,7 @@ pub fn route_to_pending(
 /// Fractional quantities pass the web schema on CRYPTO, but the order
 /// paths here carry whole units; refuse instead of truncating.
 pub const FRACTIONAL_REFUSED: &str =
-    "Fractional quantities are not supported in OpenAlgo Desktop yet. Use a whole-number quantity.";
+    "Fractional quantities are not supported in The Bridge yet. Use a whole-number quantity.";
 
 pub fn fractional_refusal(req: &Value) -> Option<Reply> {
     (f(req, "quantity").fract() != 0.0).then(|| Reply::error(400, FRACTIONAL_REFUSED))
@@ -183,7 +183,7 @@ async fn apply_leverage(h: &BrokerHandle, ctx: &AppState, req: &Value, order: &R
 }
 
 /// What an API-key client reads when the order mode cannot be read.
-pub const ORDER_MODE_UNREADABLE: &str = "OpenAlgo could not read whether your orders wait for approval in the Action Center (Semi-Auto), so nothing was sent. Try again in a moment; if it keeps happening, restart OpenAlgo.";
+pub const ORDER_MODE_UNREADABLE: &str = "The Bridge could not read whether your orders wait for approval in the Action Center (Semi-Auto), so nothing was sent. Try again in a moment; if it keeps happening, restart The Bridge.";
 
 /// Whether the order mode is Semi-Auto, or the refusal when it cannot be
 /// read: never a default (re-audit NEW-TR-05; the web reads a failure as

@@ -51,7 +51,7 @@ pub fn unreadable(broker: &str, book: Book) -> AppError {
         book.noun()
     );
     AppError::Broker(format!(
-        "OpenAlgo could not read your {} from {}. Try again shortly; if this keeps happening, check them in your {} app.",
+        "The Bridge could not read your {} from {}. Try again shortly; if this keeps happening, check them in your {} app.",
         book.noun(),
         name,
         name
@@ -199,7 +199,7 @@ mod tests {
         assert!(require_quantities(&rows, &["q", "s"], unread).is_err());
         assert_eq!(
             unread().client_message(),
-            "OpenAlgo could not read your positions from Fyers. Try again shortly; if this keeps happening, check them in your Fyers app."
+            "The Bridge could not read your positions from Fyers. Try again shortly; if this keeps happening, check them in your Fyers app."
         );
     }
 }

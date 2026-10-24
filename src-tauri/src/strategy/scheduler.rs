@@ -493,11 +493,11 @@ impl StrategyModule {
         let at = slot.with_timezone(&Kolkata).format("%H:%M on %d %b");
         let message = match job.func {
             JobFunc::RunScheduledStart => format!(
-                "The scheduled start at {} was missed because OpenAlgo was not running then (the computer was asleep). Start the strategy yourself if it should still run today.",
+                "The scheduled start at {} was missed because The Bridge was not running then (the computer was asleep). Start the strategy yourself if it should still run today.",
                 at
             ),
             JobFunc::RunScheduledStop => format!(
-                "The scheduled square-off at {} was missed because OpenAlgo was not running then (the computer was asleep), and a new session has begun since. Check this strategy's positions and stop it yourself if it is still running.",
+                "The scheduled square-off at {} was missed because The Bridge was not running then (the computer was asleep), and a new session has begun since. Check this strategy's positions and stop it yourself if it is still running.",
                 at
             ),
         };

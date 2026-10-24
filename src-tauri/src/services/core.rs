@@ -144,7 +144,7 @@ pub fn broker_handle(ctx: &AppState) -> Result<BrokerHandle, Reply> {
 
 /// What a trader is told when an order path cannot tell whether analyzer
 /// mode is on.
-pub const ANALYZE_MODE_UNREADABLE: &str = "OpenAlgo could not read whether analyzer mode is on, so nothing was sent. Restart OpenAlgo, then try again.";
+pub const ANALYZE_MODE_UNREADABLE: &str = "The Bridge could not read whether analyzer mode is on, so nothing was sent. Restart The Bridge, then try again.";
 
 /// Whether analyzer (sandbox) mode is on, for a path that sends, changes or
 /// reads orders: the refusal when it cannot be known. Never a default. A

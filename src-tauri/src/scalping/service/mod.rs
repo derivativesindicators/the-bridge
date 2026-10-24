@@ -604,7 +604,7 @@ pub fn reset_tracked(ctx: &AppState) -> Reply {
 }
 
 /// What the page reads when the saved stops cannot be read.
-pub const STOPS_UNAVAILABLE: &str = "The saved stop-losses could not be read just now, so this list is not complete. OpenAlgo keeps enforcing the stops it already holds. Try again; if it keeps happening, restart OpenAlgo.";
+pub const STOPS_UNAVAILABLE: &str = "The saved stop-losses could not be read just now, so this list is not complete. The Bridge keeps enforcing the stops it already holds. Try again; if it keeps happening, restart The Bridge.";
 
 /// `GET /scalping/api/sl`. A read that fails is an error, never an empty
 /// list: the web answers success with no stops, which reads as "nothing is

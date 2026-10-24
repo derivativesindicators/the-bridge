@@ -103,7 +103,7 @@ describe('Diagnostics web server card', () => {
   it('shows a default eventlet install plainly, with nothing about threads', async () => {
     const card = await renderWith(EVENTLET_DEFAULT)
     expect(shownFor(card, 'Web server')).toBe('eventlet (the default)')
-    expect(shownFor(card, 'Market data proxy')).toBe('Separate process started by OpenAlgo')
+    expect(shownFor(card, 'Market data proxy')).toBe('Separate process started by The Bridge')
     expect(card.queryByText('Request threads')).toBeNull()
     expect(card.queryByText('Started by launcher')).toBeNull()
     expect(card.queryByRole('note')).toBeNull()
@@ -139,7 +139,7 @@ describe('Diagnostics host card', () => {
   const hostCard = (host: SystemHost) =>
     renderCard({ ...systemInfo(EVENTLET_DEFAULT), host }, 'Host')
 
-  it('tells a Raspberry Pi user the desktop app does not support it and to use OpenAlgo web', async () => {
+  it('tells a Raspberry Pi user the desktop app does not support it and to use The Bridge web', async () => {
     const card = await hostCard({
       system: 'Linux',
       machine: 'aarch64',
@@ -151,9 +151,9 @@ describe('Diagnostics host card', () => {
     expect(shownFor(card, 'Raspberry Pi')).toBe('Raspberry Pi 5 Model B Rev 1.0')
     const note = card.getByRole('note', { name: 'Raspberry Pi not supported' })
     expect(note).toHaveTextContent(
-      'OpenAlgo Desktop does not support Raspberry Pi. Run OpenAlgo web on your Pi instead.'
+      'The Bridge does not support Raspberry Pi. Run The Bridge web on your Pi instead.'
     )
-    expect(within(note).getByRole('link', { name: 'OpenAlgo web' })).toHaveAttribute(
+    expect(within(note).getByRole('link', { name: 'The Bridge web' })).toHaveAttribute(
       'href',
       'https://github.com/marketcalls/openalgo'
     )

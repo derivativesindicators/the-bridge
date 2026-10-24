@@ -341,7 +341,7 @@ impl Bot {
             )
         } else {
             format!(
-                "Welcome to OpenAlgo Bot, {}! \n\nTo get started, link your OpenAlgo account:\n`/link <api_key> <host_url>`\n\nExample:\n`/link your_api_key_here http://127.0.0.1:5000`\n\nUse /help to see all available commands.",
+                "Welcome to The Bridge Bot, {}! \n\nTo get started, link your The Bridge account:\n`/link <api_key> <host_url>`\n\nExample:\n`/link your_api_key_here http://127.0.0.1:5000`\n\nUse /help to see all available commands.",
                 from.first_name
             )
         };
@@ -374,7 +374,7 @@ impl Bot {
         Self::log(ctx, from.id, "menu", chat);
         self.send(
             chat,
-            "*OpenAlgo Trading Menu*\nSelect an option below:",
+            "*The Bridge Trading Menu*\nSelect an option below:",
             true,
             Some(menu_keyboard()),
         )
@@ -492,10 +492,10 @@ impl Bot {
         Self::log(ctx, from.id, "link", chat);
         match res {
             Ok(()) => {
-                tracing::info!("Telegram user linked to the OpenAlgo account");
+                tracing::info!("Telegram user linked to the The Bridge account");
                 self.send(
                     chat,
-                    "Account linked successfully!\nYou can now use all bot features.\nType /menu to see available options.\n\nCommands run on this OpenAlgo Desktop; the host address you gave is not used.",
+                    "Account linked successfully!\nYou can now use all bot features.\nType /menu to see available options.\n\nCommands run on this The Bridge; the host address you gave is not used.",
                     true,
                     None,
                 )
@@ -519,7 +519,7 @@ impl Bot {
             Self::log(ctx, from.id, "status", chat);
             self.send(
                 chat,
-                "No linked account found.\nUse /link to connect your OpenAlgo account.",
+                "No linked account found.\nUse /link to connect your The Bridge account.",
                 true,
                 None,
             )
@@ -563,7 +563,7 @@ impl Bot {
         };
         let cs = Self::cs(&user);
         let Some(client) = Self::client(ctx, from.id) else {
-            self.send(chat, "Failed to connect to OpenAlgo", false, None)
+            self.send(chat, "Failed to connect to The Bridge", false, None)
                 .await;
             return;
         };
@@ -615,7 +615,7 @@ impl Bot {
             .map(|s| s.to_uppercase())
             .unwrap_or_else(|| "NSE".into());
         let Some(client) = Self::client(ctx, from.id) else {
-            self.send(chat, "Failed to connect to OpenAlgo", false, None)
+            self.send(chat, "Failed to connect to The Bridge", false, None)
                 .await;
             return;
         };
@@ -843,7 +843,7 @@ impl Bot {
                     chat,
                     mid,
                     &format!(
-                        "*OpenAlgo Trading Menu*\nSelect an option below:\n_Updated: {}_",
+                        "*The Bridge Trading Menu*\nSelect an option below:\n_Updated: {}_",
                         ts
                     ),
                     true,
@@ -870,7 +870,7 @@ impl Bot {
             return;
         }
         let Some(client) = Self::client(ctx, from.id) else {
-            self.edit(chat, mid, "Failed to connect to OpenAlgo", false, None)
+            self.edit(chat, mid, "Failed to connect to The Bridge", false, None)
                 .await;
             return;
         };
@@ -965,7 +965,7 @@ impl Bot {
         };
         let cs = Self::cs(&user);
         let Some(client) = Self::client(ctx, from.id) else {
-            self.send(chat, "Failed to connect to OpenAlgo", false, None)
+            self.send(chat, "Failed to connect to The Bridge", false, None)
                 .await;
             return;
         };

@@ -23,7 +23,7 @@ pub fn twofa_type(requested: Option<&str>) -> &'static str {
 }
 
 /// web `UNAUTHORIZED_HINT`, written for the trader.
-pub const UNAUTHORIZED_HINT: &str = "Tradejini did not accept the sign-in. Check, in order: the password field takes your CubePlus login PIN, not your account password; your Tradejini app only accepts requests from the static IP registered for it on the Tradejini developer portal; the API key saved in OpenAlgo must be the app's API key; and the TOTP must be current.";
+pub const UNAUTHORIZED_HINT: &str = "Tradejini did not accept the sign-in. Check, in order: the password field takes your CubePlus login PIN, not your account password; your Tradejini app only accepts requests from the static IP registered for it on the Tradejini developer portal; the API key saved in The Bridge must be the app's API key; and the TOTP must be current.";
 
 /// The stored API key (web `get_api_key`: `BROKER_API_KEY`, falling back to
 /// `BROKER_API_SECRET` for older setups; `YOUR_*` placeholders ignored).
@@ -105,7 +105,7 @@ pub async fn authenticate(b: &TradejiniBroker, creds: BrokerCredentials) -> Resu
     if !token_type.is_empty() && token_type != "bearer" {
         tracing::warn!("Tradejini returned token type {}", token_type);
         return Err(AppError::Auth(
-            "Tradejini returned a session OpenAlgo cannot use. Try signing in again.".into(),
+            "Tradejini returned a session The Bridge cannot use. Try signing in again.".into(),
         ));
     }
     Ok(AuthResponse {

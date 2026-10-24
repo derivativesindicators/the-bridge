@@ -92,7 +92,7 @@ pub async fn authenticate(b: &PocketfulBroker, creds: BrokerCredentials) -> Resu
         );
         let lower = format!("{} {}", detail, error).to_ascii_lowercase();
         return Err(AppError::Auth(if lower.contains("redirect") {
-            "Pocketful refused the login because the redirect URL does not match your Pocketful app. Set the app's redirect URL to the one shown in OpenAlgo, then log in again."
+            "Pocketful refused the login because the redirect URL does not match your Pocketful app. Set the app's redirect URL to the one shown in The Bridge, then log in again."
                 .into()
         } else if lower.contains("client") || status.as_u16() == 401 {
             "Pocketful did not accept your client id or secret. Check them on the Broker Configuration page."

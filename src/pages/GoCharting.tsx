@@ -218,7 +218,7 @@ export default function GoCharting() {
             <strong>Webhook URL not accessible!</strong> GoCharting cannot send alerts to localhost.
             Use <strong>ngrok</strong>, <strong>Cloudflare Tunnel</strong>,{' '}
             <strong>VS Code Dev Tunnel</strong>, or a <strong>custom domain</strong> to expose your
-            OpenAlgo Desktop to the internet, then enter that address as the Host Server URL on the
+            The Bridge to the internet, then enter that address as the Host Server URL on the
             Broker tab of your Profile.
           </AlertDescription>
         </Alert>

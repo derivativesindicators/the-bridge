@@ -194,13 +194,13 @@ pub async fn test_message(State(ctx): Ctx, User(u): User) -> Response {
     let (target, message) = match (mine, all.first()) {
         (Some(m), _) => (
             m.telegram_id,
-            "Test Message from OpenAlgo\n\nYour Telegram integration is working correctly!"
+            "Test Message from The Bridge\n\nYour Telegram integration is working correctly!"
                 .to_string(),
         ),
         (None, Some(first)) => (
             first.telegram_id,
             format!(
-                "Test Message from OpenAlgo (Admin: {})\n\nYour Telegram integration is working correctly!",
+                "Test Message from The Bridge (Admin: {})\n\nYour Telegram integration is working correctly!",
                 u.username
             ),
         ),

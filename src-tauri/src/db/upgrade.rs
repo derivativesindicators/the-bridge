@@ -214,7 +214,7 @@ impl Refusal {
 Opening it with an older version could damage it, so nothing was opened or changed. \
 Install OpenAlgo Desktop {recorded} or newer from the release page."
             ),
-            Refusal::InUse => "OpenAlgo Desktop is already running and has your data open. Close the other OpenAlgo window, then start it again.".into(),
+            Refusal::InUse => "The Bridge is already running and has your data open. Close the other The Bridge window, then start it again.".into(),
             Refusal::BackupFailed { .. } => "OpenAlgo backs up your data before an update changes it, and this backup could not be made, so nothing was changed. \
 Check that there is free disk space (about as much as your data folder) and that the backups folder inside the data folder is an ordinary folder, then start OpenAlgo again.".into(),
             Refusal::Restored { from, current, cause } => format!(
@@ -366,7 +366,7 @@ fn refuse_newer(
         return Ok(());
     }
     tracing::error!(
-        "Data folder was written by OpenAlgo {}; this is {}: not opened",
+        "Data folder was written by The Bridge {}; this is {}: not opened",
         v,
         current
     );
@@ -401,7 +401,7 @@ fn back_up_before_upgrade(
         })
     })?;
     tracing::info!(
-        "Backed up the data of OpenAlgo {} to {} before opening it with {}",
+        "Backed up the data of The Bridge {} to {} before opening it with {}",
         from,
         b.display(),
         current
@@ -423,7 +423,7 @@ fn put_back_after_failed_open(
     e: AppError,
 ) -> OpenError {
     tracing::error!(
-        "OpenAlgo {} could not open the data after backing it up: {}",
+        "The Bridge {} could not open the data after backing it up: {}",
         current,
         e
     );

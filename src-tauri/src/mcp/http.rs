@@ -59,7 +59,7 @@ pub const KEEPALIVE: Duration = Duration::from_secs(15);
 pub const RETRY_MS: u64 = 30_000;
 
 pub const SSE_BUSY_MESSAGE: &str =
-    "OpenAlgo is already holding as many MCP event streams as it allows. Try again in a moment.";
+    "The Bridge is already holding as many MCP event streams as it allows. Try again in a moment.";
 /// What an AI client is told while OpenAlgo is locked (KEY-01): its token
 /// is fine, OpenAlgo has nobody signed in. Sent with 503 and the error code
 /// [`LOCKED_ERROR`]; the stdio bridge shows it as it is.

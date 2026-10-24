@@ -31,8 +31,8 @@ pub const ALREADY_HANDLED_MESSAGE: &str =
 pub const ALREADY_SUBMITTING_STATUS: u16 = 409;
 pub const ALREADY_SUBMITTING_MESSAGE: &str =
     "This order is already being sent to your broker. Check the order book before approving it again.";
-pub const CLAIM_FAILED_MESSAGE: &str = "The order was not sent to your broker, because OpenAlgo could not record it as being sent. It is back in the pending list: approve it again in a moment.";
-pub const CLAIM_FAILED_STUCK_MESSAGE: &str = "The order was not sent to your broker, because OpenAlgo could not record it as being sent. Place it again from your trading platform.";
+pub const CLAIM_FAILED_MESSAGE: &str = "The order was not sent to your broker, because The Bridge could not record it as being sent. It is back in the pending list: approve it again in a moment.";
+pub const CLAIM_FAILED_STUCK_MESSAGE: &str = "The order was not sent to your broker, because The Bridge could not record it as being sent. Place it again from your trading platform.";
 const RETURNED_TO_PENDING: &str = "returned_to_pending";
 
 // ------------------------------------------------------------------ display

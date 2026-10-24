@@ -10,7 +10,7 @@ export function NoHealthSamples({ stats }: { stats: HealthStats | EmptyHealthSta
   return (
     <Card>
       <CardContent className="p-4 text-sm text-muted-foreground">
-        No health samples in the last {stats.time_period_hours} hours yet. OpenAlgo records one
+        No health samples in the last {stats.time_period_hours} hours yet. The Bridge records one
         every minute while it runs; check back shortly.
       </CardContent>
     </Card>

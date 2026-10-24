@@ -395,7 +395,7 @@ export default function RemoteMcp() {
                 <CardDescription>
                   {/* Desktop: settings are stored in-app; a restart means quitting the app. */}
                   Toggle Remote MCP on or off and adjust its OAuth posture. Changes take effect
-                  after you quit OpenAlgo Desktop and open it again.
+                  after you quit The Bridge and open it again.
                 </CardDescription>
               </div>
               <Badge variant={mcpEnabled ? 'default' : 'secondary'}>
@@ -440,7 +440,7 @@ export default function RemoteMcp() {
                 placeholder="https://yourdomain.com"
               />
               <p className="text-xs text-muted-foreground">
-                Same as your OpenAlgo dashboard URL. Required when MCP is enabled. Used as the JWT
+                Same as your The Bridge dashboard URL. Required when MCP is enabled. Used as the JWT
                 issuer / audience claim — tokens are scoped to this exact origin.
               </p>
             </div>
@@ -473,7 +473,7 @@ export default function RemoteMcp() {
                   </p>
                   {/* Desktop: AI clients use access tokens; client sign-in is not built yet. */}
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Applies when AI clients can sign in to OpenAlgo Desktop on their own, which is
+                    Applies when AI clients can sign in to The Bridge on their own, which is
                     not available yet. Today every AI client uses an access token from the API Key
                     page, so this setting has no effect.
                   </p>
@@ -544,7 +544,7 @@ export default function RemoteMcp() {
           <AlertTitle>Restart required to apply changes</AlertTitle>
           <AlertDescription>
             {/* Desktop: no .env or service; a restart means quitting the app. */}
-            Settings saved. Quit OpenAlgo Desktop and open it again to apply them.
+            Settings saved. Quit The Bridge and open it again to apply them.
             <span className="block mt-2 text-xs">
               This banner clears automatically once the running service reflects the new values.
             </span>
@@ -559,7 +559,7 @@ export default function RemoteMcp() {
           <AlertTitle>Remote MCP is currently disabled</AlertTitle>
           <AlertDescription>
             Hosted AI clients can't reach <code>/mcp</code> right now. Enable it from the settings
-            card above, then restart OpenAlgo Desktop. Local stdio MCP (Claude Desktop / Cursor /
+            card above, then restart The Bridge. Local stdio MCP (Claude Desktop / Cursor /
             Windsurf) is unaffected and works regardless.
           </AlertDescription>
         </Alert>

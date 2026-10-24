@@ -621,7 +621,7 @@ impl Runner {
     pub async fn shutdown(&self) {
         self.shutting_down.store(true, Ordering::SeqCst);
         self.cancel.cancel();
-        let paused = self.pause_all("Paused because OpenAlgo is closing");
+        let paused = self.pause_all("Paused because The Bridge is closing");
         if !paused.is_empty() {
             tracing::info!("Paused {} OpenScript run(s) on the way out", paused.len());
         }

@@ -10,7 +10,7 @@ use crate::state::AppState;
 use serde_json::Value;
 use std::sync::Arc;
 
-pub const HELP: &str = "OpenAlgo WhatsApp Bot\n/status - connection + paired status\n/orderbook - today's orders\n/tradebook - today's trades\n/positions - open positions\n/holdings - holdings\n/funds - account funds\n/pnl - net P&L\n/quote <symbol> [exchange] - last traded price\n/closeall - square off all positions\n/mode - live or analyze mode";
+pub const HELP: &str = "The Bridge WhatsApp Bot\n/status - connection + paired status\n/orderbook - today's orders\n/tradebook - today's trades\n/positions - open positions\n/holdings - holdings\n/funds - account funds\n/pnl - net P&L\n/quote <symbol> [exchange] - last traded price\n/closeall - square off all positions\n/mode - live or analyze mode";
 
 /// Every command the bot answers.
 pub const COMMANDS: &[&str] = &[
@@ -64,7 +64,7 @@ pub fn truncated(title: &str, payload: &Value) -> String {
 fn owner_client(ctx: &Arc<AppState>) -> Result<OpenAlgoClient, String> {
     let cfg = super::WhatsAppService::config(ctx);
     if cfg.owner_username.as_deref().unwrap_or("").is_empty() {
-        return Err("No owner recorded for this paired device. Re-pair from the /whatsapp page while logged in to OpenAlgo.".into());
+        return Err("No owner recorded for this paired device. Re-pair from the /whatsapp page while logged in to The Bridge.".into());
     }
     match ApiKeyService::current(ctx) {
         Ok(Some(k)) => Ok(OpenAlgoClient::new(ctx.clone(), k)),
@@ -74,7 +74,7 @@ fn owner_client(ctx: &Arc<AppState>) -> Result<OpenAlgoClient, String> {
         ),
         Err(e) => {
             tracing::error!("Could not load the owner's API key: {}", e);
-            Err("Could not load OpenAlgo API key for the owner.".into())
+            Err("Could not load The Bridge API key for the owner.".into())
         }
     }
 }

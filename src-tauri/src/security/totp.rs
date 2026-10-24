@@ -75,7 +75,7 @@ pub fn verify(secret: &str, code: &str, unix_time: u64) -> bool {
 /// `otpauth://` URI in the same form pyotp produces.
 pub fn provisioning_uri(secret: &str, account: &str) -> String {
     format!(
-        "otpauth://totp/OpenAlgo:{}?secret={}&issuer=OpenAlgo",
+        "otpauth://totp/The Bridge:{}?secret={}&issuer=The Bridge",
         urlencoding::encode(account),
         secret
     )
@@ -148,7 +148,7 @@ mod tests {
         let uri = provisioning_uri("ABC", "me@example.com");
         assert_eq!(
             uri,
-            "otpauth://totp/OpenAlgo:me%40example.com?secret=ABC&issuer=OpenAlgo"
+            "otpauth://totp/The Bridge:me%40example.com?secret=ABC&issuer=The Bridge"
         );
         let png = qr_png_base64(&uri).unwrap();
         assert!(png.starts_with("iVBORw0KGgo"));

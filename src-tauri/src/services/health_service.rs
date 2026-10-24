@@ -185,7 +185,7 @@ pub fn sample_once(ctx: &AppState) -> Result<HealthRow> {
         thread_status: Some(thread_status.into()),
         process_details: Some(json!([{
             "pid": std::process::id(),
-            "name": "OpenAlgo Desktop",
+            "name": "The Bridge",
             "rss_mb": p.rss_mb.unwrap_or(0.0),
             "vms_mb": p.vms_mb.unwrap_or(0.0),
             "memory_percent": p.memory_percent.unwrap_or(0.0),
@@ -302,7 +302,7 @@ fn alerts(
             metric_value: v,
             threshold_value: level,
             message: format!(
-                "{} is {}: {:.0}{} (level {:.0}{}). If it keeps rising, restart OpenAlgo and report it.",
+                "{} is {}: {:.0}{} (level {:.0}{}). If it keeps rising, restart The Bridge and report it.",
                 label, word, v, unit, level, unit
             ),
             ..Default::default()
@@ -353,13 +353,13 @@ pub fn order_facts_message(cause: crate::services::order_reconciler::GapCause) -
     use crate::services::order_reconciler::GapCause;
     let why = match cause {
         GapCause::RelayLagged => {
-            "the broker's order updates arrived faster than OpenAlgo could relay them"
+            "the broker's order updates arrived faster than The Bridge could relay them"
         }
-        GapCause::EventLoss => "an order update could not be delivered inside OpenAlgo",
+        GapCause::EventLoss => "an order update could not be delivered inside The Bridge",
         GapCause::OrderFeedReconnected => "the broker's order feed reconnected",
     };
     format!(
-        "Some order updates may have been missed: {}. OpenAlgo is re-checking the broker's order book, and new strategy entries wait until it has; stops and exits keep running.",
+        "Some order updates may have been missed: {}. The Bridge is re-checking the broker's order book, and new strategy entries wait until it has; stops and exits keep running.",
         why
     )
 }
@@ -529,11 +529,11 @@ pub fn overall(latest: &Result<Option<HealthRow>>, now: DateTime<Utc>) -> Overal
     match latest {
         Err(_) => unknown(
             None,
-            "The health samples could not be read, so the state of OpenAlgo is unknown.".into(),
+            "The health samples could not be read, so the state of The Bridge is unknown.".into(),
         ),
         Ok(None) => unknown(
             None,
-            "No health sample has been taken yet. OpenAlgo takes one every minute while it runs."
+            "No health sample has been taken yet. The Bridge takes one every minute while it runs."
                 .into(),
         ),
         Ok(Some(m)) => overall_of(m, now),
@@ -545,7 +545,7 @@ pub fn overall_of(m: &HealthRow, now: DateTime<Utc>) -> Overall {
     let Some(taken) = store::parse_ts(&m.timestamp) else {
         return unknown(
             None,
-            "The latest health sample has no readable time, so the state of OpenAlgo is unknown."
+            "The latest health sample has no readable time, so the state of The Bridge is unknown."
                 .into(),
         );
     };

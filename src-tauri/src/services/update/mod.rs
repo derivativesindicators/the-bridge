@@ -40,7 +40,7 @@ use std::time::Duration;
 
 /// Where every release is published. The release page of one version is
 /// `<RELEASES_URL>/tag/v<version>`.
-pub const RELEASES_URL: &str = "https://github.com/marketcalls/openalgo-desktop/releases";
+pub const RELEASES_URL: &str = "https://SOURCE-REPO-URL-PLACEHOLDER/releases";
 
 /// Socket.IO event carrying [`UpdateStatus`] whenever it changes.
 pub const STATUS_EVENT: &str = "update_status";

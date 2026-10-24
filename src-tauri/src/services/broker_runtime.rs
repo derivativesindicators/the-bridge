@@ -225,7 +225,7 @@ async fn start_session(
             }
         }
         Err(AppError::Unsupported(_)) => {
-            tracing::info!("{} has no live market data feed in OpenAlgo Desktop", id);
+            tracing::info!("{} has no live market data feed in The Bridge", id);
             ctx.bridge.set_unavailable(bridge::NO_LIVE_FEED);
         }
         Err(e) => {

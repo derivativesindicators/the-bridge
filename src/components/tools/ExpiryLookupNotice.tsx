@@ -73,7 +73,7 @@ export function ApiKeyNotice() {
       <AlertTitle>API key needed</AlertTitle>
       <AlertDescription>
         <p>
-          The option chain is loaded with your OpenAlgo API key, and none is set up. Generate one on
+          The option chain is loaded with your The Bridge API key, and none is set up. Generate one on
           the API Key page, then come back.
         </p>
         <div className="mt-3">

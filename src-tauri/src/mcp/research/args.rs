@@ -128,7 +128,7 @@ pub fn normalize(a: &Map<String, Value>) -> Result<Map<String, Value>, Value> {
     }
     let bad_interval = |raw: &str| {
         limit_error(format!(
-            "Interval '{}' is not one OpenAlgo supports. Use for example 1m, 5m, 15m, 1h, D, W or M.",
+            "Interval '{}' is not one The Bridge supports. Use for example 1m, 5m, 15m, 1h, D, W or M.",
             raw
         ))
     };
@@ -218,7 +218,7 @@ pub(super) fn resolve_inputs(
 fn not_available(name: &str) -> Value {
     error(
         format!(
-            "The '{}' indicator is not available in OpenAlgo Desktop yet. Indicators available here: {}.",
+            "The '{}' indicator is not available in The Bridge yet. Indicators available here: {}.",
             name,
             ta::supported().join(", ")
         ),

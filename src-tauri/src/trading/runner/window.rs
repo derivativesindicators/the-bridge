@@ -56,7 +56,7 @@ impl RunnerHost for WindowHost {
             .build()
             .map_err(|e| {
                 tracing::error!("Could not open the runner window: {}", e);
-                "The strategy could not be started because its window could not be opened. Restart OpenAlgo and try again.".to_string()
+                "The strategy could not be started because its window could not be opened. Restart The Bridge and try again.".to_string()
             })?;
         self.labels.lock().insert(launch.run_id.clone(), label);
         Ok(())

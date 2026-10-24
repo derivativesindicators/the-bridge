@@ -123,7 +123,7 @@ impl AppServices {
     }
 }
 
-const SHUTTING_DOWN: &str = "OpenAlgo is shutting down";
+const SHUTTING_DOWN: &str = "The Bridge is shutting down";
 
 fn parse_bars(body: &Value) -> Vec<Bar> {
     let n = |v: &Value, k: &str| v.get(k).and_then(Value::as_f64).unwrap_or(0.0);

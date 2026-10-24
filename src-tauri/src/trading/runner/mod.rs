@@ -108,7 +108,7 @@ pub const RUNNING_DELETE_REFUSAL: &str = "This strategy is running, so it has no
 pub const BUSY_DELETE_REFUSAL: &str =
     "This strategy is still being stopped or removed. Try again in a moment.";
 /// What a start is told when this copy of the app cannot open runner pages.
-pub const NO_HOST_MESSAGE: &str = "Strategies cannot be run in this copy of OpenAlgo because it has no window to run them in. Start OpenAlgo Desktop normally and try again.";
+pub const NO_HOST_MESSAGE: &str = "Strategies cannot be run in this copy of The Bridge because it has no window to run them in. Start The Bridge normally and try again.";
 /// The end of every answer that leaves a close pending: what the run is
 /// doing and what the trader does next. It never says the run manages the
 /// position, because a close-pending run sends nothing.
@@ -668,7 +668,7 @@ impl Runner {
         let me = self
             .me
             .upgrade()
-            .ok_or_else(|| crate::error::AppError::Internal("OpenAlgo is shutting down".into()))?;
+            .ok_or_else(|| crate::error::AppError::Internal("The Bridge is shutting down".into()))?;
         tokio::task::spawn_blocking(move || read(&me))
             .await
             .map_err(|e| crate::error::AppError::Internal(format!("Blocking task failed: {}", e)))

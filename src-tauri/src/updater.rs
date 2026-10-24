@@ -430,7 +430,7 @@ mod tests {
 
     #[test]
     fn only_installer_built_copies_update_themselves() {
-        let app = Path::new("/Applications/OpenAlgo Desktop.app/Contents/MacOS/openalgo-desktop");
+        let app = Path::new("/Applications/The Bridge.app/Contents/MacOS/openalgo-desktop");
         let loose = Path::new("/Users/me/src/target/release/openalgo-desktop");
         assert_eq!(
             package_of(Some(BundleType::App), false, false, Some(app)),
@@ -521,7 +521,7 @@ mod plugin_tests {
             self.sign_with_comment(
                 data,
                 &format!(
-                    "timestamp:1760500000\tfile:OpenAlgo.Desktop.app.tar.gz\tversion:{}",
+                    "timestamp:1760500000\tfile:The Bridge.Desktop.app.tar.gz\tversion:{}",
                     version
                 ),
             )
@@ -654,7 +654,7 @@ mod plugin_tests {
     #[tokio::test]
     async fn a_signed_update_is_offered_downloaded_and_verified() {
         let key = TestKey::generate();
-        let artifact = b"the new OpenAlgo Desktop".to_vec();
+        let artifact = b"the new The Bridge".to_vec();
         let sig = key.sign(&artifact, "0.2.0");
         let server = serve(|url| Served {
             manifest: Ok(manifest(url, "0.2.0", &sig)),

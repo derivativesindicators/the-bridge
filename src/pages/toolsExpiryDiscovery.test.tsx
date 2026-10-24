@@ -163,7 +163,7 @@ const PAGES: PageCase[] = [
   // page (2026-10-20), so it keeps the web's expiry lookup verbatim.
 ]
 
-const busy = 'OpenAlgo is busy. Try again in a few seconds.'
+const busy = 'The Bridge is busy. Try again in a few seconds.'
 
 const OUTCOMES = [
   {

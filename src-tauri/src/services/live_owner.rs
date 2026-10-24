@@ -160,7 +160,7 @@ impl LiveOwner {
     fn not_sent_through(&self, active: &LiveOwner) -> String {
         let mine = self.describe();
         format!(
-            "This was opened on {}, but OpenAlgo is signed in to {} now, so the order was not sent. Sign in to {} to manage it.",
+            "This was opened on {}, but The Bridge is signed in to {} now, so the order was not sent. Sign in to {} to manage it.",
             mine,
             active.describe(),
             mine
@@ -258,7 +258,7 @@ mod tests {
             .unwrap();
         assert_eq!(
             why,
-            "This was opened on Zerodha (AB1234), but OpenAlgo is signed in to Angel One (XY9876) now, so the order was not sent. Sign in to Zerodha (AB1234) to manage it."
+            "This was opened on Zerodha (AB1234), but The Bridge is signed in to Angel One (XY9876) now, so the order was not sent. Sign in to Zerodha (AB1234) to manage it."
         );
         assert!(zerodha
             .refusal(Some(&LiveOwner::new("zerodha", "ZZ0001")))
@@ -311,7 +311,7 @@ mod tests {
         );
         assert_eq!(
             a.refusal(Some(&angel)).unwrap(),
-            "This was opened on Zerodha (AB1234), but OpenAlgo is signed in to Angel One (XY9876) now, so the order was not sent. Sign in to Zerodha (AB1234) to manage it."
+            "This was opened on Zerodha (AB1234), but The Bridge is signed in to Angel One (XY9876) now, so the order was not sent. Sign in to Zerodha (AB1234) to manage it."
         );
         assert!(
             row("live", "", "").refusal(Some(&angel)).is_some(),

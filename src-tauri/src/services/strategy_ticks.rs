@@ -34,7 +34,7 @@ pub fn alert(conn: &Connection, ctx: &AppState, now: DateTime<Utc>) -> Result<()
             metric_value: missed as f64,
             threshold_value: 0.0,
             message: format!(
-                "Strategy risk management missed {} prices since OpenAlgo started: the market data came faster than it was read. Stops and targets act on the next price. If this keeps happening, hold fewer symbols or restart OpenAlgo, and report it.",
+                "Strategy risk management missed {} prices since The Bridge started: the market data came faster than it was read. Stops and targets act on the next price. If this keeps happening, hold fewer symbols or restart The Bridge, and report it.",
                 missed
             ),
             ..Default::default()

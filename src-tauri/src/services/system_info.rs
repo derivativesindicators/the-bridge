@@ -291,7 +291,7 @@ pub fn system_payload(
         "host": host_json(),
         "runtime": {
             "wsgi_hint": "desktop",
-            "worker_class": "OpenAlgo Desktop",
+            "worker_class": "The Bridge",
             "process_uptime_seconds": process_start().elapsed().as_secs(),
             "active_threads": crate::services::health_service::process_stats().threads,
             "background_tasks": ctx.task_count(),
@@ -496,7 +496,7 @@ pub fn render_report(ctx: &AppState, payload: &Value, md: bool) -> Result<String
     let all = errors(ctx)?;
     let mut l: Vec<String> = Vec::new();
     l.push(format!(
-        "{}OpenAlgo Desktop System Report",
+        "{}The Bridge System Report",
         if md { "# " } else { "" }
     ));
     l.push(String::new());
@@ -563,7 +563,7 @@ const REPORT_SECTIONS: &[Section<'static>] = &[
     (
         "Build",
         "build",
-        &[("OpenAlgo Desktop", "openalgo_version")],
+        &[("The Bridge", "openalgo_version")],
     ),
     (
         "Brokers",

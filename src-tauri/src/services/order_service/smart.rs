@@ -43,7 +43,7 @@ pub const FRACTIONAL_POSITION_REFUSED: &str =
     "Fractional position sizes are accepted only for live CRYPTO orders. Use a whole-number position size.";
 
 /// The refusal of a `position_size` or `quantity` that is not a plain number.
-const SIZE_UNREADABLE: &str = "OpenAlgo could not read the position size or the quantity. Send each as a plain number, such as 2 or 0.5.";
+const SIZE_UNREADABLE: &str = "The Bridge could not read the position size or the quantity. Send each as a plain number, such as 2 or 0.5.";
 
 /// The web's smart-order decision table (broker `place_smartorder_api`),
 /// for whole units and exact sizes alike (`Q::default()` is zero).

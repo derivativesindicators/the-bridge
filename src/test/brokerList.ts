@@ -39,9 +39,9 @@ export function brokerEntry(
     exchanges: ['NSE', 'BSE', 'NFO'],
     banner:
       signIn === 'redirect'
-        ? `Login with ${name} takes you to ${name}'s login page. Log in there and ${name} sends you back to OpenAlgo.`
+        ? `Login with ${name} takes you to ${name}'s login page. Log in there and ${name} sends you back to The Bridge.`
         : signIn === 'form'
-          ? `Login with ${name} opens a short form in OpenAlgo.`
+          ? `Login with ${name} opens a short form in The Bridge.`
           : `Login with ${name} signs you in with one click using the keys you saved.`,
     fields: [{ ...KEY }, { ...SECRET }],
     redirect_url: redirect,

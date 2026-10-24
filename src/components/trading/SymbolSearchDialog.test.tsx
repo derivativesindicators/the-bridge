@@ -208,7 +208,7 @@ describe('SymbolSearchDialog', () => {
     expect(picked).toHaveLength(0)
   })
 
-  it('reads CE, PE and FUT from the symbol only where OpenAlgo symbology puts them (#2136)', async () => {
+  it('reads CE, PE and FUT from the symbol only where The Bridge symbology puts them (#2136)', async () => {
     const TEST_ROWS: SearchRow[] = [
       // Cash: plain names that end in CE by chance.
       { symbol: 'ACE', exchange: 'NSE', name: 'ACTION CONST EQ', instrumenttype: 'EQ' },

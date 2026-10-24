@@ -90,7 +90,7 @@ interface Envelope {
 
 function statusOf(body: Envelope): UpdateStatus {
   if (body.status !== 'success' || !body.data) {
-    throw new Error(body.message || 'OpenAlgo could not read the update status. Try again.')
+    throw new Error(body.message || 'The Bridge could not read the update status. Try again.')
   }
   return body.data
 }

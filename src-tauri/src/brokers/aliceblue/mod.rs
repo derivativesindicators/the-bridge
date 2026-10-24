@@ -467,7 +467,7 @@ impl AliceBlueBroker {
 
 pub(crate) fn missing_ucc() -> AppError {
     AppError::Auth(
-        "OpenAlgo could not read your AliceBlue client code from the session. Log in to AliceBlue again."
+        "The Bridge could not read your AliceBlue client code from the session. Log in to AliceBlue again."
             .into(),
     )
 }

@@ -68,7 +68,7 @@ export function StartFreshCard({ reason, onDone }: StartFreshCardProps) {
         {reason === 'forgot' ? 'Set a new password' : 'Start fresh'}
       </h2>
       <p className="text-muted-foreground">
-        OpenAlgo locks your saved broker keys, your API key and your two-factor login with your
+        The Bridge locks your saved broker keys, your API key and your two-factor login with your
         password, so they cannot be opened without the old one. A new password keeps your account,
         settings, strategies, watchlists and trade history. After it you:
       </p>
@@ -127,7 +127,7 @@ export function StartFreshCard({ reason, onDone }: StartFreshCardProps) {
         </form>
       ) : (
         <p>
-          For your safety this works only in the OpenAlgo Desktop window on the computer where it is
+          For your safety this works only in the The Bridge window on the computer where it is
           installed. Open the app there and choose {action} on this page.
         </p>
       )}

@@ -45,7 +45,7 @@ interface UpdateStore {
   later: () => Promise<void>
 }
 
-const COULD_NOT_REACH = 'Could not reach OpenAlgo. Try again.'
+const COULD_NOT_REACH = 'Could not reach The Bridge. Try again.'
 
 function messageOf(e: unknown): string {
   return e instanceof Error && e.message ? e.message : COULD_NOT_REACH
@@ -97,7 +97,7 @@ export const useUpdateStore = create<UpdateStore>((set, get) => ({
 
   startUpdate: async (confirmed) => {
     if (!isDesktopShell()) {
-      set({ error: 'Open OpenAlgo Desktop on this computer to install the update.' })
+      set({ error: 'Open The Bridge on this computer to install the update.' })
       return
     }
     set({ busy: true, error: null, pending: null, dialogOpen: true })
@@ -128,7 +128,7 @@ export const useUpdateStore = create<UpdateStore>((set, get) => ({
       if (out.status === 'confirm' && out.warning && out.activity) {
         set({ pending: { warning: out.warning, activity: out.activity, step: 'restart' } })
       } else if (out.status !== 'restarting') {
-        set({ error: out.message || 'OpenAlgo could not restart to install the update.' })
+        set({ error: out.message || 'The Bridge could not restart to install the update.' })
       }
     } finally {
       set({ busy: false })

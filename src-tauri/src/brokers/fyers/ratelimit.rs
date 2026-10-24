@@ -292,13 +292,13 @@ impl FyersLimiter {
 pub fn denied_message(plan: FyersPlan, c: Category, d: Denied) -> String {
     match d {
         Denied::Daily(cap) => format!(
-            "Fyers' daily limit of {} {} requests on the {} plan is used up for today, so OpenAlgo has stopped sending them. It resets at midnight.",
+            "Fyers' daily limit of {} {} requests on the {} plan is used up for today, so The Bridge has stopped sending them. It resets at midnight.",
             group_thousands(cap),
             c.noun(),
             plan.label()
         ),
         Denied::Wait(w) => format!(
-            "OpenAlgo is pacing {} requests to stay within Fyers' limits on the {} plan, and this one would have had to wait about {} seconds for its turn. Try again shortly.",
+            "The Bridge is pacing {} requests to stay within Fyers' limits on the {} plan, and this one would have had to wait about {} seconds for its turn. Try again shortly.",
             c.noun(),
             plan.label(),
             w.as_secs().max(1)
@@ -307,7 +307,7 @@ pub fn denied_message(plan: FyersPlan, c: Category, d: Denied) -> String {
 }
 
 /// Fyers asked for a pause longer than the request can be held.
-pub const SLOW_DOWN_MESSAGE: &str = "Fyers asked OpenAlgo to slow down for longer than this request can be held. It was not retried. Try again in a minute.";
+pub const SLOW_DOWN_MESSAGE: &str = "Fyers asked The Bridge to slow down for longer than this request can be held. It was not retried. Try again in a minute.";
 
 fn group_thousands(n: u32) -> String {
     let s = n.to_string();
@@ -434,7 +434,7 @@ mod tests {
     fn messages_name_the_plan_and_the_limit() {
         assert_eq!(
             denied_message(FyersPlan::Standard, Category::Data, Denied::Daily(5_000)),
-            "Fyers' daily limit of 5,000 market data requests on the Standard plan is used up for today, so OpenAlgo has stopped sending them. It resets at midnight."
+            "Fyers' daily limit of 5,000 market data requests on the Standard plan is used up for today, so The Bridge has stopped sending them. It resets at midnight."
         );
         assert_eq!(group_thousands(500_000), "500,000");
         assert_eq!(group_thousands(50), "50");

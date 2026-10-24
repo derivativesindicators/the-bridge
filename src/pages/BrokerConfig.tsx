@@ -418,7 +418,7 @@ export default function BrokerConfig() {
                             (p) => p.id === (broker.rate_plan ?? broker.rate_plans?.[0]?.id)
                           )?.hint
                         }{' '}
-                        OpenAlgo paces {broker.name} requests to stay within these limits. It
+                        The Bridge paces {broker.name} requests to stay within these limits. It
                         applies at once and does not sign you out.
                       </p>
                     </div>

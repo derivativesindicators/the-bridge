@@ -576,7 +576,7 @@ async fn reject(stream: TcpStream, cfg: &FeedConfig) {
 /// The error frame's message when an authenticated client is closed because
 /// its authentication no longer holds (then closed with 4401).
 pub const CREDENTIALS_CHANGED_MSG: &str =
-    "Your OpenAlgo session ended or the API key changed. Connect again and authenticate with the current API key.";
+    "Your The Bridge session ended or the API key changed. Connect again and authenticate with the current API key.";
 
 /// Resolves to true when `rx` sees a new value; never resolves when there is
 /// no receiver or its sender is gone.

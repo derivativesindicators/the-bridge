@@ -1471,7 +1471,7 @@ export default function Scalping() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {/* Raw OpenAlgo product codes (docs/prompt/order-constants.md):
+                  {/* Raw The Bridge product codes (docs/prompt/order-constants.md):
                       MIS / NRML / CNC — not Intraday/Margin/Delivery. */}
                   <SelectItem value="MIS">MIS</SelectItem>
                   {segment !== 'EQUITY' && <SelectItem value="NRML">NRML</SelectItem>}

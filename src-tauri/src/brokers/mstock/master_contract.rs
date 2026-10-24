@@ -429,7 +429,7 @@ pub async fn download(b: &MstockBroker, auth: &AuthToken) -> Result<Vec<SymToken
     let v: Value = serde_json::from_slice(&bytes).map_err(|e| {
         tracing::warn!("mStock master contract is not JSON: {}", e);
         AppError::Broker(
-            "mStock sent an instrument list OpenAlgo could not read. Try downloading the master contract again shortly."
+            "mStock sent an instrument list The Bridge could not read. Try downloading the master contract again shortly."
                 .into(),
         )
     })?;

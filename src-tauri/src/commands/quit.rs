@@ -46,16 +46,16 @@ async fn ask_then_quit(app: AppHandle) {
                 title: &w.title,
                 message: &message,
                 yes: "Quit",
-                no: "Keep OpenAlgo Open",
+                no: "Keep The Bridge Open",
             };
             confirmed(&app, &window, question).await
         }
     };
     shell.quit.answered(quit);
     if quit {
-        tracing::info!("Quitting OpenAlgo at the trader's request");
+        tracing::info!("Quitting The Bridge at the trader's request");
         if let Err(e) = window.destroy() {
-            tracing::warn!("The OpenAlgo window could not be closed: {}", e);
+            tracing::warn!("The The Bridge window could not be closed: {}", e);
         }
     }
 }
@@ -83,7 +83,7 @@ pub fn route_menu_quit(app: &tauri::App) -> tauri::Result<()> {
         let quit = MenuItem::with_id(
             app,
             QUIT_MENU_ID,
-            "Quit OpenAlgo Desktop",
+            "Quit The Bridge",
             true,
             Some("CmdOrCtrl+Q"),
         )?;

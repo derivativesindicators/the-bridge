@@ -58,7 +58,7 @@ pub const TBT_URL: &str = "wss://rtsocket-api.fyers.in/versova";
 pub const ORDER_WS_URL: &str = "wss://socket.fyers.in/trade/v3";
 
 /// web `self.source`.
-pub const HSM_SOURCE: &str = "OpenAlgo-HSM";
+pub const HSM_SOURCE: &str = "The Bridge-HSM";
 /// web subscription channel.
 pub const HSM_CHANNEL: u8 = 11;
 /// Absent value marker in HSM frames.
@@ -680,7 +680,7 @@ impl BrokerFeed for HsmFeed {
             .into_client_request()
             .map_err(|_| AppError::Internal("Fyers feed address is invalid".into()))?;
         req.headers_mut()
-            .insert("User-Agent", HeaderValue::from_static("OpenAlgo-HSM/1.0"));
+            .insert("User-Agent", HeaderValue::from_static("The Bridge-HSM/1.0"));
         Ok(req)
     }
 

@@ -652,7 +652,7 @@ impl StrategyModule {
             user_id,
             ORDER_UNCONFIRMED,
             &format!(
-                "{} for leg {} was sent, but the broker did not confirm it. It may have been placed, so it is not sent again; OpenAlgo is checking the order book and keeps the position managed meanwhile.",
+                "{} for leg {} was sent, but the broker did not confirm it. It may have been placed, so it is not sent again; The Bridge is checking the order book and keeps the position managed meanwhile.",
                 what, leg_id
             ),
             EventFields {

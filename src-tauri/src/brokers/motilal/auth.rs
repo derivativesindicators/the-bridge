@@ -165,7 +165,7 @@ pub async fn authenticate(b: &MotilalBroker, creds: BrokerCredentials) -> Result
     }
     let v: Value = resp.json().await.map_err(|_| {
         AppError::Auth(
-            "Motilal Oswal sent a login answer OpenAlgo could not read. Try again.".into(),
+            "Motilal Oswal sent a login answer The Bridge could not read. Try again.".into(),
         )
     })?;
     let token = vs(&v, "AuthToken");
@@ -174,7 +174,7 @@ pub async fn authenticate(b: &MotilalBroker, creds: BrokerCredentials) -> Result
     }
     if is_unverified(&v) {
         return Err(AppError::Auth(
-            "Motilal Oswal asked for an OTP sent by SMS or e-mail, which OpenAlgo does not support yet. Enable an authenticator app with Motilal Oswal and log in with a TOTP code."
+            "Motilal Oswal asked for an OTP sent by SMS or e-mail, which The Bridge does not support yet. Enable an authenticator app with Motilal Oswal and log in with a TOTP code."
                 .into(),
         ));
     }

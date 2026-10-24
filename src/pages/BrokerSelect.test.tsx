@@ -257,7 +257,7 @@ describe('Switching truthfully', () => {
     renderPage()
     await switchToXts()
     expect(
-      await (await card('fivepaisaxts')).findByText('Could not reach OpenAlgo. Try again.')
+      await (await card('fivepaisaxts')).findByText('Could not reach The Bridge. Try again.')
     ).toBeInTheDocument()
     expect(assigned).toEqual([])
     // Read again: the server still has Zerodha logged in.

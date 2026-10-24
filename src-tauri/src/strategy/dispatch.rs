@@ -378,7 +378,7 @@ fn sandbox_reply<T: serde::Serialize>(r: crate::sandbox::SbResult<T>) -> Reply {
 impl OrderGateway for AppGateway {
     async fn place(&self, mode: RunMode, order: &OrderPayload) -> DispatchResult {
         let Some(ctx) = self.ctx.upgrade() else {
-            return DispatchResult::refused("OpenAlgo is shutting down");
+            return DispatchResult::refused("The Bridge is shutting down");
         };
         let req = order.to_request();
         match mode {
@@ -426,7 +426,7 @@ impl OrderGateway for AppGateway {
 
     async fn cancel(&self, mode: RunMode, broker_order_id: &str) -> DispatchResult {
         let Some(ctx) = self.ctx.upgrade() else {
-            return DispatchResult::refused("OpenAlgo is shutting down");
+            return DispatchResult::refused("The Bridge is shutting down");
         };
         if broker_order_id.is_empty() {
             return DispatchResult::refused("Broker order id is unavailable");
@@ -466,7 +466,7 @@ impl OrderGateway for AppGateway {
     async fn order_status(&self, mode: RunMode, broker_order_id: &str) -> OrderStatusResult {
         let Some(ctx) = self.ctx.upgrade() else {
             return OrderStatusResult {
-                error: Some("OpenAlgo is shutting down".into()),
+                error: Some("The Bridge is shutting down".into()),
                 ..Default::default()
             };
         };
@@ -535,7 +535,7 @@ impl OrderGateway for AppGateway {
                 let ctx = self
                     .ctx
                     .upgrade()
-                    .ok_or_else(|| "OpenAlgo is shutting down".to_string())?;
+                    .ok_or_else(|| "The Bridge is shutting down".to_string())?;
                 broker_handle(&ctx)
                     .map(|_| ())
                     .map_err(|_| NO_BROKER_SESSION.to_string())
@@ -587,7 +587,7 @@ impl OrderGateway for AppGateway {
 
     async fn book(&self, mode: RunMode, book: Book) -> Result<Value, Value> {
         let Some(ctx) = self.ctx.upgrade() else {
-            return Err(json!({"status": "error", "message": "OpenAlgo is shutting down"}));
+            return Err(json!({"status": "error", "message": "The Bridge is shutting down"}));
         };
         use crate::services::account_service as acct;
         let reply = match mode {
@@ -644,7 +644,7 @@ impl OrderGateway for AppGateway {
         let ctx = self
             .ctx
             .upgrade()
-            .ok_or_else(|| "OpenAlgo is shutting down".to_string())?;
+            .ok_or_else(|| "The Bridge is shutting down".to_string())?;
         if mode == RunMode::Sandbox {
             let body = sandbox_reply(ctx.sandbox.orderbook().await).body;
             let rows = body["data"]["orders"]
@@ -693,7 +693,7 @@ impl OrderGateway for AppGateway {
         let ctx = self
             .ctx
             .upgrade()
-            .ok_or_else(|| "OpenAlgo is shutting down".to_string())?;
+            .ok_or_else(|| "The Bridge is shutting down".to_string())?;
         let h = broker_handle(&ctx).map_err(|_| NO_BROKER_SESSION.to_string())?;
         match crate::services::market_data_service::fetch_quote(&ctx, &h, symbol, exchange).await {
             Ok(q) if q.ltp.is_finite() && q.ltp > 0.0 => Ok(q.ltp),

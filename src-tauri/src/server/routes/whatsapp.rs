@@ -226,7 +226,7 @@ pub async fn test_message(State(ctx): Ctx, User(u): User) -> Response {
     let (jid, text) = match mine {
         Some(m) => (
             m.whatsapp_jid,
-            "*Test from OpenAlgo*\nYour WhatsApp integration is working.".to_string(),
+            "*Test from The Bridge*\nYour WhatsApp integration is working.".to_string(),
         ),
         None => {
             let all = page::users(&ctx).unwrap_or_default();
@@ -239,7 +239,7 @@ pub async fn test_message(State(ctx): Ctx, User(u): User) -> Response {
             (
                 first.whatsapp_jid,
                 format!(
-                    "*Test from OpenAlgo (admin: {})*\nYour WhatsApp integration is working.",
+                    "*Test from The Bridge (admin: {})*\nYour WhatsApp integration is working.",
                     u.username
                 ),
             )

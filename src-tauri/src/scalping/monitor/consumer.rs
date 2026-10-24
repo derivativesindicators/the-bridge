@@ -27,7 +27,7 @@ const SYNC_RETRY_MAX: Duration = Duration::from_secs(30);
 const SYNC_ALERT_AFTER: u32 = 3;
 
 /// What the trader is told when the stops keep failing to be read.
-pub const STOPS_UNREAD: &str = "Scalping stops could not be read from OpenAlgo's data folder, so a stop saved or changed recently may not be watched yet. Stops already watched stay in place, and OpenAlgo keeps trying. Check that the disk has free space; if this lasts, watch your open positions yourself and restart OpenAlgo.";
+pub const STOPS_UNREAD: &str = "Scalping stops could not be read from The Bridge's data folder, so a stop saved or changed recently may not be watched yet. Stops already watched stay in place, and The Bridge keeps trying. Check that the disk has free space; if this lasts, watch your open positions yourself and restart The Bridge.";
 
 type SyncFuture = Pin<Box<dyn Future<Output = ()> + Send>>;
 

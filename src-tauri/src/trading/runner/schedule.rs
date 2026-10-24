@@ -126,7 +126,7 @@ pub fn due(
                     // Passed over while the computer slept (ARCH-03): said,
                     // never skipped silently.
                     tracing::warn!(
-                        "OpenScript {}: the scheduled start at {} was missed because OpenAlgo was not running then (the computer was asleep). Start it yourself if it should still run today.",
+                        "OpenScript {}: the scheduled start at {} was missed because The Bridge was not running then (the computer was asleep). Start it yourself if it should still run today.",
                         name,
                         at.with_timezone(&crate::clock::ist_offset()).format("%H:%M on %d %b")
                     );

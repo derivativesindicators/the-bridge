@@ -204,7 +204,7 @@ export default function Dashboard() {
   const quickAccessCards = [
     {
       href: '/search',
-      label: 'OpenAlgo Symbols',
+      label: 'The Bridge Symbols',
       description: 'Universal symbology across brokers',
       icon: Search,
       gradient: 'from-primary/10 to-primary/5 hover:from-primary/20 hover:to-primary/10',
@@ -247,7 +247,7 @@ export default function Dashboard() {
     {
       href: 'https://www.openalgo.in/learn',
       label: 'OpenVarsity',
-      description: 'Learn algo trading with OpenAlgo',
+      description: 'Learn algo trading with The Bridge',
       icon: GraduationCap,
       gradient: 'from-blue-500/10 to-blue-500/5 hover:from-blue-500/20 hover:to-blue-500/10',
       iconBg: 'bg-blue-500/20',

@@ -172,7 +172,7 @@ pub(crate) fn modify_body(req: &GttRequest, existing: &VortexGtt, row: &SymToken
     };
     if legs.len() != targets.len() {
         return Err(AppError::Validation(
-            "This GTT has legs OpenAlgo cannot change. Cancel it and place a new one instead."
+            "This GTT has legs The Bridge cannot change. Cancel it and place a new one instead."
                 .into(),
         ));
     }

@@ -434,7 +434,7 @@ pub async fn download(b: &TradejiniBroker) -> Result<Vec<SymbolData>> {
     let base = format!("{}/api/mkt-data/scrips/symbol-store", b.base_url);
     let text = get_text(b, &base).await?;
     let v: Value = serde_json::from_str(&text).map_err(|_| {
-        AppError::Broker("Tradejini sent an instrument list OpenAlgo could not read.".into())
+        AppError::Broker("Tradejini sent an instrument list The Bridge could not read.".into())
     })?;
     let groups = parse_groups(&v);
     if groups.is_empty() {

@@ -421,7 +421,7 @@ pub fn resolve_symbol(
         return r.symbol;
     }
     if !trading_symbol.is_empty() {
-        tracing::debug!("No OpenAlgo symbol for Dhan {}:{}", exchange, security_id);
+        tracing::debug!("No The Bridge symbol for Dhan {}:{}", exchange, security_id);
         return trading_symbol.to_string();
     }
     security_id.to_string()

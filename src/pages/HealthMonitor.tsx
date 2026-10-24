@@ -759,7 +759,7 @@ export default function HealthMonitor() {
         <CardHeader>
           <CardTitle className="text-lg">Top Memory Processes</CardTitle>
           <CardDescription>
-            Memory used by OpenAlgo's own process, not the rest of the computer
+            Memory used by The Bridge's own process, not the rest of the computer
           </CardDescription>
           <NotRefreshed read={reads.current} what="this list" />
         </CardHeader>

@@ -49,10 +49,10 @@ pub const MAX_RETRY_WAIT: Duration = Duration::from_secs(10);
 
 /// A call refused because its turn would come too late (web
 /// `BROKER_BUSY_MESSAGE`).
-pub const BUSY_MESSAGE: &str = "OpenAlgo is pacing requests to stay within Groww's rate limit, and this one would have had to wait too long for its turn. Try again in a few seconds.";
+pub const BUSY_MESSAGE: &str = "The Bridge is pacing requests to stay within Groww's rate limit, and this one would have had to wait too long for its turn. Try again in a few seconds.";
 /// Groww asked for a wait longer than a request is held (web
 /// `retry_delay`'s refusal).
-pub const SLOW_DOWN_MESSAGE: &str = "Groww asked OpenAlgo to slow down for longer than a request can be held. This request was not retried. Try again in a minute.";
+pub const SLOW_DOWN_MESSAGE: &str = "Groww asked The Bridge to slow down for longer than a request can be held. This request was not retried. Try again in a minute.";
 
 /// Groww API type of a call.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

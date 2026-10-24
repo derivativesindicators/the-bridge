@@ -195,7 +195,7 @@ impl Deployment {
 /// The saved parameters as a run may carry them, or why they cannot be.
 fn saved_inputs(text: &str) -> std::result::Result<Map<String, Value>, String> {
     let value = serde_json::from_str::<Value>(text)
-        .map_err(|_| "They are not in a form OpenAlgo can read.".to_string())?;
+        .map_err(|_| "They are not in a form The Bridge can read.".to_string())?;
     checked_inputs(&value)
 }
 

@@ -26,8 +26,8 @@ const WEB_SERVER_NAMES: Record<string, string> = {
 }
 
 const PROXY_MODES: Record<string, string> = {
-  subprocess: 'Separate process started by OpenAlgo',
-  thread: 'Inside the OpenAlgo process',
+  subprocess: 'Separate process started by The Bridge',
+  thread: 'Inside the The Bridge process',
   external: 'Separate service (Docker or standalone mode)',
 }
 
@@ -86,7 +86,7 @@ function proxyStatusText(runtime: SystemRuntime): string | null {
   const state = status.alive ? 'Running' : 'Stopped'
   const restarts = status.restarts
   if (isNumber(restarts) && restarts > 0) {
-    return `${state}, restarted ${plural(restarts, 'time', 'times')} since OpenAlgo started`
+    return `${state}, restarted ${plural(restarts, 'time', 'times')} since The Bridge started`
   }
   return state
 }

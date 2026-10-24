@@ -79,7 +79,7 @@ export const EVENTLET_LAUNCHER: SystemRuntime = {
 
 /** The sentence blueprints/admin.py writes when the request slots run out. */
 export const BUSY_NOTE =
-  "Almost every request slot is busy (60 of 64), so new requests can wait. Close OpenAlgo tabs you are not using. If this keeps happening during trading, go back to eventlet: set OPENALGO_WORKER_CLASS = 'eventlet' in .env and restart OpenAlgo after 23:30 IST."
+  "Almost every request slot is busy (60 of 64), so new requests can wait. Close The Bridge tabs you are not using. If this keeps happening during trading, go back to eventlet: set OPENALGO_WORKER_CLASS = 'eventlet' in .env and restart The Bridge after 23:30 IST."
 
 /** gthread under load: most threads busy, a queue, broker connections open. */
 export const GTHREAD_BUSY: SystemRuntime = {

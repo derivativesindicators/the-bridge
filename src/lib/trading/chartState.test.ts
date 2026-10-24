@@ -34,7 +34,7 @@ describe('chart state wording', () => {
   })
 
   it.each([
-    ['TypeError: Failed to fetch', /OpenAlgo could not be reached/],
+    ['TypeError: Failed to fetch', /The Bridge could not be reached/],
     ['HTTP 502 Bad gateway', /^Bad gateway$/],
     ['status code 429: Too many requests.', /^Too many requests$/],
     ['', /^The broker did not return bars$/],

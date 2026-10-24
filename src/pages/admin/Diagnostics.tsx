@@ -270,7 +270,7 @@ export default function Diagnostics() {
       <p className="text-sm text-muted-foreground">
         Use this page to troubleshoot issues. Click{' '}
         <span className="font-semibold">Download .md</span> and attach it when asking for help on
-        the OpenAlgo community — secrets and tokens are never included.
+        the The Bridge community — secrets and tokens are never included.
       </p>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -293,20 +293,20 @@ export default function Diagnostics() {
             {info?.host.is_raspberry_pi ? (
               <>
                 <KV label="Raspberry Pi" value={info.host.rpi_model} />
-                {/* Desktop: the app does not support the Pi; OpenAlgo web does. */}
+                {/* Desktop: the app does not support the Pi; The Bridge web does. */}
                 <div
                   role="note"
                   aria-label="Raspberry Pi not supported"
                   className="mt-2 rounded-md border border-amber-500/60 bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-950/30 dark:text-amber-200"
                 >
-                  OpenAlgo Desktop does not support Raspberry Pi. Run{' '}
+                  The Bridge does not support Raspberry Pi. Run{' '}
                   <a
                     href="https://github.com/marketcalls/openalgo"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="font-medium underline"
                   >
-                    OpenAlgo web
+                    The Bridge web
                   </a>{' '}
                   on your Pi instead.
                 </div>
@@ -331,7 +331,7 @@ export default function Diagnostics() {
           <Section
             icon={Layers}
             title="Web server"
-            description="How OpenAlgo serves requests and market data on this server."
+            description="How The Bridge serves requests and market data on this server."
           >
             <WebServerDetails runtime={info.runtime} />
           </Section>
@@ -373,8 +373,8 @@ export default function Diagnostics() {
         {/* Build */}
         <Section icon={Settings} title="Build">
           <div>
-            <KV label="OpenAlgo" value={info?.build.openalgo_version} />
-            <KV label="OpenAlgo SDK" value={info?.build.openalgo_sdk_version} />
+            <KV label="The Bridge" value={info?.build.openalgo_version} />
+            <KV label="The Bridge SDK" value={info?.build.openalgo_sdk_version} />
             <KV label="Git branch" value={info?.build.git_branch} />
             <KV label="Git commit" value={info?.build.git_commit} />
             <KV label="Frontend build" value={info?.build.frontend_build_time} />
@@ -544,7 +544,7 @@ export default function Diagnostics() {
       <Section
         icon={AlertCircle}
         title="Errors"
-        description="Browse the errors OpenAlgo saved in its logs database (logs.db), newest first or grouped where the same error repeats. Errors in the app's pages land here too."
+        description="Browse the errors The Bridge saved in its logs database (logs.db), newest first or grouped where the same error repeats. Errors in the app's pages land here too."
       >
         {errorStats ? (
           <div className="flex flex-wrap gap-2 mb-4">
