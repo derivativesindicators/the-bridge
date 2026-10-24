@@ -37,6 +37,7 @@ pub mod telegram;
 pub mod traffic;
 pub mod update;
 pub mod watchlist;
+pub mod tunnel;
 pub mod websocket_example;
 pub mod webui;
 pub mod whatsapp;
@@ -308,6 +309,12 @@ fn broker_and_server_settings() -> Vec<RouteSpec> {
             websocket_example::apikey
         ),
         r!(GET, "/api/config/host", User, app_config::host),
+        r!(GET, "/api/tunnel", User, tunnel::status),
+        r!(POST, "/api/tunnel", User, tunnel::setup),
+        r!(POST, "/api/tunnel/start", User, tunnel::start),
+        r!(POST, "/api/tunnel/stop", User, tunnel::stop),
+        r!(POST, "/api/tunnel/remove", User, tunnel::remove),
+        r!(POST, "/api/tunnel/test", User, tunnel::test),
     ]
 }
 

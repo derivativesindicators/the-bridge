@@ -173,6 +173,14 @@ pub async fn peer_layer(
         req.headers(),
         req.uri().authority().map(|a| a.as_str()),
     );
+    // The Bridge 1.0.5: while the in-app webhook tunnel runs "webhook only",
+    // callers through a tunnel reach only the webhook routes.
+    if source == Source::Tunnel
+        && crate::tunnel::webhook_only_active()
+        && !crate::tunnel::tunnel_path_allowed(req.uri().path())
+    {
+        return error(StatusCode::NOT_FOUND, "Not found");
+    }
     // A resource guard on every request, well above legitimate use: the
     // per-surface limits come after the credential is checked.
     let too_many = || {

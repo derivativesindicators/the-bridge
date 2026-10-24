@@ -57,6 +57,7 @@ pub mod session;
 pub mod state;
 pub mod strategy;
 pub mod trading;
+pub mod tunnel;
 pub mod updater;
 pub mod websocket;
 
@@ -238,6 +239,8 @@ async fn start_services(
     ctx.chartink.start();
     // Market data feed for SDK clients; a taken port is kept in
     // its status with a trader-facing message.
+    // The Bridge: the saved webhook tunnel starts once the app is unlocked.
+    tunnel::supervise(ctx.clone());
     let feed = feed::FeedService::new(ctx.clone());
     feed.start().await;
     (server, feed)

@@ -1,6 +1,6 @@
 [package]
 name = "openalgo-desktop"
-version = "1.0.4"
+version = "1.0.5"
 description = "OpenAlgo Desktop - Algorithmic Trading Platform"
 authors = ["Derivatives Indicators"]
 edition = "2021"
@@ -18,6 +18,7 @@ crate-type = ["lib"]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
+zip = { version = "9", default-features = false, features = ["deflate"] }
 # Tauri framework
 tauri = { version = "2", features = [] }
 tauri-plugin-shell = "2"

@@ -35,3 +35,6 @@ This program is a modified version of OpenAlgo Desktop (https://github.com/marke
 - A taken port now names the likely cause ("most likely OpenAlgo Desktop or another copy of The Bridge"); the Scalping Terminal banner shows that message instead of only "Live feed lost". `/api/websocket/config` reports the port the feed actually listens on.
 - External links: the shell plugin's open scope `^https?://` (anchored by the plugin as `^^https?://$`) refused every real URL, so Download page / footer links did nothing (logged: "Scoped command argument at position 0 was found, but failed regex validation ^^https?://$"). Now `^https?://.+`, with a test.
 - Download page: "Back to Dashboard" whenever signed in to the app.
+
+## 2026-10-25 - Derivatives Indicators (v1.0.5)
+- New: guided "Set up a permanent webhook URL" on the TradingView page (ngrok free dev domain, or a Cloudflare named tunnel on your own domain). The Bridge downloads the official agent on first use (not bundled, per ngrok's terms), runs and supervises it, stores the token encrypted (never logged), sets the Host Server URL to the public address, restricts tunnel callers to webhook routes, and offers "Test webhook". Code: `src-tauri/src/tunnel.rs`, `/api/tunnel*`, `src/components/tunnel/`. Docs: `docs/userguide/33-permanent-webhook-url`.

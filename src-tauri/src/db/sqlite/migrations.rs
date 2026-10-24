@@ -104,6 +104,7 @@ const RUST_MIGRATIONS: &[(&str, Step)] = &[
         crate::messaging::whatsapp::db::migrate_executed_at,
     ),
     ("096_the_bridge_own_ports", m096_the_bridge_own_ports),
+    ("097_tunnel_settings", crate::tunnel::migrate),
 ];
 
 /// Run all database migrations

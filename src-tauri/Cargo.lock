@@ -3972,7 +3972,7 @@ dependencies = [
 
 [[package]]
 name = "openalgo-desktop"
-version = "1.0.4"
+version = "1.0.5"
 dependencies = [
  "aes 0.8.4",
  "aes-gcm",
@@ -4049,6 +4049,7 @@ dependencies = [
  "webpki-roots 1.0.10",
  "whatsapp-rust",
  "zeroize",
+ "zip",
 ]
 
 [[package]]

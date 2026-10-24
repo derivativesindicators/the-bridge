@@ -1,5 +1,6 @@
 import { AlertTriangle, BookOpen, Copy, ExternalLink, RefreshCw } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { WebhookTunnelSetup } from '@/components/tunnel/WebhookTunnelSetup'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -69,6 +70,15 @@ export default function TradingView() {
 
   // Refs
   const inputWrapperRef = useRef<HTMLDivElement>(null)
+
+  const refreshHostConfig = useCallback(async () => {
+    try {
+      const response = await fetch('/api/config/host', { credentials: 'include' })
+      setHostConfig(await response.json())
+    } catch {
+      /* keep the last value */
+    }
+  }, [])
 
   // Fetch host configuration and API key on mount
   useEffect(() => {
@@ -230,6 +240,9 @@ export default function TradingView() {
         </p>
       </div>
 
+      {/* The Bridge 1.0.5: guided permanent webhook URL. */}
+      <WebhookTunnelSetup onChanged={refreshHostConfig} />
+
       {/* Localhost Warning - only show if HOST_SERVER is not configured to external URL */}
       {/* Desktop: no .env; the external URL is the Host Server URL in Profile. */}
       {hostConfig?.is_localhost && (
@@ -239,8 +252,8 @@ export default function TradingView() {
             <strong>Webhook URL not accessible!</strong> TradingView cannot send alerts to
             localhost. Use <strong>ngrok</strong>, <strong>Cloudflare Tunnel</strong>,{' '}
             <strong>VS Code Dev Tunnel</strong>, or a <strong>custom domain</strong> to expose your
-            The Bridge to the internet, then enter that address as the Host Server URL on the
-            Broker tab of your Profile.
+            The Bridge to the internet, then enter that address as the Host Server URL on the Broker
+            tab of your Profile.
           </AlertDescription>
         </Alert>
       )}
