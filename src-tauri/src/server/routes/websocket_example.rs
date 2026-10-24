@@ -22,7 +22,12 @@ type Ctx = State<Arc<AppState>>;
 /// other devices, on the host the page was loaded from.
 pub fn websocket_url(ctx: &AppState, headers: &HeaderMap) -> String {
     let host = headers.get(header::HOST).and_then(|h| h.to_str().ok());
-    feed_url(&ctx.server_config(), host)
+    let mut cfg = ctx.server_config();
+    // The port the feed really listens on (it moves off a taken port).
+    if let crate::state::ServerStatus::Running { port, .. } = &*ctx.feed_status.read() {
+        cfg.ws_port = *port;
+    }
+    feed_url(&cfg, host)
 }
 
 /// [`websocket_url`] from the settings and the page's `Host` header; also

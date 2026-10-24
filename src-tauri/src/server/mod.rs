@@ -177,7 +177,7 @@ pub fn port_in_use_message(port: u16) -> String {
     let mac = if cfg!(target_os = "macos") && port == 5000 {
         " On a Mac this is usually AirPlay Receiver: open System Settings, General, AirDrop and Handoff, turn off AirPlay Receiver, then choose Try again."
     } else {
-        " Close the other program (for example another copy of The Bridge or The Bridge web), then choose Try again."
+        " Another app, most likely OpenAlgo Desktop or another copy of The Bridge, is using it: close it, then choose Try again."
     };
     format!(
         "The Bridge could not start because port {} is already used by another program.{} You can also choose a different port.",

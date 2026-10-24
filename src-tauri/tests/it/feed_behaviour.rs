@@ -476,7 +476,7 @@ async fn s10_browser_pages_from_other_sites_cannot_open_the_feed() {
     let mut c = Client::connect(&h.url).await;
     assert_eq!(c.auth().await["status"], "success");
     // The app's own page.
-    let (ws, _) = tokio_tungstenite::connect_async(with_origin("http://127.0.0.1:5000"))
+    let (ws, _) = tokio_tungstenite::connect_async(with_origin("http://127.0.0.1:5050"))
         .await
         .expect("the app's page connects");
     let mut c = Client { ws };

@@ -818,3 +818,31 @@ mod startup_tests {
             .is_none());
     }
 }
+
+#[cfg(test)]
+mod shell_open_scope_tests {
+    /// The Bridge 1.0.4: tauri-plugin-shell anchors the `plugins.shell.open`
+    /// pattern as `^<pattern>$`. The upstream value `^https?://` therefore
+    /// only matched the bare string "https://", so every external link
+    /// (Download page, footer, docs) failed with "Scoped command argument at
+    /// position 0 was found, but failed regex validation ^^https?://$" — and
+    /// `open_external` goes through the same scope.
+    #[test]
+    fn shell_open_scope_admits_real_links() {
+        let conf: serde_json::Value = serde_json::from_str(include_str!("../../tauri.conf.json")).unwrap();
+        let pat = conf["plugins"]["shell"]["open"].as_str().unwrap();
+        let re = regex::Regex::new(&format!("^{}$", pat)).unwrap();
+        for ok in [
+            "https://github.com/derivativesindicators/the-bridge/releases",
+            "https://github.com/derivativesindicators/the-bridge/releases/latest",
+            "https://github.com/derivativesindicators/the-bridge",
+            "https://derivativesindicators.com",
+            "http://example.com/x?y=1",
+        ] {
+            assert!(re.is_match(ok), "{} refused by {}", ok, pat);
+        }
+        for bad in ["file:///C:/Windows/system32/calc.exe", "javascript:alert(1)", "https://"] {
+            assert!(!re.is_match(bad), "{} admitted by {}", bad, pat);
+        }
+    }
+}

@@ -30,3 +30,8 @@ This program is a modified version of OpenAlgo Desktop (https://github.com/marke
 - Logo/icons: logo composited on a black rounded square so its white parts are visible on light backgrounds; all Tauri icons, favicon and in-app logo regenerated (`rebrand.py --icon-bg`).
 - External links (Download page, footer) open in the system browser through the app's own `open_external` command (permission added to the app window) with the shell plugin as fallback.
 - Download page renders inside the app layout (header nav) when signed in, with a Back to Dashboard/Home button.
+## 2026-10-25 - Derivatives Indicators (v1.0.4)
+- Own default ports: HTTP 5050 and market data WebSocket 8770 (OpenAlgo Desktop uses 5000/8765), so both apps run side by side. Migration `096_the_bridge_own_ports` moves settings still on 5000/8765 (including ones copied from OpenAlgo Desktop's data folder); custom ports are kept.
+- A taken port now names the likely cause ("most likely OpenAlgo Desktop or another copy of The Bridge"); the Scalping Terminal banner shows that message instead of only "Live feed lost". `/api/websocket/config` reports the port the feed actually listens on.
+- External links: the shell plugin's open scope `^https?://` (anchored by the plugin as `^^https?://$`) refused every real URL, so Download page / footer links did nothing (logged: "Scoped command argument at position 0 was found, but failed regex validation ^^https?://$"). Now `^https?://.+`, with a test.
+- Download page: "Back to Dashboard" whenever signed in to the app.

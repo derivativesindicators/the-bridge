@@ -103,6 +103,7 @@ const RUST_MIGRATIONS: &[(&str, Step)] = &[
         "095_whatsapp_command_logs_executed_at",
         crate::messaging::whatsapp::db::migrate_executed_at,
     ),
+    ("096_the_bridge_own_ports", m096_the_bridge_own_ports),
 ];
 
 /// Run all database migrations
@@ -409,6 +410,29 @@ fn m042_broker_credentials_market(conn: &Connection) -> Result<()> {
 /// a sign-in uses is the same after the upgrade as before it.
 fn m080_broker_redirect_url(conn: &Connection) -> Result<()> {
     add_column(conn, "broker_credentials", "redirect_url", "TEXT")
+}
+
+/// The Bridge 1.0.4: move settings still on OpenAlgo Desktop's default ports
+/// (5000 HTTP, 8765 market data, also copied over with its data folder) to
+/// The Bridge's own (5050, 8770), so the two apps do not fight over a port.
+/// A port the trader chose (anything else) is kept. Runs once.
+pub fn m096_the_bridge_own_ports(conn: &Connection) -> Result<()> {
+    use crate::config::*;
+    conn.execute(
+        "UPDATE settings SET http_port = ?1 WHERE id = 1 AND http_port = ?2",
+        rusqlite::params![DEFAULT_HTTP_PORT, OPENALGO_HTTP_PORT],
+    )?;
+    conn.execute(
+        "UPDATE settings SET ws_port = ?1 WHERE id = 1 AND ws_port = ?2",
+        rusqlite::params![DEFAULT_WS_PORT, OPENALGO_WS_PORT],
+    )?;
+    // A saved feed address naming OpenAlgo's port on this computer follows.
+    conn.execute(
+        "UPDATE settings SET websocket_url = REPLACE(websocket_url, ':8765', ':8770')
+         WHERE id = 1 AND (websocket_url LIKE 'ws://127.0.0.1:8765%' OR websocket_url LIKE 'ws://localhost:8765%')",
+        [],
+    )?;
+    Ok(())
 }
 
 fn run_migration(conn: &Connection, name: &str, sql: &str) -> Result<()> {
@@ -942,3 +966,55 @@ const ENABLE_WEBHOOK_BY_DEFAULT: &str = r#"
 -- This is required for Fyers, Zerodha, and other OAuth-based brokers
 UPDATE settings SET webhook_enabled = 1 WHERE id = 1;
 "#;
+
+#[cfg(test)]
+mod the_bridge_ports_tests {
+    use super::*;
+
+    fn settings(http: u16, ws: u16, url: Option<&str>) -> Connection {
+        let c = Connection::open_in_memory().unwrap();
+        c.execute_batch(
+            "CREATE TABLE settings (id INTEGER PRIMARY KEY, http_port INTEGER, ws_port INTEGER, websocket_url TEXT)",
+        )
+        .unwrap();
+        c.execute(
+            "INSERT INTO settings VALUES (1, ?1, ?2, ?3)",
+            rusqlite::params![http, ws, url],
+        )
+        .unwrap();
+        c
+    }
+
+    fn read(c: &Connection) -> (u16, u16, Option<String>) {
+        c.query_row("SELECT http_port, ws_port, websocket_url FROM settings", [], |r| {
+            Ok((r.get(0)?, r.get(1)?, r.get(2)?))
+        })
+        .unwrap()
+    }
+
+    #[test]
+    fn openalgo_default_ports_move_to_the_bridge_ports() {
+        let c = settings(5000, 8765, Some("ws://127.0.0.1:8765"));
+        m096_the_bridge_own_ports(&c).unwrap();
+        assert_eq!(read(&c), (5050, 8770, Some("ws://127.0.0.1:8770".into())));
+        // Idempotent.
+        m096_the_bridge_own_ports(&c).unwrap();
+        assert_eq!(read(&c).1, 8770);
+    }
+
+    #[test]
+    fn ports_the_trader_chose_are_kept() {
+        let c = settings(5001, 9000, Some("ws://192.168.1.5:8765"));
+        m096_the_bridge_own_ports(&c).unwrap();
+        assert_eq!(read(&c), (5001, 9000, Some("ws://192.168.1.5:8765".into())));
+    }
+
+    #[test]
+    fn defaults_differ_from_openalgo_desktop() {
+        use crate::config::*;
+        assert_ne!(DEFAULT_HTTP_PORT, OPENALGO_HTTP_PORT);
+        assert_ne!(DEFAULT_WS_PORT, OPENALGO_WS_PORT);
+        assert_ne!(DEFAULT_WS_PORT, DEV_WS_PORT);
+        assert_ne!(DEFAULT_HTTP_PORT, DEV_HTTP_PORT);
+    }
+}

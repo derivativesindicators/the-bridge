@@ -29,12 +29,12 @@ export function isDesktopShell(): boolean {
 /**
  * The market data feed address used when the server does not report one.
  *
- * Matches the shipped default (8765) and the development port (8766) the
+ * Matches The Bridge's shipped default (8770, apart from OpenAlgo Desktop's 8765) and the development port (8766) the
  * maintainer uses so the desktop can run next to OpenAlgo web on one machine.
  */
 export const DEFAULT_WEBSOCKET_URL = import.meta.env.DEV
   ? 'ws://127.0.0.1:8766'
-  : 'ws://127.0.0.1:8765'
+  : 'ws://127.0.0.1:8770'
 
 /**
  * How a broker's sign-in starts, as the local server reports it (`sign_in`

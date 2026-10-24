@@ -319,8 +319,8 @@ pub enum StartError {
 pub fn port_in_use_message(port: u16) -> String {
     format!(
         "Live market data for your trading platforms and the Python SDK could not start because \
-port {} is already used by another program. Close the other program (for example The Bridge web \
-or another copy of The Bridge), or choose a different market data port in Server Settings. Live \
+port {} is already used by another program, most likely OpenAlgo Desktop or another copy of The \
+Bridge. Close the other program, or choose a different market data port in Server Settings. Live \
 market data starts by itself once the port is free.",
         port
     )

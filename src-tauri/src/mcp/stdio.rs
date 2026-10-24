@@ -521,7 +521,7 @@ mod tests {
                     value,
                     debug
                 );
-                let port = if app_dev { 5500 } else { 5000 };
+                let port = if app_dev { 5500 } else { crate::config::DEFAULT_HTTP_PORT };
                 assert_eq!(
                     default_url_for(value, debug),
                     format!("http://127.0.0.1:{}", port),

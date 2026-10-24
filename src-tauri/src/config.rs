@@ -18,8 +18,13 @@ use crate::error::{AppError, Result};
 use rusqlite::{params, Connection};
 use serde::Serialize;
 
-pub const DEFAULT_HTTP_PORT: u16 = 5000;
-pub const DEFAULT_WS_PORT: u16 = 8765;
+/// The Bridge's own defaults (1.0.4), apart from OpenAlgo Desktop's 5000/8765
+/// so both apps can run side by side on one computer.
+pub const DEFAULT_HTTP_PORT: u16 = 5050;
+pub const DEFAULT_WS_PORT: u16 = 8770;
+/// OpenAlgo Desktop's defaults, which settings copied from it still carry.
+pub const OPENALGO_HTTP_PORT: u16 = 5000;
+pub const OPENALGO_WS_PORT: u16 = 8765;
 pub const DEV_HTTP_PORT: u16 = 5500;
 pub const DEV_WS_PORT: u16 = 8766;
 pub const DEV_PORTS_ENV: &str = "OPENALGO_DESKTOP_DEV_PORTS";
@@ -250,7 +255,7 @@ mod tests {
         let c = ServerConfig::default();
         assert_eq!(
             c.redirect_url_for("zerodha"),
-            "http://127.0.0.1:5000/zerodha/callback"
+            "http://127.0.0.1:5050/zerodha/callback"
         );
         let c = ServerConfig {
             host_server: Some("https://abc.ngrok.app/".into()),

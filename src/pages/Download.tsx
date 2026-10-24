@@ -36,7 +36,10 @@ const platforms = [
 
 export default function Download() {
   const { isAuthenticated, user } = useAuthStore()
-  const inApp = layoutRedirect(user, isAuthenticated, '/dashboard') === null
+  // Signed in to the app (with or without a broker yet): back into the app.
+  // /dashboard sends a session without a broker on to /broker itself.
+  const inApp =
+    layoutRedirect(user, isAuthenticated, '/dashboard') === null || Boolean(user?.username)
   return (
     <div className="mx-auto max-w-4xl py-4 space-y-8">
       <div>

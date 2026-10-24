@@ -827,7 +827,7 @@ export default function ProfilePage() {
                   id="profile-websocket-url"
                   value={websocketUrl}
                   onChange={(e) => setWebsocketUrl(e.target.value)}
-                  placeholder="ws://127.0.0.1:8765"
+                  placeholder="ws://127.0.0.1:8770"
                 />
                 <p className="text-xs text-muted-foreground">
                   WebSocket server URL for real-time market data streaming.

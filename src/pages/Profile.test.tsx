@@ -54,7 +54,7 @@ async function saveServerConfiguration(restartRequired: boolean) {
     data: { status: 'success', message: 'Saved', restart_required: restartRequired },
   })
   render(<Profile />)
-  const ws = await screen.findByPlaceholderText('ws://127.0.0.1:8765')
+  const ws = await screen.findByPlaceholderText('ws://127.0.0.1:8770')
   fireEvent.change(ws, { target: { value: 'ws://127.0.0.1:8766' } })
   fireEvent.click(screen.getByRole('button', { name: /save ngrok settings/i }))
   await waitFor(() => expect(client.post).toHaveBeenCalled())

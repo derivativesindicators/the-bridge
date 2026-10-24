@@ -27,6 +27,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useFeedServerProblem } from '@/hooks/useFeedServerProblem'
 import { useMarketData } from '@/hooks/useMarketData'
 import { useOrderEventRefresh } from '@/hooks/useOrderEventRefresh'
 import { findLegSL, type SLState, useTrailingSL } from '@/hooks/useTrailingSL'
@@ -1043,6 +1044,8 @@ export default function Scalping() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [handleKeyDown])
 
+  const feedServerProblem = useFeedServerProblem(!isAuthenticated)
+
   const wsBadge = isFallbackMode
     ? { label: 'Polling (REST)', variant: 'secondary' as const }
     : isAuthenticated
@@ -1070,11 +1073,13 @@ export default function Scalping() {
           shared WebSocket manager auto-resubscribes active legs on reconnect. */}
       {!isAuthenticated && (
         <div className="rounded-md border border-red-500/50 bg-red-500/10 px-4 py-2 text-sm text-red-700 dark:text-red-400">
-          {isFallbackMode
-            ? 'Live feed lost — using slower REST polling. Prices may lag; trade with caution.'
-            : isConnected
-              ? 'Reconnecting to the live market-data feed… active legs will resubscribe automatically.'
-              : 'Market-data feed disconnected — prices are stale. Reconnecting…'}
+          {feedServerProblem
+            ? `Live feed unavailable — using slower REST polling. ${feedServerProblem}`
+            : isFallbackMode
+              ? 'Live feed lost — using slower REST polling. Prices may lag; trade with caution.'
+              : isConnected
+                ? 'Reconnecting to the live market-data feed… active legs will resubscribe automatically.'
+                : 'Market-data feed disconnected — prices are stale. Reconnecting…'}
         </div>
       )}
 

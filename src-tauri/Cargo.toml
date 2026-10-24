@@ -1,6 +1,6 @@
 [package]
 name = "openalgo-desktop"
-version = "1.0.3"
+version = "1.0.4"
 description = "OpenAlgo Desktop - Algorithmic Trading Platform"
 authors = ["Derivatives Indicators"]
 edition = "2021"
@@ -172,6 +172,7 @@ blake2 = "0.10"
 libc = "0.2"
 
 [dev-dependencies]
+regex = "1"
 tempfile = "3.10"
 proptest = "1"
 tokio = { version = "1", features = ["full", "test-util"] }
