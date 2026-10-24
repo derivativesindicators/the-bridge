@@ -162,7 +162,10 @@ function App() {
               <Route path="/setup" element={<Setup />} />
               <Route path="/login" element={<Login />} />
               <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/download" element={<Download />} />
+              {/* The Bridge: inside the app chrome (header nav) when signed in. */}
+              <Route element={<Layout allowPublic />}>
+                <Route path="/download" element={<Download />} />
+              </Route>
               <Route path="/error" element={<ServerError />} />
               <Route path="/rate-limited" element={<RateLimited />} />
 

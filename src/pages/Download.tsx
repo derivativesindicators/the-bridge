@@ -1,19 +1,52 @@
-import { Apple, Download as DownloadIcon, ExternalLink, Github, Monitor } from 'lucide-react'
+import {
+  Apple,
+  ArrowLeft,
+  Download as DownloadIcon,
+  ExternalLink,
+  Github,
+  Monitor,
+} from 'lucide-react'
+import { Link } from 'react-router'
+import { ExternalAnchor } from '@/components/common/ExternalAnchor'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { layoutRedirect } from '@/lib/desktop'
+import { useAuthStore } from '@/stores/authStore'
 
 // REBRAND: download page for The Bridge (installers are published on GitHub Releases).
 const RELEASES = 'https://github.com/derivativesindicators/the-bridge/releases'
 const LATEST = `${RELEASES}/latest`
 
 const platforms = [
-  { id: 'windows', title: 'Windows', icon: Monitor, file: 'Windows installer (.exe, 64-bit)', note: 'Windows 10 or 11.' },
-  { id: 'macos', title: 'macOS', icon: Apple, file: 'macOS disk image (.dmg, Apple Silicon and Intel)', note: 'Not yet signed by Apple: right-click the app and choose Open the first time.' },
+  {
+    id: 'windows',
+    title: 'Windows',
+    icon: Monitor,
+    file: 'Windows installer (.exe, 64-bit)',
+    note: 'Windows 10 or 11.',
+  },
+  {
+    id: 'macos',
+    title: 'macOS',
+    icon: Apple,
+    file: 'macOS disk image (.dmg, Apple Silicon and Intel)',
+    note: 'Not yet signed by Apple: right-click the app and choose Open the first time.',
+  },
 ]
 
 export default function Download() {
+  const { isAuthenticated, user } = useAuthStore()
+  const inApp = layoutRedirect(user, isAuthenticated, '/dashboard') === null
   return (
-    <div className="container mx-auto max-w-4xl px-4 py-10 space-y-8">
+    <div className="mx-auto max-w-4xl py-4 space-y-8">
+      <div>
+        <Button variant="ghost" size="sm" asChild>
+          <Link to={inApp ? '/dashboard' : '/'}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            {inApp ? 'Back to Dashboard' : 'Back to Home'}
+          </Link>
+        </Button>
+      </div>
       <div className="text-center space-y-2">
         <h1 className="text-3xl font-bold">Download The Bridge</h1>
         <p className="text-muted-foreground">
@@ -32,10 +65,10 @@ export default function Download() {
             </CardHeader>
             <CardContent className="space-y-3">
               <Button asChild className="w-full">
-                <a href={LATEST} target="_blank" rel="noopener noreferrer">
+                <ExternalAnchor href={LATEST}>
                   <DownloadIcon className="mr-2 h-4 w-4" />
                   Download The Bridge for {p.title}
-                </a>
+                </ExternalAnchor>
               </Button>
               <p className="text-xs text-muted-foreground">{p.note}</p>
             </CardContent>
@@ -44,16 +77,16 @@ export default function Download() {
       </div>
       <div className="flex flex-wrap justify-center gap-3">
         <Button variant="outline" asChild>
-          <a href={RELEASES} target="_blank" rel="noopener noreferrer">
+          <ExternalAnchor href={RELEASES}>
             <ExternalLink className="mr-2 h-4 w-4" />
             All releases
-          </a>
+          </ExternalAnchor>
         </Button>
         <Button variant="outline" asChild>
-          <a href="https://github.com/derivativesindicators/the-bridge" target="_blank" rel="noopener noreferrer">
+          <ExternalAnchor href="https://github.com/derivativesindicators/the-bridge">
             <Github className="mr-2 h-4 w-4" />
             Source code
-          </a>
+          </ExternalAnchor>
         </Button>
       </div>
       <p className="text-center text-xs text-muted-foreground">

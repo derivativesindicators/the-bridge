@@ -75,7 +75,7 @@ pub fn require_user(ctx: &AppState) -> Result<String> {
 /// basics, opening http(s) links, and the account reset. Granted at run
 /// time to the exact origin the server listens on, never to every port on
 /// loopback (security review S-08).
-pub const REMOTE_APP_PERMISSIONS: [&str; 11] = [
+pub const REMOTE_APP_PERMISSIONS: [&str; 12] = [
     "core:app:allow-version",
     "core:window:allow-set-title",
     "core:window:allow-minimize",
@@ -83,6 +83,9 @@ pub const REMOTE_APP_PERMISSIONS: [&str; 11] = [
     "core:window:allow-unmaximize",
     "core:window:allow-set-focus",
     "shell:allow-open",
+    // The Bridge 1.0.3: the app's own Rust opener, so external links (Download
+    // page, footer) reach the system browser even if the plugin call is refused.
+    "allow-open-external",
     "allow-reset-account",
     "allow-start-fresh",
     "allow-window-proof",

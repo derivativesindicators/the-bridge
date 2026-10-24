@@ -415,7 +415,8 @@ export class MarketDataManager {
         }
 
         this.setConnectionState('connected')
-        this.reconnectAttempts = 0
+        // reconnectAttempts is reset only once the feed authenticates, so a
+        // socket that opens and is then refused does not reconnect forever at 1s.
 
         try {
           // Get API key for authentication
@@ -462,10 +463,15 @@ export class MarketDataManager {
           this.consecutiveFailures++
         }
 
-        // Auto-reconnect if not clean close and not paused
+        // Auto-reconnect whenever the server (not this page) ended the socket.
+        // A server close is often *clean*: 4401 "auth timeout" / "authentication
+        // expired" after a broker re-login or while the app was locked, 1001 on a
+        // feed restart. Treating those as final left the page "Disconnected" for
+        // good while REST quotes kept the prices moving (The Bridge 1.0.3 fix).
+        // Only a pause or an explicit disconnect() stays down.
         if (
           this.autoReconnect &&
-          !event.wasClean &&
+          !this.userDisconnected &&
           this.connectionState !== 'paused' &&
           this.reconnectAttempts < this.maxReconnectAttempts
         ) {
@@ -493,6 +499,19 @@ export class MarketDataManager {
       this.consecutiveFailures++
       this.setError(`Connection failed: ${err}`)
       this.setConnectionState('disconnected')
+
+      // The config/CSRF fetch failed before a socket existed (server still
+      // starting, session not ready yet): retry with the same backoff.
+      if (
+        this.autoReconnect &&
+        !this.userDisconnected &&
+        !abortSignal.aborted &&
+        this.reconnectAttempts < this.maxReconnectAttempts
+      ) {
+        this.reconnectAttempts++
+        const delay = Math.min(1000 * 2 ** (this.reconnectAttempts - 1), 30000)
+        this.reconnectTimeout = setTimeout(() => this.connect(), delay)
+      }
 
       // Check if we should switch to fallback mode
       if (this.consecutiveFailures >= this.maxConsecutiveFailures) {
@@ -580,6 +599,7 @@ export class MarketDataManager {
             this.setConnectionState('authenticated')
             this.error = null
             this.consecutiveFailures = 0 // Reset failure count on successful auth
+            this.reconnectAttempts = 0
             // Disable fallback mode now that WebSocket is working
             this.disableFallbackMode()
             // Resubscribe to all active subscriptions

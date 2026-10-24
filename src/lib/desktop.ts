@@ -133,8 +133,23 @@ export function isExternalHttpUrl(href: string, base: string = window.location.h
  */
 export async function openExternal(url: string): Promise<void> {
   if (isDesktopShell()) {
-    const { open } = await import('@tauri-apps/plugin-shell')
-    await open(url)
+    // The Bridge 1.0.3: links on the Download page and footer did nothing in
+    // the window because a refused/failed plugin call was swallowed by
+    // `void openExternal(...)`. Try the app's own opener first, then the shell
+    // plugin, and report rather than silently drop the click.
+    try {
+      await invoke('open_external', { url })
+      return
+    } catch (first) {
+      try {
+        const { open } = await import('@tauri-apps/plugin-shell')
+        await open(url)
+        return
+      } catch (second) {
+        console.error('Could not open link in the system browser', url, first, second)
+      }
+    }
+    // window.open is routed back here in the shell; never loop.
     return
   }
   window.open(url, '_blank', 'noopener,noreferrer')

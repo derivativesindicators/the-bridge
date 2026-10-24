@@ -139,6 +139,7 @@ describe('installDesktopShellHandlers', () => {
 
   beforeEach(() => {
     tauri.open.mockClear()
+    tauri.invoke.mockClear()
   })
 
   afterEach(() => {
@@ -163,7 +164,22 @@ describe('installDesktopShellHandlers', () => {
     const event = clickLink('https://docs.openalgo.in/', { target: '_blank' })
     await flush()
     expect(event.defaultPrevented).toBe(true)
-    expect(tauri.open).toHaveBeenCalledWith('https://docs.openalgo.in/')
+    // The app's own opener first (The Bridge 1.0.3)...
+    expect(tauri.invoke).toHaveBeenCalledWith('open_external', { url: 'https://docs.openalgo.in/' })
+    expect(tauri.open).not.toHaveBeenCalled()
+  })
+
+  it('falls back to the shell plugin when the app opener is refused', async () => {
+    tauri.inShell = true
+    tauri.invoke.mockImplementationOnce(async () => {
+      throw new Error('refused')
+    })
+    uninstall = installDesktopShellHandlers()
+    clickLink('https://github.com/derivativesindicators/the-bridge/releases', { target: '_blank' })
+    await flush()
+    expect(tauri.open).toHaveBeenCalledWith(
+      'https://github.com/derivativesindicators/the-bridge/releases'
+    )
   })
 
   it('leaves in-app links to the router', async () => {
@@ -193,7 +209,9 @@ describe('installDesktopShellHandlers', () => {
     uninstall = installDesktopShellHandlers()
     expect(window.open('https://openalgo.in/discord', '_blank')).toBeNull()
     await flush()
-    expect(tauri.open).toHaveBeenCalledWith('https://openalgo.in/discord')
+    expect(tauri.invoke).toHaveBeenCalledWith('open_external', {
+      url: 'https://openalgo.in/discord',
+    })
 
     const clicks: string[] = []
     const spy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (
@@ -204,7 +222,7 @@ describe('installDesktopShellHandlers', () => {
     expect(window.open('/traffic/export', '_blank')).toBeNull()
     spy.mockRestore()
     expect(clicks).toEqual(['/traffic/export'])
-    expect(tauri.open).toHaveBeenCalledTimes(1)
+    expect(tauri.open).not.toHaveBeenCalled()
   })
 
   it('restores window.open when removed', () => {

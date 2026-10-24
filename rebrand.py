@@ -187,11 +187,36 @@ export default function Download() {
 }
 """
 
+def dark_tile(src, bg, out):
+    """The logo has white text/B on transparency, invisible on light headers
+    and taskbars. Composite it on a dark rounded square (1024px, ~22% corner
+    radius, 6% padding) so it reads on any background. Idempotent."""
+    from PIL import Image, ImageDraw
+    logo = Image.open(src).convert("RGBA")
+    S = 1024
+    tile = Image.new("RGBA", (S, S), (0, 0, 0, 0))
+    mask = Image.new("L", (S * 4, S * 4), 0)
+    ImageDraw.Draw(mask).rounded_rectangle((0, 0, S * 4 - 1, S * 4 - 1), radius=int(S * 4 * 0.22), fill=255)
+    mask = mask.resize((S, S), Image.LANCZOS)
+    tile.paste(Image.new("RGBA", (S, S), bg), (0, 0), mask)
+    pad = int(S * 0.06)
+    inner = S - 2 * pad
+    lw, lh = logo.size
+    sc = inner / max(lw, lh)
+    logo = logo.resize((max(1, int(lw * sc)), max(1, int(lh * sc))), Image.LANCZOS)
+    tile.alpha_composite(logo, ((S - logo.width) // 2, (S - logo.height) // 2))
+    out = pathlib.Path(out); out.parent.mkdir(parents=True, exist_ok=True)
+    tile.save(out)
+    return out
+
+
 def main():
     a = argparse.ArgumentParser()
     for k in ("repo", "name", "slug", "app-id", "company", "website"): a.add_argument("--" + k, required=True)
     a.add_argument("--icon"); a.add_argument("--source-url", default="https://SOURCE-REPO-URL-PLACEHOLDER")
     a.add_argument("--skip-icons", action="store_true")
+    a.add_argument("--icon-bg", default="#000000",
+                   help="put the (transparent, white-text) logo on a dark rounded square; 'none' keeps it as is")
     a.add_argument("--x-url", default="https://x.com/i_amArko")
     a.add_argument("--youtube-url", default="https://www.youtube.com/@DerivativesIndicators")
     a.add_argument("--support-email", default="admin@derivativesindicators.com")
@@ -362,6 +387,8 @@ def main():
 
     # 6. icons
     if o.icon and not o.skip_icons:
+        if o.icon_bg.lower() != "none":
+            o.icon = str(dark_tile(o.icon, o.icon_bg, R / "src-tauri/icons/.source-dark.png"))
         subprocess.run(["npx", "--yes", "tauri", "icon", str(pathlib.Path(o.icon).resolve())], cwd=R, check=True)
         ic = R / "src-tauri/icons"
         shutil.copy(o.icon, R / "public/logo.png"); shutil.copy(ic / "icon.ico", R / "public/favicon.ico")

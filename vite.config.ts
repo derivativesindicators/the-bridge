@@ -2,6 +2,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import path from 'path'
+import { chartBranding, chartBrandingEsbuild } from './vite-plugins/chartBranding'
 
 // Desktop: in development the Rust server runs on the maintainer's dev port
 // (5500, next to OpenAlgo web on 5000), so the dev server proxies there.
@@ -67,7 +68,10 @@ const pageOrApi = {
 
 // https://vite.dev/config/
 export default defineConfig({
+  // The Bridge: same chart mark in `vite dev` (deps are pre-bundled by esbuild).
+  optimizeDeps: { esbuildOptions: { plugins: [chartBrandingEsbuild] } },
   plugins: [
+    chartBranding(),
     react(),
     tailwindcss(),
     // No build-time compression plugin. The .br/.gz variants it used to emit

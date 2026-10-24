@@ -24,3 +24,9 @@ This program is a modified version of OpenAlgo Desktop (https://github.com/marke
 - Added one-time copy of the legacy `com.openalgo.desktop` data folder into the new app-id folder.
 - Corresponding Source: https://github.com/derivativesindicators/the-bridge
 
+## 2026-10-24 - Derivatives Indicators (v1.0.3)
+- Charts: the engine's default "Chart by OpenAlgo" mark (link to openalgo.in) now reads "Chart by The Bridge" with The Bridge logo, via a Vite build plugin (`vite-plugins/chartBranding.ts`); the "Based on OpenAlgo" credit stays in the footer.
+- Market data: `MarketDataManager` now reconnects after a *clean* server close (4401 auth timeout / authentication expired, 1001) and after a failed config fetch; previously such a close left pages (Scalping Terminal) "Disconnected" for good while REST quotes kept prices moving.
+- Logo/icons: logo composited on a black rounded square so its white parts are visible on light backgrounds; all Tauri icons, favicon and in-app logo regenerated (`rebrand.py --icon-bg`).
+- External links (Download page, footer) open in the system browser through the app's own `open_external` command (permission added to the app window) with the shell plugin as fallback.
+- Download page renders inside the app layout (header nav) when signed in, with a Back to Dashboard/Home button.
