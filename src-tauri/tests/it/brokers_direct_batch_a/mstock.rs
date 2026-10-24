@@ -354,7 +354,7 @@ async fn open_position_refuses_an_unconfirmed_book() {
         } else {
             let msg = got.unwrap_err().client_message();
             assert!(
-                msg.starts_with("OpenAlgo could not read your open position from mStock"),
+                msg.starts_with("The Bridge could not read your open position from mStock"),
                 "{} -> {}",
                 answer,
                 msg

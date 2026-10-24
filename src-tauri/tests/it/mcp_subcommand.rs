@@ -21,7 +21,7 @@ use std::process::{Child, ChildStdin, Command, ExitStatus, Stdio};
 use std::sync::mpsc;
 use std::time::{Duration, Instant};
 
-const APP_START_LINE: &str = "Starting OpenAlgo Desktop";
+const APP_START_LINE: &str = "Starting The Bridge";
 
 /// Kills and reaps the child when dropped.
 struct Guard {

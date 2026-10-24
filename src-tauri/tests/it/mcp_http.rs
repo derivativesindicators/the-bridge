@@ -401,7 +401,7 @@ async fn local_tools_and_the_trust_envelope() {
     assert!(out["data"]["text"]
         .as_str()
         .unwrap()
-        .starts_with("OpenAlgo version: "));
+        .starts_with("The Bridge version: "));
     let out = m
         .output(&t, "search_instruments", json!({"query": "SBIN"}))
         .await;

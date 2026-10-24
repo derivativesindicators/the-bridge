@@ -529,7 +529,7 @@ async fn unreadable_position_is_not_flat() {
         .unwrap_err();
     assert!(
         err.client_message()
-            .starts_with("OpenAlgo could not read your open position from Tradejini"),
+            .starts_with("The Bridge could not read your open position from Tradejini"),
         "{}",
         err.client_message()
     );

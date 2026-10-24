@@ -151,7 +151,7 @@ async fn a_check_offers_the_update_and_nothing_downloads_before_update() {
     assert_eq!(d["offer"]["notes"], "Faster option chain.");
     assert_eq!(
         d["offer"]["release_url"],
-        "https://github.com/marketcalls/openalgo-desktop/releases/tag/v9.0.0"
+        "https://SOURCE-REPO-URL-PLACEHOLDER/releases/tag/v9.0.0"
     );
     assert!(d["checked_at"].is_string());
     // Notify only: a check downloads nothing.
@@ -268,7 +268,7 @@ async fn quitting_names_the_protection_that_stops() {
     let w = quit_warning(&h.ctx).await.unwrap();
     assert_eq!(w.level, "live");
     assert!(
-        w.intro.starts_with("Quitting closes OpenAlgo."),
+        w.intro.starts_with("Quitting closes The Bridge."),
         "{}",
         w.intro
     );
@@ -278,7 +278,7 @@ async fn quitting_names_the_protection_that_stops() {
         w.items
     );
     assert!(w.items[1].starts_with("Sandbox: 1 sandbox position under scalping protection"));
-    assert!(w.items[2].starts_with("OpenAlgo locks its keys when it closes"));
+    assert!(w.items[2].starts_with("The Bridge locks its keys when it closes"));
 }
 
 #[tokio::test]
@@ -317,7 +317,7 @@ async fn a_deb_copy_is_told_about_the_update_and_never_installs_it() {
     assert!(d["manual_reason"]
         .as_str()
         .unwrap()
-        .contains("installed from a .deb package, which OpenAlgo cannot update by itself"));
+        .contains("installed from a .deb package, which The Bridge cannot update by itself"));
     let (s, v) = h
         .json(with(post("/api/update/install", json!({})), &c, Some(&t)))
         .await;
@@ -338,7 +338,7 @@ async fn a_failed_check_is_reported_in_a_traders_words() {
     assert_eq!(v["data"]["state"], "failed");
     assert_eq!(
         v["data"]["message"],
-        "OpenAlgo could not reach the update server. Check your internet connection and try again."
+        "The Bridge could not reach the update server. Check your internet connection and try again."
     );
     assert!(v["data"]["offer"].is_null());
     // Nothing to install.

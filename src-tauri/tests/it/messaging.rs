@@ -429,7 +429,7 @@ async fn telegram_polls_answers_commands_links_and_stops_cleanly() {
             || fake
                 .texts()
                 .iter()
-                .any(|t| t.starts_with("Welcome to OpenAlgo Bot, Asha!")),
+                .any(|t| t.starts_with("Welcome to The Bridge Bot, Asha!")),
             5000
         )
         .await

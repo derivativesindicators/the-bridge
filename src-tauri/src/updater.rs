@@ -370,9 +370,9 @@ mod tests {
 
     /// The key the maintainer published for updates (public; the private
     /// half is a GitHub secret). The app must carry exactly this one.
-    const MAINTAINER_PUBKEY: &str = "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDEzMzc5QTJBRTVDMEFCNzEKUldSeHE4RGxLcG8zRXllUlJUVll3VmR6ckMxZzY5QXFqaGxpc3VLMTEzSEcyaDRGeEluODdXTFEK";
+    const MAINTAINER_PUBKEY: &str = "REPLACE_WITH_OUR_UPDATER_PUBKEY";
     const ENDPOINT: &str =
-        "https://github.com/marketcalls/openalgo-desktop/releases/latest/download/latest.json";
+        "https://UPDATE-SERVER-PLACEHOLDER.invalid/latest.json";
 
     pub(super) fn shipped_config() -> Value {
         let p = Path::new(env!("CARGO_MANIFEST_DIR")).join("tauri.conf.json");

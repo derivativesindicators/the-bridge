@@ -101,7 +101,14 @@ def main():
     n += edit(R / "src-tauri/src/lib.rs", mig)
 
     # 4. user-visible strings
-    for p in (R / "src-tauri/src").rglob("*.rs"):
+    PUB = "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDEzMzc5QTJBRTVDMEFCNzEKUldSeHE4RGxLcG8zRXllUlJUVll3VmR6ckMxZzY5QXFqaGxpc3VLMTEzSEcyaDRGeEluODdXTFEK"
+    UPREL = "https://github.com/marketcalls/openalgo-desktop/releases"
+    for p in list((R / "src-tauri/src").rglob("*.rs")) + list((R / "src-tauri/tests").rglob("*.rs")):
+        # tests that pin the upstream updater key/address follow our placeholders
+        n += edit(p, lambda s: s.replace(PUB, "REPLACE_WITH_OUR_UPDATER_PUBKEY")
+                  .replace(UPREL + "/latest/download/latest.json", "https://UPDATE-SERVER-PLACEHOLDER.invalid/latest.json")
+                  .replace(UPREL, o.source_url + "/releases"))
+    for p in list((R / "src-tauri/src").rglob("*.rs")) + list((R / "src-tauri/tests").rglob("*.rs")):
         if p.name == "keystore.rs": continue
         n += edit(p, lambda s: rs_fix(s, o.name))
     for p in list((R / "src").rglob("*.ts")) + list((R / "src").rglob("*.tsx")):

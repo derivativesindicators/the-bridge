@@ -675,7 +675,7 @@ async fn a_retry_after_is_honoured_or_refused_never_shortened() {
     let e = b.get_order_book(&auth()).await.unwrap_err();
     assert_eq!(
         e.client_message(),
-        "Fyers asked OpenAlgo to slow down for longer than this request can be held. It was not retried. Try again in a minute."
+        "Fyers asked The Bridge to slow down for longer than this request can be held. It was not retried. Try again in a minute."
     );
     assert!(
         started.elapsed() < Duration::from_secs(5),
@@ -749,7 +749,7 @@ async fn the_daily_data_cap_refuses_before_sending_and_spares_orders() {
     let e = b.get_quote(&auth(), &key).await.unwrap_err();
     assert_eq!(
         e.client_message(),
-        "Fyers' daily limit of 2 market data requests on the Standard plan is used up for today, so OpenAlgo has stopped sending them. It resets at midnight."
+        "Fyers' daily limit of 2 market data requests on the Standard plan is used up for today, so The Bridge has stopped sending them. It resets at midnight."
     );
     assert_eq!(fake.requests("GET", "/data/depth").len(), 2);
     assert_eq!(b.get_order_book(&auth()).await.unwrap().len(), 7);

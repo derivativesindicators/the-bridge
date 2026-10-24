@@ -15,7 +15,7 @@ const FRACTIONAL_TARGET: &str =
     "Fractional position size (0.5) is not allowed for non-crypto exchanges.";
 const TOO_LARGE: &str = "larger than any exchange accepts";
 const FRACTIONAL_REFUSED: &str =
-    "Fractional quantities are not supported in OpenAlgo Desktop yet. Use a whole-number quantity.";
+    "Fractional quantities are not supported in The Bridge yet. Use a whole-number quantity.";
 
 fn count(h: &H, wanted: impl Fn(&MockCall) -> bool) -> usize {
     h.mock.calls().iter().filter(|c| wanted(c)).count()

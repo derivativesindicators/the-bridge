@@ -1493,7 +1493,7 @@ async fn a_start_whose_saved_parameters_cannot_be_used_is_refused() {
     let path = format!("/openscript/runner/start/{}", id);
     let start = || t.call(Method::POST, &path, None);
     for (saved, cause) in [
-        (r#"{"qty": 7"#, "They are not in a form OpenAlgo can read."),
+        (r#"{"qty": 7"#, "They are not in a form The Bridge can read."),
         (
             r#"{"qty": [7]}"#,
             "qty was given something a parameter cannot be.",

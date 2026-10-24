@@ -286,7 +286,7 @@ async fn a_folder_written_by_a_newer_version_is_refused_before_anything_opens() 
     match AppState::open_upgrading(dir.path(), opts(&keys), "1.1.0") {
         Err(OpenError::Refused(r @ Refusal::Downgrade { .. })) => {
             assert!(r.message().starts_with(
-                "Your OpenAlgo data was last opened by version 1.2.0, which is newer than this copy (1.1.0)."
+                "Your The Bridge data was last opened by version 1.2.0, which is newer than this copy (1.1.0)."
             ));
         }
         Err(OpenError::Refused(other)) => panic!("{:?}", other),

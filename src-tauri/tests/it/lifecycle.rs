@@ -133,9 +133,9 @@ async fn quitting_names_the_strategies_waiting_for_alerts() {
     assert_eq!(
         w.items[..2],
         [
-            "Webhook alerts for Breakout (TradingView and other senders) are refused until you open OpenAlgo and sign in again.",
-            "Chartink alerts for Momentum are refused until you open OpenAlgo and sign in again.",
+            "Webhook alerts for Breakout (TradingView and other senders) are refused until you open The Bridge and sign in again.",
+            "Chartink alerts for Momentum are refused until you open The Bridge and sign in again.",
         ]
     );
-    assert!(w.items[2].starts_with("OpenAlgo locks its keys"));
+    assert!(w.items[2].starts_with("The Bridge locks its keys"));
 }

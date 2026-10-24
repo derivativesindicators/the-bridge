@@ -211,7 +211,7 @@ async fn lan_toggle_binds_all_interfaces() {
     assert_eq!(v["restart_required"], true);
     let msg = v["message"].as_str().unwrap();
     assert!(msg.contains("Live market data moves to 0.0.0.0"), "{}", msg);
-    assert!(msg.contains("when you restart OpenAlgo"), "{}", msg);
+    assert!(msg.contains("when you restart The Bridge"), "{}", msg);
 }
 
 #[tokio::test]

@@ -595,7 +595,7 @@ async fn system_info_diagnostics_and_report_have_no_secrets() {
         cd.starts_with("attachment; filename=\"openalgo-system-report-") && cd.ends_with(".txt\"")
     );
     let body = String::from_utf8(b).unwrap();
-    assert!(body.contains("OpenAlgo Desktop System Report"));
+    assert!(body.contains("The Bridge System Report"));
     assert!(!body.contains(&key));
     let (_, hd, b) = h
         .send(with(get("/admin/api/system/report"), &c, None))
@@ -604,7 +604,7 @@ async fn system_info_diagnostics_and_report_have_no_secrets() {
         .to_str()
         .unwrap()
         .starts_with("text/markdown"));
-    assert!(String::from_utf8(b).unwrap().starts_with("# OpenAlgo"));
+    assert!(String::from_utf8(b).unwrap().starts_with("# The Bridge"));
     let _: Value = Value::Null;
 }
 
