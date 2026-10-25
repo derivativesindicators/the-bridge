@@ -40,6 +40,12 @@ pub const LEG_SEGMENTS: &[&str] = &["options", "futures", "cash"];
 pub const LEG_POSITIONS: &[&str] = &["B", "S"];
 pub const LEG_OPTION_TYPES: &[&str] = &["CE", "PE"];
 pub const LEG_STRIKE_MODES: &[&str] = &["atm", "strike"];
+/// The Bridge 1.0.7: strike chosen by premium, on signal legs only.
+pub const STRIKE_MODE_PREMIUM: &str = "premium";
+/// gte: cheapest at or above X; lte: dearest at or below X; closest: nearest to X.
+pub const PREMIUM_RULES: &[&str] = &["gte", "lte", "closest"];
+/// Upper bound on a premium target, rupees.
+pub const MAX_PREMIUM: f64 = 100000.0;
 pub const LEG_EXPIRIES: &[&str] = &[
     "weekly",
     "next_week",
@@ -66,6 +72,8 @@ const LEG_FIELDS: &[&str] = &[
     "strike_mode",
     "atm_offset",
     "strike",
+    "premium_rule",
+    "premium",
     "expiry",
     "sl_pts",
     "target_pts",
@@ -596,6 +604,10 @@ fn risk_settings(raw: &Map<String, Value>, c: &mut Map<String, Value>) -> R<()> 
     c.insert(
         "webhook_ip_allowlist".into(),
         ip_allowlist(get(raw, "webhook_ip_allowlist"))?,
+    );
+    c.insert(
+        "webhook_messages".into(),
+        crate::strategy::webhook::messages::validate_rules(get(raw, "webhook_messages"))?,
     );
     Ok(())
 }

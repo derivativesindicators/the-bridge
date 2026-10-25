@@ -73,6 +73,7 @@ import {
   type LegState,
   type Order,
   pnlToneClass,
+  premiumStrikeText,
   type QtyMode,
   type ReconciledBrokerOrder,
   type ReconciledBrokerTrade,
@@ -683,7 +684,7 @@ function SetupTab({ strategy }: { strategy: Strategy }) {
                           (leg.position
                             ? `${leg.position === 'B' ? 'Buy' : 'Sell'} ${strategy.underlying} ${
                                 leg.segment === 'options'
-                                  ? `${leg.atm_offset ?? leg.strike ?? 'ATM'} ${leg.option_type ?? ''}`
+                                  ? `${leg.strike_mode === 'premium' ? premiumStrikeText(leg) : (leg.atm_offset ?? leg.strike ?? 'ATM')} ${leg.option_type ?? ''}`
                                   : 'FUT'
                               } (at signal)`
                             : '—')}
@@ -742,11 +743,13 @@ function SetupTab({ strategy }: { strategy: Strategy }) {
                     const strikeText =
                       leg.segment !== 'options'
                         ? '—'
-                        : leg.strike_mode === 'strike'
-                          ? leg.strike != null
-                            ? `${leg.strike}`
-                            : '—'
-                          : `ATM (${leg.atm_offset ?? 'ATM'})`
+                        : leg.strike_mode === 'premium'
+                          ? premiumStrikeText(leg)
+                          : leg.strike_mode === 'strike'
+                            ? leg.strike != null
+                              ? `${leg.strike}`
+                              : '—'
+                            : `ATM (${leg.atm_offset ?? 'ATM'})`
                     return (
                       <tr key={leg.id} className="border-t">
                         <td className="px-2 py-1.5 font-mono">{leg.id}</td>

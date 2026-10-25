@@ -397,11 +397,25 @@ pub async fn resolve_leg(
         let price = reference_price(g, gateway, (&base, &uex), today, shared_ltp).await?;
         ltp = Some(price);
         atm_strike(g, (&base, &exchange), &expiry, &option_type, &offset, price)?
+    } else if strike_mode == "premium" {
+        let (rule, target) = premium_spec(leg, &base)?;
+        let price = reference_price(g, gateway, (&base, &uex), today, shared_ltp).await?;
+        ltp = Some(price);
+        premium_strike(
+            g,
+            gateway,
+            (&base, &exchange),
+            &expiry,
+            &option_type,
+            (rule, target),
+            price,
+        )
+        .await?
     } else {
         return Err(fail(
             "invalid_strike_mode",
             format!(
-                "Unknown strike mode {:?} on a {} option leg. Supported modes are atm, strike.",
+                "Unknown strike mode {:?} on a {} option leg. Supported modes are atm, strike, premium.",
                 strike_mode, base
             ),
         ));
@@ -676,4 +690,287 @@ fn parse_literal_expiry(text: &str) -> Option<ExpiryResult> {
         expiry_symbol: date.format("%d%b%y").to_string().to_ascii_uppercase(),
         fallback: false,
     })
+}
+
+/// The Bridge 1.0.7: how a premium-based strike is chosen.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PremiumRule {
+    /// The cheapest strike whose premium is at or above X (the backtest
+    /// engine's `target_premium` / `prem_ge` rule).
+    AtLeast,
+    /// The dearest strike whose premium is at or below X.
+    AtMost,
+    /// The strike whose premium is nearest X (ties: the higher premium).
+    Closest,
+}
+
+impl PremiumRule {
+    pub fn parse(text: &str) -> Option<Self> {
+        match text.trim().to_ascii_lowercase().as_str() {
+            "gte" => Some(Self::AtLeast),
+            "lte" => Some(Self::AtMost),
+            "closest" => Some(Self::Closest),
+            _ => None,
+        }
+    }
+
+    pub fn label(self) -> &'static str {
+        match self {
+            Self::AtLeast => "≥",
+            Self::AtMost => "≤",
+            Self::Closest => "closest to",
+        }
+    }
+}
+
+/// Strikes quoted either side of the ATM in the first request (the backtest
+/// engine searches ATM±10).
+pub const PREMIUM_SEARCH_FIRST: usize = 10;
+/// The widest strip read when the first finds no qualifying strike.
+pub const PREMIUM_SEARCH_MAX: usize = 25;
+
+fn premium_spec(leg: &Value, base: &str) -> Result<(PremiumRule, f64), Failure> {
+    let rule = PremiumRule::parse(leg["premium_rule"].as_str().unwrap_or("gte")).ok_or_else(|| {
+        fail(
+            "invalid_premium_rule",
+            format!(
+                "Unknown premium rule {} on a {} option leg. Supported rules are gte, lte, closest.",
+                leg["premium_rule"], base
+            ),
+        )
+    })?;
+    match crate::risk::value_to_f64(&leg["premium"]) {
+        Some(x) if x.is_finite() && x > 0.0 => Ok((rule, x)),
+        _ => Err(fail(
+            "invalid_premium",
+            format!(
+                "Premium {} on a {} option leg is not usable. It must be a positive rupee amount.",
+                leg["premium"], base
+            ),
+        )),
+    }
+}
+
+/// Pick a strike from `(strike, last price)` candidates. `None` when no
+/// candidate qualifies. Prices that are not finite or not above zero are
+/// ignored (no quote). Ties go to the strike nearer `atm`.
+pub fn pick_by_premium(
+    candidates: &[(f64, f64)],
+    rule: PremiumRule,
+    target: f64,
+    atm: f64,
+) -> Option<(f64, f64)> {
+    let usable = candidates
+        .iter()
+        .copied()
+        .filter(|(_, p)| p.is_finite() && *p > 0.0);
+    let key = |&(k, p): &(f64, f64)| -> (f64, f64) {
+        let primary = match rule {
+            PremiumRule::AtLeast => p,
+            PremiumRule::AtMost => -p,
+            // Equal distance: prefer the premium at or above X.
+            PremiumRule::Closest => (p - target).abs() * 2.0 + if p >= target { 0.0 } else { 1e-9 },
+        };
+        (primary, (k - atm).abs())
+    };
+    usable
+        .filter(|(_, p)| match rule {
+            PremiumRule::AtLeast => *p >= target,
+            PremiumRule::AtMost => *p <= target,
+            PremiumRule::Closest => true,
+        })
+        .min_by(|a, b| {
+            let (ka, kb) = (key(a), key(b));
+            ka.0.total_cmp(&kb.0).then(ka.1.total_cmp(&kb.1))
+        })
+}
+
+/// The strike chosen by premium on the expiry's chain: quotes a strip of
+/// strikes around the ATM in one multi-quote, widening once when nothing
+/// qualifies. Failure is a refusal, never a nearby guess.
+async fn premium_strike(
+    g: &SymbolGeneration,
+    gateway: &dyn OrderGateway,
+    (base, exchange): (&str, &str),
+    expiry: &ExpiryResult,
+    option_type: &str,
+    (rule, target): (PremiumRule, f64),
+    price: f64,
+) -> Result<f64, Failure> {
+    let strikes = available_strikes(g.rows(), base, &expiry.expiry_symbol, option_type, exchange);
+    if strikes.is_empty() {
+        return Err(fail(
+            "no_strikes",
+            format!(
+                "No {} strikes listed for {} expiring {} on {}. Check the expiry, or re-download the master contract.",
+                option_type, base, expiry.expiry_symbol, exchange
+            ),
+        ));
+    }
+    let Some(atm) = atm_index(&strikes, price) else {
+        return Err(fail(
+            "no_atm_strike",
+            format!(
+                "Could not pick an ATM strike for {} from a last price of {}.",
+                base, price
+            ),
+        ));
+    };
+    let atm_k = strikes[atm];
+    let symbol_of = |k: f64| {
+        format!(
+            "{}{}{}{}",
+            base,
+            expiry.expiry_symbol,
+            format_strike(k),
+            option_type
+        )
+    };
+    let mut quoted: Vec<(f64, f64)> = Vec::new();
+    let mut done: (usize, usize) = (atm, atm); // [lo, hi) already read
+    let mut first = true;
+    let mut any_quote = false;
+    for width in [PREMIUM_SEARCH_FIRST, PREMIUM_SEARCH_MAX] {
+        let lo = atm.saturating_sub(width);
+        let hi = (atm + width + 1).min(strikes.len());
+        let wanted: Vec<f64> = (lo..hi)
+            .filter(|i| first || *i < done.0 || *i >= done.1)
+            .map(|i| strikes[i])
+            .filter(|k| g.by_symbol(exchange, &symbol_of(*k)).is_some())
+            .collect();
+        first = false;
+        done = (lo, hi);
+        if !wanted.is_empty() {
+            let keys: Vec<(String, String)> = wanted
+                .iter()
+                .map(|k| (symbol_of(*k), exchange.to_string()))
+                .collect();
+            let prices = gateway
+                .ltps(&keys)
+                .await
+                .map_err(|e| fail("quote_failed", e))?;
+            for (k, p) in wanted.iter().zip(prices) {
+                if let Some(p) = p {
+                    any_quote = true;
+                    quoted.push((*k, p));
+                }
+            }
+        }
+        if let Some((k, _)) = pick_by_premium(&quoted, rule, target, atm_k) {
+            return Ok(k);
+        }
+        if lo == 0 && hi == strikes.len() {
+            break;
+        }
+    }
+    if !any_quote {
+        return Err(fail(
+            "no_option_quotes",
+            format!(
+                "No live quotes came back for the {} {} {} chain around ATM {}, so no strike could be chosen by premium. Nothing was placed for this leg.",
+                base, expiry.expiry_symbol, option_type, format_strike(atm_k)
+            ),
+        ));
+    }
+    Err(fail(
+        "no_premium_strike",
+        format!(
+            "No {} {} {} strike within {} strikes of ATM {} has a premium {} ₹{}. Nothing was placed for this leg.",
+            base,
+            expiry.expiry_symbol,
+            option_type,
+            PREMIUM_SEARCH_MAX,
+            format_strike(atm_k),
+            rule.label(),
+            target
+        ),
+    ))
+}
+
+#[cfg(test)]
+mod premium_tests {
+    use super::*;
+
+    // CE chain around ATM 24500: premiums fall as strikes rise.
+    fn chain() -> Vec<(f64, f64)> {
+        vec![
+            (24300.0, 230.0),
+            (24350.0, 190.0),
+            (24400.0, 150.0),
+            (24450.0, 118.0),
+            (24500.0, 92.0),
+            (24550.0, 70.0),
+            (24600.0, 100.0 - 48.0),
+        ]
+    }
+
+    #[test]
+    fn at_least_takes_the_cheapest_at_or_above() {
+        let k = pick_by_premium(&chain(), PremiumRule::AtLeast, 100.0, 24500.0);
+        assert_eq!(k, Some((24450.0, 118.0)));
+        // Exactly X qualifies.
+        let k = pick_by_premium(
+            &[(1.0, 100.0), (2.0, 99.95)],
+            PremiumRule::AtLeast,
+            100.0,
+            1.0,
+        );
+        assert_eq!(k, Some((1.0, 100.0)));
+    }
+
+    #[test]
+    fn at_most_takes_the_dearest_at_or_below() {
+        let k = pick_by_premium(&chain(), PremiumRule::AtMost, 100.0, 24500.0);
+        assert_eq!(k, Some((24500.0, 92.0)));
+    }
+
+    #[test]
+    fn closest_takes_the_nearest_and_breaks_ties_upward() {
+        let k = pick_by_premium(&chain(), PremiumRule::Closest, 100.0, 24500.0);
+        assert_eq!(k, Some((24500.0, 92.0)));
+        let tie = pick_by_premium(
+            &[(1.0, 95.0), (2.0, 105.0)],
+            PremiumRule::Closest,
+            100.0,
+            1.0,
+        );
+        assert_eq!(tie, Some((2.0, 105.0)));
+    }
+
+    #[test]
+    fn nothing_qualifies_or_no_quotes_is_none() {
+        assert_eq!(
+            pick_by_premium(&chain(), PremiumRule::AtLeast, 500.0, 24500.0),
+            None
+        );
+        assert_eq!(
+            pick_by_premium(&chain(), PremiumRule::AtMost, 10.0, 24500.0),
+            None
+        );
+        assert_eq!(pick_by_premium(&[], PremiumRule::Closest, 100.0, 1.0), None);
+        let bad = [(1.0, f64::NAN), (2.0, 0.0), (3.0, -5.0)];
+        assert_eq!(
+            pick_by_premium(&bad, PremiumRule::Closest, 100.0, 1.0),
+            None
+        );
+    }
+
+    #[test]
+    fn equal_premiums_prefer_the_strike_nearer_atm() {
+        let k = pick_by_premium(
+            &[(24400.0, 120.0), (24600.0, 120.0)],
+            PremiumRule::AtLeast,
+            100.0,
+            24550.0,
+        );
+        assert_eq!(k, Some((24600.0, 120.0)));
+    }
+
+    #[test]
+    fn rules_parse() {
+        assert_eq!(PremiumRule::parse("GTE"), Some(PremiumRule::AtLeast));
+        assert_eq!(PremiumRule::parse("lte"), Some(PremiumRule::AtMost));
+        assert_eq!(PremiumRule::parse("closest"), Some(PremiumRule::Closest));
+        assert_eq!(PremiumRule::parse("x"), None);
+    }
 }

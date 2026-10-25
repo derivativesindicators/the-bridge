@@ -39,9 +39,9 @@ impl Store {
              underlying, underlying_exchange, strategy_type, entry_time, exit_time, product, \
              pricetype, legs, overall_sl_mtm, overall_target_mtm, lock_profit, trail_sl_to_entry, \
              scheduler, live_enabled, webhook_token_hash, webhook_ip_allowlist, webhook_locked, \
-             daily_loss_limit_inr, status, current_run_id, created_at, updated_at) VALUES \
+             daily_loss_limit_inr, status, current_run_id, created_at, updated_at, webhook_messages) VALUES \
              (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, 0, \
-              ?19, ?20, 0, ?21, 'stopped', NULL, ?22, ?22)",
+              ?19, ?20, 0, ?21, 'stopped', NULL, ?22, ?22, ?23)",
             params![
                 user_id,
                 name,
@@ -65,6 +65,7 @@ impl Store {
                 json_col(&config["webhook_ip_allowlist"]),
                 num_param(&config["daily_loss_limit_inr"]),
                 now,
+                json_col(&config["webhook_messages"]),
             ],
         )?;
         let id = conn.last_insert_rowid();

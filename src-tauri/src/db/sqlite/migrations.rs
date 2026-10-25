@@ -105,6 +105,10 @@ const RUST_MIGRATIONS: &[(&str, Step)] = &[
     ),
     ("096_the_bridge_own_ports", m096_the_bridge_own_ports),
     ("097_tunnel_settings", crate::tunnel::migrate),
+    (
+        "098_strategy_webhook_messages",
+        crate::strategy::store::migrate_webhook_messages,
+    ),
 ];
 
 /// Run all database migrations
@@ -987,9 +991,11 @@ mod the_bridge_ports_tests {
     }
 
     fn read(c: &Connection) -> (u16, u16, Option<String>) {
-        c.query_row("SELECT http_port, ws_port, websocket_url FROM settings", [], |r| {
-            Ok((r.get(0)?, r.get(1)?, r.get(2)?))
-        })
+        c.query_row(
+            "SELECT http_port, ws_port, websocket_url FROM settings",
+            [],
+            |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)),
+        )
         .unwrap()
     }
 

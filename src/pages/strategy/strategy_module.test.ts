@@ -12,6 +12,7 @@ import {
   allowedProductsForLegs,
   batchQuantityLabelFor,
   convertLegKind,
+  DEFAULT_WEBHOOK_MESSAGES,
   DIRECTION_ACCEPTS,
   defaultQtyMode,
   derivativeExchangeFor,
@@ -34,7 +35,9 @@ import {
   maxBatchQuantityFor,
   monthlyExpiries,
   type Order,
+  PREMIUM_RULE_LABELS,
   parseExpiryDate,
+  premiumStrikeText,
   productHintForLegs,
   type QtyMode,
   resolvedQuantity,
@@ -48,6 +51,8 @@ import {
   TAB_UNDERLYING_EXCHANGES,
   TAB_UNDERLYING_IS_CLOSED_SET,
   UNIVERSE_TAB_HINT,
+  webhookMessageAction,
+  webhookMessagesError,
   withQtyMode,
 } from '@/types/strategy_module'
 
@@ -1596,5 +1601,87 @@ describe('withQtyMode converts once the lot size is known', () => {
   it('still keeps the number when the lot size is unknown', () => {
     const leg: Leg = { id: 1, segment: 'futures', exchange: 'NFO', qty: 4, qty_mode: 'lots' }
     expect(withQtyMode(leg, 'units', null).qty).toBe(4)
+  })
+})
+
+// The Bridge 1.0.7: strike chosen by premium at alert time.
+describe('premium-based strike (index signal legs)', () => {
+  const PREMIUM_LEG: Leg = {
+    id: 1,
+    segment: 'options',
+    position: 'B',
+    lots: 2,
+    option_type: 'CE',
+    strike_mode: 'premium',
+    premium_rule: 'gte',
+    premium: 100,
+    atm_offset: 'ATM',
+    strike: 24500,
+    expiry: 'weekly',
+    side: 'long',
+  }
+
+  it('sends the rule and X on a signal leg, never an offset or strike', () => {
+    const p = legToPayload(PREMIUM_LEG, 'signal')
+    expect(p.strike_mode).toBe('premium')
+    expect(p.premium_rule).toBe('gte')
+    expect(p.premium).toBe(100)
+    expect(p.side).toBe('long')
+    expect(p).not.toHaveProperty('atm_offset')
+    expect(p).not.toHaveProperty('strike')
+  })
+
+  it('defaults the rule to ≥', () => {
+    const p = legToPayload({ ...PREMIUM_LEG, premium_rule: null }, 'signal')
+    expect(p.premium_rule).toBe('gte')
+  })
+
+  it('falls back to ATM on a batch leg, without premium fields', () => {
+    const p = legToPayload(PREMIUM_LEG, 'batch')
+    expect(p.strike_mode).toBe('atm')
+    expect(p.atm_offset).toBe('ATM')
+    expect(p).not.toHaveProperty('premium')
+    expect(p).not.toHaveProperty('premium_rule')
+  })
+
+  it('describes the rule', () => {
+    expect(premiumStrikeText({ premium_rule: 'gte', premium: 100 })).toBe('Premium ≥ ₹100')
+    expect(premiumStrikeText({ premium_rule: 'lte', premium: 80 })).toBe('Premium ≤ ₹80')
+    expect(premiumStrikeText({ premium_rule: 'closest', premium: 50 })).toBe('Premium ≈ ₹50')
+    expect(PREMIUM_RULE_LABELS.gte).toBe('Premium ≥ X')
+  })
+})
+
+describe('plain-text webhook messages', () => {
+  it("maps Arko's Strategy messages with the defaults", () => {
+    expect(webhookMessageAction('BUY', null)).toBe('long_entry')
+    expect(webhookMessageAction(' sell ', null)).toBe('short_entry')
+    expect(webhookMessageAction('CLOSE LONG: Trailing Profit', null)).toBe('long_exit')
+    expect(webhookMessageAction('close short: Normal Exit', null)).toBe('short_exit')
+    expect(webhookMessageAction('BUY NOW', null)).toBeNull()
+  })
+
+  it('prefers exact rules, then the longest prefix', () => {
+    const rules = [
+      { match: 'LONG', action: 'long_entry' as const, prefix: true },
+      { match: 'LONG EXIT', action: 'long_exit' as const, prefix: true },
+      { match: 'LONG ENTRY', action: 'short_entry' as const, prefix: false },
+    ]
+    expect(webhookMessageAction('long entry', rules)).toBe('short_entry')
+    expect(webhookMessageAction('LONG EXIT now', rules)).toBe('long_exit')
+    expect(webhookMessageAction('LONG x', rules)).toBe('long_entry')
+  })
+
+  it('flags empty and duplicate rules', () => {
+    expect(webhookMessagesError(DEFAULT_WEBHOOK_MESSAGES)).toBeNull()
+    expect(webhookMessagesError([{ match: ' ', action: 'long_entry', prefix: false }])).toMatch(
+      /text/
+    )
+    expect(
+      webhookMessagesError([
+        { match: 'X', action: 'long_entry', prefix: false },
+        { match: 'x', action: 'short_entry', prefix: false },
+      ])
+    ).toMatch(/twice/)
   })
 })

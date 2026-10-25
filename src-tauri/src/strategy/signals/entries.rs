@@ -87,7 +87,33 @@ impl StrategyModule {
                 s.position_ref = Some(claim.position_ref.clone());
                 s
             }
-            Err(e) => return SignalResult::refuse(format!("Leg {}: {}", lid, e), Some(lid), None),
+            Err(e) => {
+                let msg = format!("Leg {}: {}", lid, e);
+                if leg["strike_mode"].as_str() == Some("premium") {
+                    // The Bridge 1.0.7: a premium-based strike that could not be
+                    // chosen places nothing; say so where the trader looks.
+                    tracing::warn!(
+                        "Strategy {} signal {} not placed. {}",
+                        strategy.id,
+                        side,
+                        msg
+                    );
+                    self.emit(
+                        strategy.id,
+                        &strategy.user_id,
+                        "leg_entry_rejected",
+                        &msg,
+                        EventFields {
+                            run_id: Some(run_id),
+                            leg_id: Some(lid),
+                            severity: Some("warn"),
+                            ..Default::default()
+                        },
+                    )
+                    .await;
+                }
+                return SignalResult::refuse(msg, Some(lid), None);
+            }
         };
         match self
             .signal_place_entry(strategy, run_id, &spec, &claim)

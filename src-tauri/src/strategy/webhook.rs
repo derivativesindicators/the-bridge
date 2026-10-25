@@ -33,6 +33,7 @@ use std::collections::{HashMap, VecDeque};
 use std::net::IpAddr;
 use std::time::{Duration, Instant};
 
+pub mod messages;
 mod pipeline;
 
 pub const MAX_PAYLOAD_BYTES: usize = 16384;

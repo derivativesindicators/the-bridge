@@ -242,6 +242,26 @@ closes the open legs of the other side (and opens nothing if that close is
 refused). Example: leg 1 `side: long, position: B, option_type: CE`; leg 2
 `side: short, position: B, option_type: PE`.
 
+**The Bridge 1.0.7: plain-text bodies.** A signal strategy's webhook also
+takes a body that is not a JSON object: its text (trimmed; a JSON string's
+quotes removed) is mapped by the strategy's `webhook_messages`, a list of up
+to 20 rules `{match, action, prefix}` (`null` = defaults `BUY`→long_entry,
+`SELL`→short_entry, prefix `CLOSE LONG`→long_exit, prefix `CLOSE SHORT`→
+short_exit). Case is ignored; exact beats prefix; the longest prefix wins.
+Unmatched text is `rejected_payload` (400). Authentication is the URL token
+only. Column `sm_strategy.webhook_messages` (migration
+`098_strategy_webhook_messages`).
+
+**The Bridge 1.0.7: strike by premium.** Such an options leg may set
+`strike_mode: "premium"` with `premium_rule` (`gte` default, `lte`,
+`closest`) and `premium` (rupees, > 0, ≤ 100000), and no `atm_offset` or
+`strike`. At signal time the strike is the cheapest at or above `premium`
+(`gte`), the dearest at or below it (`lte`) or the nearest to it (`closest`),
+from one multi-quote of the expiry's CE or PE strikes around the ATM (±10,
+widened once to ±25). No quote or no qualifying strike refuses the leg
+(`no_option_quotes` / `no_premium_strike`), places nothing for it, and emits
+`leg_entry_rejected` (warn). Batch legs refuse `strike_mode: "premium"`.
+
 ### Directions
 
 `both`, `long_only`, `short_only`

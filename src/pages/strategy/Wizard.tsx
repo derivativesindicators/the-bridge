@@ -35,6 +35,7 @@ import {
   allowedProductsForLegs,
   batchQuantityLabelFor,
   convertLegKind,
+  DEFAULT_WEBHOOK_MESSAGES,
   DIRECTION_ACCEPTS,
   defaultProductForLegs,
   defaultQtyMode,
@@ -58,9 +59,12 @@ import {
   MAX_NAME_LENGTH,
   MAX_SIGNAL_LOTS,
   MAX_SIGNAL_QTY,
+  MAX_WEBHOOK_MESSAGE_RULES,
   maxBatchQuantityFor,
   maxQtyFor,
   type OptionType,
+  PREMIUM_RULE_LABELS,
+  type PremiumRule,
   type Product,
   productHintForLegs,
   type QtyMode,
@@ -89,6 +93,8 @@ import {
   UNIVERSE_TAB_LABELS,
   UNIVERSE_TABS,
   type UniverseTab,
+  type WebhookMessageRule,
+  webhookMessagesError,
   withQtyMode,
 } from '@/types/strategy_module'
 import { showToast } from '@/utils/toast'
@@ -248,6 +254,8 @@ interface LegCardProps {
   onRemove: () => void
   onOpenStrikePicker: () => void
   removable: boolean
+  /** The Bridge 1.0.7: offer the premium-based strike (index signal legs). */
+  allowPremium?: boolean
 }
 
 function LegCard({
@@ -259,6 +267,7 @@ function LegCard({
   onRemove,
   onOpenStrikePicker,
   removable,
+  allowPremium = false,
 }: LegCardProps) {
   const segments = TAB_SEGMENTS[tab]
   const expiries = expiriesFor(tab, leg.segment)
@@ -411,16 +420,22 @@ function LegCard({
             <div className="space-y-1.5">
               <Label className="text-xs uppercase">Strike mode</Label>
               <div className="flex h-9 overflow-hidden rounded-md border border-input">
-                {(['atm', 'strike'] as const).map((mode) => (
+                {(allowPremium
+                  ? (['atm', 'strike', 'premium'] as const)
+                  : (['atm', 'strike'] as const)
+                ).map((mode) => (
                   <button
                     key={mode}
                     type="button"
+                    data-testid={`strike-mode-${mode}`}
                     onClick={() =>
                       onChange({
                         ...leg,
                         strike_mode: mode,
                         atm_offset: mode === 'atm' ? (leg.atm_offset ?? 'ATM') : null,
                         strike: mode === 'strike' ? (leg.strike ?? null) : null,
+                        premium_rule: mode === 'premium' ? (leg.premium_rule ?? 'gte') : null,
+                        premium: mode === 'premium' ? (leg.premium ?? 100) : null,
                       })
                     }
                     className={cn(
@@ -430,13 +445,54 @@ function LegCard({
                         : 'bg-background hover:bg-muted'
                     )}
                   >
-                    {mode === 'atm' ? 'ATM-relative' : 'Direct strike'}
+                    {mode === 'atm'
+                      ? 'ATM-relative'
+                      : mode === 'strike'
+                        ? 'Direct strike'
+                        : 'By premium'}
                   </button>
                 ))}
               </div>
             </div>
 
-            {leg.strike_mode === 'atm' ? (
+            {leg.strike_mode === 'premium' && allowPremium ? (
+              <div className="space-y-1.5 sm:col-span-2" data-testid="premium-fields">
+                <Label className="text-xs uppercase">Premium rule (₹)</Label>
+                <div className="flex gap-2">
+                  <select
+                    aria-label="Premium rule"
+                    value={leg.premium_rule ?? 'gte'}
+                    onChange={(event) => update('premium_rule', event.target.value as PremiumRule)}
+                    className={SELECT_CLASS_SM}
+                  >
+                    {(Object.keys(PREMIUM_RULE_LABELS) as PremiumRule[]).map((rule) => (
+                      <option key={rule} value={rule}>
+                        {PREMIUM_RULE_LABELS[rule]}
+                      </option>
+                    ))}
+                  </select>
+                  <Input
+                    aria-label="Premium X (₹)"
+                    type="number"
+                    min={0}
+                    step={0.05}
+                    value={leg.premium ?? ''}
+                    onChange={(event) =>
+                      update(
+                        'premium',
+                        event.target.value === '' ? null : Number(event.target.value)
+                      )
+                    }
+                    className="h-9 w-28 font-mono"
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Chosen when the alert arrives from live {leg.option_type ?? 'CE'} quotes of this
+                  expiry around the ATM. ≥: the cheapest strike at or above X; ≤: the dearest at or
+                  below X. If no quote or no strike qualifies, nothing is placed for this leg.
+                </p>
+              </div>
+            ) : leg.strike_mode === 'atm' ? (
               <div className="space-y-1.5 sm:col-span-2">
                 <Label className="text-xs uppercase">Strike offset</Label>
                 <select
@@ -1148,6 +1204,9 @@ export default function StrategyWizard({ editing }: StrategyWizardProps = {}) {
   const [lockTrailStep, setLockTrailStep] = useState(
     editing?.lock_profit?.trail_step != null ? String(editing.lock_profit.trail_step) : ''
   )
+  const [messageRules, setMessageRules] = useState<WebhookMessageRule[]>(
+    editing?.webhook_messages ?? DEFAULT_WEBHOOK_MESSAGES
+  )
   const [dailyLossLimit, setDailyLossLimit] = useState(
     editing?.daily_loss_limit_inr != null ? String(editing.daily_loss_limit_inr) : ''
   )
@@ -1325,6 +1384,10 @@ export default function StrategyWizard({ editing }: StrategyWizardProps = {}) {
         }
       }
     }
+    if (isSignal) {
+      const why = webhookMessagesError(messageRules)
+      if (why) return why
+    }
     for (const leg of legs) {
       if (isIndexSignal) {
         if (leg.side !== 'long' && leg.side !== 'short') {
@@ -1360,6 +1423,18 @@ export default function StrategyWizard({ editing }: StrategyWizardProps = {}) {
           return `Leg ${leg.id}: ${mode === 'lots' ? 'lots' : 'quantity'} cannot be more than ${cap.toLocaleString('en-IN')}`
         }
         continue
+      }
+      if (leg.segment === 'options' && leg.strike_mode === 'premium') {
+        if (!isIndexSignal) {
+          return `Leg ${leg.id}: a premium-based strike is only available on signal-driven index legs. Switch the leg to ATM-relative.`
+        }
+        const x = Number(leg.premium)
+        if (leg.premium == null || !Number.isFinite(x) || x <= 0) {
+          return `Leg ${leg.id}: enter the premium X in rupees (above zero)`
+        }
+        if (x > 100000) {
+          return `Leg ${leg.id}: premium X cannot be more than ₹1,00,000`
+        }
       }
       if (leg.segment === 'options' && leg.strike_mode === 'strike') {
         if (leg.strike == null || leg.strike <= 0) {
@@ -1433,6 +1508,9 @@ export default function StrategyWizard({ editing }: StrategyWizardProps = {}) {
       overall_target_mtm: overallTarget ? Number(overallTarget) : null,
       trail_sl_to_entry: trailToEntry,
       daily_loss_limit_inr: dailyLossLimit ? Number(dailyLossLimit) : null,
+      webhook_messages: isSignal
+        ? messageRules.map((r) => ({ ...r, match: r.match.trim() }))
+        : null,
       lock_profit: lockEnabled
         ? {
             mode: lockMode,
@@ -1548,6 +1626,106 @@ export default function StrategyWizard({ editing }: StrategyWizardProps = {}) {
           </div>
         </CardContent>
       </Card>
+
+      {isSignal && (
+        <Card data-testid="webhook-messages">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Webhook messages (plain text)</CardTitle>
+            <CardDescription>
+              Alerts may send plain text instead of JSON, e.g. TradingView <code>alert("BUY")</code>
+              . The text is trimmed and compared without case. "Starts with" matches any text
+              beginning with it (CLOSE LONG matches "CLOSE LONG: Trailing Profit"). JSON such as{' '}
+              <code>{'{"action":"long_entry"}'}</code> always works too.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2 p-4 pt-0">
+            {messageRules.map((rule, i) => (
+              <div key={i} className="flex flex-wrap items-center gap-2">
+                <Input
+                  aria-label={`Alert text ${i + 1}`}
+                  value={rule.match}
+                  maxLength={100}
+                  onChange={(event) =>
+                    setMessageRules(
+                      messageRules.map((r, j) =>
+                        j === i ? { ...r, match: event.target.value } : r
+                      )
+                    )
+                  }
+                  className="h-9 w-56 font-mono"
+                />
+                <label className="flex items-center gap-1 text-xs">
+                  <input
+                    type="checkbox"
+                    checked={rule.prefix}
+                    onChange={(event) =>
+                      setMessageRules(
+                        messageRules.map((r, j) =>
+                          j === i ? { ...r, prefix: event.target.checked } : r
+                        )
+                      )
+                    }
+                  />
+                  Starts with
+                </label>
+                <span className="text-xs text-muted-foreground">→</span>
+                <select
+                  aria-label={`Action ${i + 1}`}
+                  value={rule.action}
+                  onChange={(event) =>
+                    setMessageRules(
+                      messageRules.map((r, j) =>
+                        j === i
+                          ? { ...r, action: event.target.value as WebhookMessageRule['action'] }
+                          : r
+                      )
+                    )
+                  }
+                  className={`${SELECT_CLASS_SM} w-36`}
+                >
+                  {(['long_entry', 'long_exit', 'short_entry', 'short_exit'] as const).map((a) => (
+                    <option key={a} value={a}>
+                      {a}
+                    </option>
+                  ))}
+                </select>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setMessageRules(messageRules.filter((_, j) => j !== i))}
+                >
+                  Remove
+                </Button>
+              </div>
+            ))}
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={messageRules.length >= MAX_WEBHOOK_MESSAGE_RULES}
+                onClick={() =>
+                  setMessageRules([
+                    ...messageRules,
+                    { match: '', action: 'long_entry', prefix: false },
+                  ])
+                }
+              >
+                + Add message
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                onClick={() => setMessageRules(DEFAULT_WEBHOOK_MESSAGES)}
+              >
+                Reset to defaults
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {isSignal && (
         <Card>
@@ -1808,6 +1986,7 @@ export default function StrategyWizard({ editing }: StrategyWizardProps = {}) {
                   onRemove={() => removeLeg(index)}
                   onOpenStrikePicker={() => setStrikePickerLegIndex(index)}
                   removable={legs.length > 1}
+                  allowPremium={isIndexSignal}
                 />
               </div>
             )

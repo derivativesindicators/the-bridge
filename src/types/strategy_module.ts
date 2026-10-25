@@ -29,7 +29,29 @@ export type PriceType = 'MARKET' | 'LIMIT' | 'SL' | 'SL-M'
 export type Segment = 'options' | 'futures' | 'cash'
 export type LegPosition = 'B' | 'S'
 export type OptionType = 'CE' | 'PE'
-export type StrikeMode = 'atm' | 'strike'
+export type StrikeMode = 'atm' | 'strike' | 'premium'
+
+/**
+ * The Bridge 1.0.7: how a premium-based strike is chosen at alert time
+ * (signal legs on an index only). `gte`: the cheapest strike whose premium is
+ * at or above X (the backtest engine's rule); `lte`: the dearest at or below
+ * X; `closest`: the nearest to X.
+ */
+export type PremiumRule = 'gte' | 'lte' | 'closest'
+
+export const PREMIUM_RULE_LABELS: Record<PremiumRule, string> = {
+  gte: 'Premium ≥ X',
+  lte: 'Premium ≤ X',
+  closest: 'Closest to X',
+}
+
+/** A short description of a premium-based strike, e.g. "Premium ≥ ₹100". */
+export function premiumStrikeText(leg: Pick<Leg, 'premium_rule' | 'premium'>): string {
+  const rule = leg.premium_rule ?? 'gte'
+  const x = leg.premium ?? 0
+  const sign = rule === 'gte' ? '≥' : rule === 'lte' ? '≤' : '≈'
+  return `Premium ${sign} ₹${x}`
+}
 
 /**
  * Which signals a leg accepts, on a signal-mode strategy.
@@ -129,6 +151,10 @@ export interface Leg {
   strike_mode?: StrikeMode | null
   atm_offset?: string | null
   strike?: number | null
+  /** With `strike_mode` `premium` (signal legs on an index only). */
+  premium_rule?: PremiumRule | null
+  /** Rupees, above zero. */
+  premium?: number | null
 
   // --- Signal-mode fields. A signal leg names its own instrument and its own
   // absolute quantity; it is a different shape, not a superset. ---
@@ -198,6 +224,8 @@ export interface StrategySummary {
   live_enabled: boolean
   webhook_locked: boolean
   webhook_ip_allowlist: string[] | null
+  /** The Bridge 1.0.7: plain-text alert rules; null means the defaults. */
+  webhook_messages?: WebhookMessageRule[] | null
   daily_loss_limit_inr: number | null
   status: StrategyStatus
   current_run_id: number | null
@@ -238,6 +266,64 @@ export interface StrategyConfigPayload {
   scheduler?: SchedulerConfig | null
   daily_loss_limit_inr?: number | null
   webhook_ip_allowlist?: string[] | null
+  webhook_messages?: WebhookMessageRule[] | null
+}
+
+/**
+ * The Bridge 1.0.7: one plain-text alert rule of a signal strategy. A body
+ * that is not JSON (e.g. TradingView `alert("BUY")`) is trimmed and compared
+ * without case: an exact rule wins, then the longest matching prefix rule.
+ */
+export interface WebhookMessageRule {
+  match: string
+  action: 'long_entry' | 'long_exit' | 'short_entry' | 'short_exit'
+  prefix: boolean
+}
+
+export const MAX_WEBHOOK_MESSAGE_RULES = 20
+
+export const DEFAULT_WEBHOOK_MESSAGES: WebhookMessageRule[] = [
+  { match: 'BUY', action: 'long_entry', prefix: false },
+  { match: 'SELL', action: 'short_entry', prefix: false },
+  { match: 'CLOSE LONG', action: 'long_exit', prefix: true },
+  { match: 'CLOSE SHORT', action: 'short_exit', prefix: true },
+]
+
+/** The action a plain-text alert maps to, as the server decides it. */
+export function webhookMessageAction(
+  text: string,
+  rules: WebhookMessageRule[] | null | undefined
+): WebhookMessageRule['action'] | null {
+  const list = rules ?? DEFAULT_WEBHOOK_MESSAGES
+  const wanted = text.trim().toUpperCase()
+  if (!wanted) return null
+  const exact = list.find((r) => !r.prefix && r.match.trim().toUpperCase() === wanted)
+  if (exact) return exact.action
+  let best: WebhookMessageRule | null = null
+  for (const r of list) {
+    const m = r.match.trim().toUpperCase()
+    if (r.prefix && m && wanted.startsWith(m) && (!best || m.length > best.match.trim().length)) {
+      best = r
+    }
+  }
+  return best?.action ?? null
+}
+
+/** Why a rule list would be refused, or null. */
+export function webhookMessagesError(rules: WebhookMessageRule[]): string | null {
+  if (rules.length > MAX_WEBHOOK_MESSAGE_RULES) {
+    return `At most ${MAX_WEBHOOK_MESSAGE_RULES} webhook message rules`
+  }
+  const seen = new Set<string>()
+  for (const [i, r] of rules.entries()) {
+    const m = r.match.trim()
+    if (!m) return `Webhook message ${i + 1}: enter the alert text`
+    if (m.length > 100) return `Webhook message ${i + 1}: at most 100 characters`
+    const key = `${m.toUpperCase()}|${r.prefix}`
+    if (seen.has(key)) return `Webhook message ${i + 1}: '${m}' is listed twice`
+    seen.add(key)
+  }
+  return null
 }
 
 export type StrategyUpdatePayload = Partial<StrategyConfigPayload>
@@ -1014,6 +1100,13 @@ export function legToPayload(leg: Leg, kind: StrategyKind = 'batch'): Leg {
 
   if (kind === 'signal' && isResolvedSignalLeg(leg)) {
     const base = legToPayload(leg, 'batch')
+    if (leg.segment === 'options' && leg.strike_mode === 'premium') {
+      delete base.atm_offset
+      delete base.strike
+      base.strike_mode = 'premium'
+      base.premium_rule = leg.premium_rule ?? 'gte'
+      base.premium = leg.premium ?? null
+    }
     return { ...base, side: leg.side === 'short' ? 'short' : 'long' }
   }
 
@@ -1036,7 +1129,9 @@ export function legToPayload(leg: Leg, kind: StrategyKind = 'batch'): Leg {
     if (leg.segment !== 'cash') clean.expiry = leg.expiry
     if (leg.segment === 'options') {
       clean.option_type = leg.option_type ?? 'CE'
-      clean.strike_mode = leg.strike_mode ?? 'atm'
+      // A premium-based strike exists only on a signal leg (added back above);
+      // a batch leg falls back to the ATM.
+      clean.strike_mode = leg.strike_mode === 'premium' ? 'atm' : (leg.strike_mode ?? 'atm')
       if (clean.strike_mode === 'atm') clean.atm_offset = leg.atm_offset ?? 'ATM'
       else clean.strike = leg.strike ?? null
     }

@@ -43,6 +43,16 @@ pub fn migrate_revision(conn: &Connection) -> Result<()> {
     Ok(())
 }
 
+/// Migration `098_strategy_webhook_messages` (The Bridge 1.0.7): a signal
+/// strategy's plain-text alert rules, JSON; NULL means the defaults.
+/// Idempotent.
+pub fn migrate_webhook_messages(conn: &Connection) -> Result<()> {
+    if !crate::db::sqlite::migrations::column_exists(conn, "sm_strategy", "webhook_messages")? {
+        conn.execute_batch("ALTER TABLE sm_strategy ADD COLUMN webhook_messages TEXT")?;
+    }
+    Ok(())
+}
+
 /// What a start decided on, checked again by the statement that moves the
 /// strategy to running (SM-01).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -144,7 +154,9 @@ fn check_editable(
 fn column_value(field: &str, value: &Value) -> rusqlite::types::Value {
     match field {
         "entry_time" | "exit_time" => time_col(value).into(),
-        "legs" | "lock_profit" | "scheduler" | "webhook_ip_allowlist" => json_col(value).into(),
+        "legs" | "lock_profit" | "scheduler" | "webhook_ip_allowlist" | "webhook_messages" => {
+            json_col(value).into()
+        }
         "overall_sl_mtm" | "overall_target_mtm" | "daily_loss_limit_inr" => num_param(value).into(),
         "trail_sl_to_entry" => i64::from(value.as_bool().unwrap_or(false)).into(),
         _ => value.as_str().map(str::to_string).into(),

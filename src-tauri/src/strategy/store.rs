@@ -40,8 +40,8 @@ mod webhook_audit;
 
 pub use by_mode::ModedOrder;
 pub use management::{
-    migrate_revision, ClaimOutcome, StartClaim, ALREADY_RUNNING, CHANGED_WHILE_EDITING,
-    CHANGED_WHILE_STARTING, LIVE_NOT_ENABLED, WEBHOOK_LOCKED,
+    migrate_revision, migrate_webhook_messages, ClaimOutcome, StartClaim, ALREADY_RUNNING,
+    CHANGED_WHILE_EDITING, CHANGED_WHILE_STARTING, LIVE_NOT_ENABLED, WEBHOOK_LOCKED,
 };
 pub use runs::migrate_run_account;
 pub use webhook_audit::WebhookEvent;
@@ -166,6 +166,7 @@ pub const UPDATABLE_FIELDS: &[&str] = &[
     "scheduler",
     "daily_loss_limit_inr",
     "webhook_ip_allowlist",
+    "webhook_messages",
 ];
 
 // ---------------------------------------------------------------- migration
@@ -452,6 +453,8 @@ pub struct StrategyRow {
     /// Advanced by every configuration write (SM-01). Not part of the
     /// web's strategy shape.
     pub revision: i64,
+    /// The Bridge 1.0.7: plain-text alert rules (`null`: the defaults).
+    pub webhook_messages: Value,
 }
 
 const STRATEGY_COLS: &str =
@@ -459,7 +462,7 @@ const STRATEGY_COLS: &str =
     underlying_exchange, strategy_type, entry_time, exit_time, product, pricetype, legs, \
     overall_sl_mtm, overall_target_mtm, lock_profit, trail_sl_to_entry, scheduler, live_enabled, \
     webhook_token_hash, webhook_ip_allowlist, webhook_locked, daily_loss_limit_inr, status, \
-    current_run_id, created_at, updated_at, revision";
+    current_run_id, created_at, updated_at, revision, webhook_messages";
 
 fn strategy_from(r: &Row<'_>) -> rusqlite::Result<StrategyRow> {
     Ok(StrategyRow {
@@ -499,6 +502,7 @@ fn strategy_from(r: &Row<'_>) -> rusqlite::Result<StrategyRow> {
         created_at: r.get(26)?,
         updated_at: r.get(27)?,
         revision: r.get(28)?,
+        webhook_messages: read_json(r.get(29)?),
     })
 }
 
@@ -535,6 +539,7 @@ impl StrategyRow {
             "webhook_ip_allowlist".into(),
             self.webhook_ip_allowlist.clone(),
         );
+        m.insert("webhook_messages".into(), self.webhook_messages.clone());
         m.insert(
             "daily_loss_limit_inr".into(),
             f64_json(self.daily_loss_limit_inr),

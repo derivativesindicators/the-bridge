@@ -5,8 +5,9 @@
 use super::{
     choice, get, integer, mapping, number, py_repr, reject_unknown, required, risk_fields, text,
     LEG_EXPIRIES, LEG_FIELDS, LEG_OPTION_TYPES, LEG_POSITIONS, LEG_SEGMENTS, LEG_SIDES,
-    LEG_STRIKE_MODES, MAX_CASH_QUANTITY, MAX_LEGS, MAX_LOTS, MAX_SIGNAL_LOTS, MAX_SIGNAL_QTY,
-    MIN_LEGS, QTY_MODES, R, SIGNAL_LEG_EXCHANGES, SIGNAL_LEG_FIELDS,
+    LEG_STRIKE_MODES, MAX_CASH_QUANTITY, MAX_LEGS, MAX_LOTS, MAX_PREMIUM, MAX_SIGNAL_LOTS,
+    MAX_SIGNAL_QTY, MIN_LEGS, PREMIUM_RULES, QTY_MODES, R, SIGNAL_LEG_EXCHANGES, SIGNAL_LEG_FIELDS,
+    STRIKE_MODE_PREMIUM,
 };
 use crate::brokers::common::symbols::SymbolGeneration;
 use crate::strategy::resolver::{is_derivative_exchange, quantity_is_whole_lots};
@@ -41,7 +42,7 @@ fn validate_resolved_signal_leg(raw: &Value, index: usize) -> R<Value> {
     let mut rest = leg.clone();
     rest.remove("side");
     rest.remove("symbol");
-    let mut c = match validate_leg(&Value::Object(rest), index)? {
+    let mut c = match validate_leg_with(&Value::Object(rest), index, true)? {
         Value::Object(m) => m,
         _ => unreachable!(),
     };
@@ -152,7 +153,12 @@ fn validate_signal_leg(raw: &Value, index: usize, g: &SymbolGeneration) -> R<Val
 
 /// An options leg's contract fields: the option type, and either the ATM
 /// offset or a fixed strike (never both).
-fn option_fields(leg: &Map<String, Value>, c: &mut Map<String, Value>, label: &str) -> R<()> {
+fn option_fields(
+    leg: &Map<String, Value>,
+    c: &mut Map<String, Value>,
+    label: &str,
+    allow_premium: bool,
+) -> R<()> {
     c.insert(
         "option_type".into(),
         json!(choice(
@@ -161,8 +167,56 @@ fn option_fields(leg: &Map<String, Value>, c: &mut Map<String, Value>, label: &s
             &format!("{}.option_type", label)
         )?),
     );
+    let raw_mode = get(leg, "strike_mode").unwrap_or(&json!("atm")).clone();
+    let premium_mode = raw_mode
+        .as_str()
+        .is_some_and(|m| m.trim().eq_ignore_ascii_case(STRIKE_MODE_PREMIUM));
+    if premium_mode && !allow_premium {
+        return Err(format!(
+            "{}.strike_mode 'premium' is only available on signal-driven legs chosen when the alert arrives.",
+            label
+        ));
+    }
+    if !premium_mode {
+        for f in ["premium_rule", "premium"] {
+            if get(leg, f).is_some() {
+                return Err(format!(
+                    "{}.{} is only used when strike_mode is 'premium'. Set strike_mode to 'premium', or remove it.",
+                    label, f
+                ));
+            }
+        }
+    }
+    if premium_mode {
+        c.insert("strike_mode".into(), json!(STRIKE_MODE_PREMIUM));
+        for f in ["strike", "atm_offset"] {
+            if get(leg, f).is_some() {
+                return Err(format!(
+                    "{}.{} is not used when strike_mode is 'premium'. Remove it.",
+                    label, f
+                ));
+            }
+        }
+        let rule = choice(
+            get(leg, "premium_rule").unwrap_or(&json!("gte")),
+            PREMIUM_RULES,
+            &format!("{}.premium_rule", label),
+        )?;
+        c.insert("premium_rule".into(), json!(rule));
+        c.insert(
+            "premium".into(),
+            number(
+                required(leg, "premium", label)?,
+                &format!("{}.premium", label),
+                None,
+                Some(MAX_PREMIUM),
+                Some(0.0),
+            )?,
+        );
+        return Ok(());
+    }
     let mode = choice(
-        get(leg, "strike_mode").unwrap_or(&json!("atm")),
+        &raw_mode,
         LEG_STRIKE_MODES,
         &format!("{}.strike_mode", label),
     )?;
@@ -211,6 +265,10 @@ fn option_fields(leg: &Map<String, Value>, c: &mut Map<String, Value>, label: &s
 }
 
 fn validate_leg(raw: &Value, index: usize) -> R<Value> {
+    validate_leg_with(raw, index, false)
+}
+
+fn validate_leg_with(raw: &Value, index: usize, allow_premium: bool) -> R<Value> {
     let label = format!("legs[{}]", index);
     let leg = mapping(raw, &label)?;
     reject_unknown(leg, LEG_FIELDS, &label)?;
@@ -244,9 +302,16 @@ fn validate_leg(raw: &Value, index: usize) -> R<Value> {
         )?),
     );
     if segment == "options" {
-        option_fields(leg, &mut c, &label)?;
+        option_fields(leg, &mut c, &label, allow_premium)?;
     } else {
-        for f in ["option_type", "strike_mode", "atm_offset", "strike"] {
+        for f in [
+            "option_type",
+            "strike_mode",
+            "atm_offset",
+            "strike",
+            "premium_rule",
+            "premium",
+        ] {
             if get(leg, f).is_some() {
                 return Err(format!("{}.{} is only valid on an options leg", label, f));
             }

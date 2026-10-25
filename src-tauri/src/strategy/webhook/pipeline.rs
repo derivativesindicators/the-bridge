@@ -159,6 +159,34 @@ impl StrategyModule {
         // 4. Payload.
         let payload = match parse_payload(body) {
             Ok(p) => p,
+            // The Bridge 1.0.7: a signal strategy also takes a plain-text
+            // message (e.g. `BUY`, `CLOSE LONG: Normal Exit`), mapped to an
+            // action by its `webhook_messages` rules.
+            Err(_)
+                if strategy.strategy_kind == "signal"
+                    && body.len() <= super::MAX_PAYLOAD_BYTES
+                    && super::messages::body_text(body).is_some() =>
+            {
+                let text = super::messages::body_text(body).unwrap_or_default();
+                match super::messages::action_for(&text, &strategy.webhook_messages) {
+                    Some(action) => {
+                        let mut m = Map::new();
+                        m.insert("action".into(), Value::String(action));
+                        m.insert("message".into(), Value::String(text));
+                        m
+                    }
+                    None => {
+                        let shown: String = text.chars().take(80).collect();
+                        let e = format!(
+                            "The message '{}' matches none of this strategy's alert messages. Add it under Webhook messages, or send JSON such as {{\"action\": \"long_entry\"}}.",
+                            redact(&Value::String(shown), token, 0).as_str().unwrap_or("")
+                        );
+                        let id =
+                            audit.write("rejected_payload", Some(sid), None, None, None, Some(&e));
+                        return stamped(WebhookOutcome::new("rejected_payload", e, false), sid, id);
+                    }
+                }
+            }
             Err(e) => {
                 let id = audit.write("rejected_payload", Some(sid), None, None, None, Some(&e));
                 return stamped(WebhookOutcome::new("rejected_payload", e, false), sid, id);

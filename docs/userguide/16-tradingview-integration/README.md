@@ -251,6 +251,73 @@ address (for example `https://abc123.ngrok-free.app/strategy/webhook/...`).
 The token in the address is the credential: keep it private, and rotate it on
 the strategy's page if it leaks.
 
+### Plain-text alerts (The Bridge 1.0.7)
+
+A signal-driven strategy also accepts a plain-text body, so a Pine Script
+`alert("BUY")` or an indicator's own alert text works without JSON. The
+strategy's **Webhook messages** list maps text to the four actions. The
+defaults are:
+
+| Alert text | Action |
+|---|---|
+| `BUY` | long_entry |
+| `SELL` | short_entry |
+| starts with `CLOSE LONG` | long_exit |
+| starts with `CLOSE SHORT` | short_exit |
+
+Text is trimmed and compared without case; an exact rule wins over a
+"starts with" rule, and the longest "starts with" wins. Add your own (for
+example `LONG ENTRY` → long_entry). Text that matches nothing is refused and
+logged; nothing is placed. The webhook URL's token is the only credential:
+do **not** put an API key in the alert. In TradingView, create one alert on
+the script with condition **"alert() function calls only"**, tick Webhook
+URL, paste the strategy's URL, and leave the message box as it is (the
+script's `alert()` text is sent). For an `alertcondition()` alert, type the
+text (e.g. `BUY`) as the message.
+
+An entry while the other side is open flips (closes the other side's legs
+first), and an exit with nothing open is a harmless no-op, so a `SELL` that
+arrives before the same bar's `CLOSE LONG` works as intended.
+
+### Index option legs chosen at alert time (The Bridge 1.0.6+)
+
+A signal-driven strategy on an index tab (Weekly & Monthly, Monthly Only)
+can have legs without a symbol: each trades the strategy's underlying (for
+example NIFTY), as its future or as a CE/PE option, bought or sold, for a
+number of lots and an expiry (current/next week or month). Each leg
+**fires on** Long or Short signals. The alert body is just the action:
+
+```json
+{"action": "long_entry"}
+```
+
+`long_entry` opens every Long leg (closing open Short legs first),
+`long_exit` closes them, and the same for `short_entry` / `short_exit`. A
+repeated entry opens nothing more; an exit closes the exact contract that was
+opened. Only these four actions are accepted (not `buy` / `sell`).
+
+**Strike.** An option leg's strike is one of:
+
+- **ATM-relative**: ATM, ITM1-5 or OTM1-5 of the live index price.
+- **Direct strike**: a fixed strike.
+- **By premium** (The Bridge 1.0.7): chosen from live option quotes of that
+  expiry when the alert arrives, for the leg's CE or PE side. Pick a rule and
+  an amount X in rupees:
+  - **Premium ≥ X**: the cheapest strike whose last price is at or above X
+    (for X = 100, a strike at ₹104 beats one at ₹131). This is the
+    backtest engine's "premium ≥ 100" rule.
+  - **Premium ≤ X**: the most expensive strike at or below X.
+  - **Closest to X**: the strike whose price is nearest X (a tie goes to the
+    higher price).
+
+  The Bridge reads ATM±10 strikes in one multi-quote request and widens to
+  ATM±25 only if nothing qualifies. If no quote comes back, or no strike
+  qualifies, **nothing is placed for that leg**: the alert is answered with
+  the reason, logged under the strategy's webhook events, and shown as a
+  "leg entry rejected" warning on the strategy's page. Legs are entered in
+  order, and a failure stops the legs after it, so put a hedge (bought) leg
+  before the leg it protects.
+
 ## Testing
 
 1. Switch to **analyzer mode** (top bar). Check the badge reads **Analyze

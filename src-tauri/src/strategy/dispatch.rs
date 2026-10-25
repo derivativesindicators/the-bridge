@@ -325,6 +325,22 @@ pub trait OrderGateway: Send + Sync {
     async fn book(&self, mode: RunMode, book: Book) -> Result<Value, Value>;
     /// A last price for the underlying an ATM strike is measured against.
     async fn ltp(&self, symbol: &str, exchange: &str) -> Result<f64, String>;
+    /// The Bridge 1.0.7: last prices for many contracts in one request
+    /// (premium-based strike selection reads a strip of the chain). One
+    /// entry per key, in order; `None` where no usable price came back.
+    /// Default: one `ltp` per key.
+    async fn ltps(&self, keys: &[(String, String)]) -> Result<Vec<Option<f64>>, String> {
+        let mut out = Vec::with_capacity(keys.len());
+        for (s, e) in keys {
+            out.push(
+                self.ltp(s, e)
+                    .await
+                    .ok()
+                    .filter(|p| p.is_finite() && *p > 0.0),
+            );
+        }
+        Ok(out)
+    }
     /// Whether `order_book_rows` carries the client tag every order was sent
     /// with (the broker's capability, never inferred from rows).
     fn reports_order_tags(&self, _mode: RunMode) -> bool {
@@ -685,6 +701,36 @@ impl OrderGateway for AppGateway {
                 let mut b = BookOrder::from_row(&row)?;
                 b.client_tag = t.client_tag;
                 Some(b)
+            })
+            .collect())
+    }
+
+    async fn ltps(&self, keys: &[(String, String)]) -> Result<Vec<Option<f64>>, String> {
+        let ctx = self
+            .ctx
+            .upgrade()
+            .ok_or_else(|| "The Bridge is shutting down".to_string())?;
+        let h = broker_handle(&ctx).map_err(|_| NO_BROKER_SESSION.to_string())?;
+        drop(ctx);
+        let qk: Vec<crate::brokers::types::QuoteKey> = keys
+            .iter()
+            .map(|(s, e)| crate::brokers::types::QuoteKey::new(e.clone(), s.clone()))
+            .collect();
+        let rows = h
+            .broker
+            .get_multiquotes(&h.auth, &qk)
+            .await
+            .map_err(|e| format!("Could not fetch option quotes. {}", e.client_message()))?;
+        Ok(keys
+            .iter()
+            .map(|(s, e)| {
+                rows.iter()
+                    .find(|r| {
+                        r.symbol.eq_ignore_ascii_case(s) && r.exchange.eq_ignore_ascii_case(e)
+                    })
+                    .and_then(|r| r.data.as_ref())
+                    .map(|q| q.ltp)
+                    .filter(|p| p.is_finite() && *p > 0.0)
             })
             .collect())
     }
