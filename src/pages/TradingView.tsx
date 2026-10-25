@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/select'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useSupportedExchanges } from '@/hooks/useSupportedExchanges'
+import { isIndexExchange, rankHits, searchExchanges } from '@/lib/symbolSearch'
 import { showToast } from '@/utils/toast'
 
 interface SearchResult {
@@ -23,6 +24,8 @@ interface SearchResult {
   name: string
   exchange: string
   token: string
+  instrumenttype?: string
+  expiry?: string
 }
 
 // EXCHANGES and PRODUCTS are now dynamic — provided by useSupportedExchanges() hook
@@ -34,7 +37,9 @@ const PRODUCTS = [
 ]
 
 export default function TradingView() {
-  const { tradingExchanges, defaultExchange, isCrypto } = useSupportedExchanges()
+  const { tradingExchanges, allExchanges, defaultExchange, isCrypto } = useSupportedExchanges()
+  const searchVenues = searchExchanges(allExchanges.map((e) => e.value))
+  const venuesKey = searchVenues.join(',')
 
   // Form state
   const [alertMode, setAlertMode] = useState<'strategy' | 'line'>('strategy')
@@ -129,13 +134,14 @@ export default function TradingView() {
       setIsLoading(true)
       try {
         const params = new URLSearchParams({ q: query })
-        if (exchange) params.append('exchange', exchange)
+        // Search every venue (cash, index, F&O); the pick sets Exchange.
+        if (venuesKey) params.append('exchange', venuesKey)
 
         const response = await fetch(`/search/api/search?${params}`, {
           credentials: 'include',
         })
         const data = await response.json()
-        setSearchResults((data.results || []).slice(0, 10))
+        setSearchResults(rankHits(data.results || [], query))
         setShowResults(true)
       } catch (_error) {
         setSearchResults([])
@@ -143,7 +149,7 @@ export default function TradingView() {
         setIsLoading(false)
       }
     },
-    [exchange]
+    [venuesKey]
   )
 
   // Debounced input handler
@@ -298,6 +304,32 @@ export default function TradingView() {
                 </TabsList>
               </Tabs>
 
+              {/* Exchange */}
+              <div className="space-y-2">
+                <Label htmlFor="exchange">Exchange</Label>
+                <p className="text-xs text-muted-foreground">
+                  Set automatically from the symbol you pick below (search covers NSE, indices, NFO,
+                  BSE, BFO, MCX).
+                </p>
+                <Select value={exchange} onValueChange={setExchange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Exchange" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[
+                      ...tradingExchanges,
+                      ...(tradingExchanges.some((e) => e.value === exchange)
+                        ? []
+                        : [{ value: exchange, label: exchange }]),
+                    ].map((ex) => (
+                      <SelectItem key={ex.value} value={ex.value}>
+                        {ex.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               {/* Symbol Search */}
               <div className="space-y-2">
                 <Label htmlFor="symbol">Symbol</Label>
@@ -333,7 +365,9 @@ export default function TradingView() {
                               <div className="font-medium">{result.symbol}</div>
                               <div className="text-xs text-muted-foreground">{result.name}</div>
                             </div>
-                            <span className="text-xs bg-primary text-primary-foreground px-2 py-1 rounded">
+                            <span
+                              className={`text-xs px-2 py-1 rounded ${isIndexExchange(result.exchange) ? 'bg-amber-500 text-white' : 'bg-primary text-primary-foreground'}`}
+                            >
                               {result.exchange}
                             </span>
                           </div>
@@ -344,22 +378,16 @@ export default function TradingView() {
                 </div>
               </div>
 
-              {/* Exchange */}
-              <div className="space-y-2">
-                <Label htmlFor="exchange">Exchange</Label>
-                <Select value={exchange} onValueChange={setExchange}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Exchange" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {tradingExchanges.map((ex) => (
-                      <SelectItem key={ex.value} value={ex.value}>
-                        {ex.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              {isIndexExchange(exchange) && (
+                <Alert variant="destructive" data-testid="index-warning">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription>
+                    {symbol} on {exchange} is an index: it can't be bought or sold, so
+                    placesmartorder will be rejected. Pick its future (e.g. {symbol}…FUT on{' '}
+                    {exchange.startsWith('BSE') ? 'BFO' : 'NFO'}) or an option instead.
+                  </AlertDescription>
+                </Alert>
+              )}
 
               {/* Product Type (hidden for crypto — Delta Exchange ignores it) */}
               {!isCrypto && (
