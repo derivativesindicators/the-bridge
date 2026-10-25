@@ -482,6 +482,8 @@ impl StrategyModule {
             }
             fired.push(job.id);
         }
+        // The Bridge 1.0.8: expiry roll, pending re-entries, CAS exit.
+        self.run_signal_timers().await;
         fired
     }
 }

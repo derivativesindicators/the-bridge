@@ -325,6 +325,19 @@ pub trait OrderGateway: Send + Sync {
     async fn book(&self, mode: RunMode, book: Book) -> Result<Value, Value>;
     /// A last price for the underlying an ATM strike is measured against.
     async fn ltp(&self, symbol: &str, exchange: &str) -> Result<f64, String>;
+    /// The Bridge 1.0.8: candles of one contract (the CAS exit's Supertrend
+    /// warm-up). `interval` as OpenAlgo names it (`1m`, `5m`, `1h`).
+    /// Default: not available.
+    async fn history(
+        &self,
+        _symbol: &str,
+        _exchange: &str,
+        _interval: &str,
+        _from: chrono::NaiveDate,
+        _to: chrono::NaiveDate,
+    ) -> Result<Vec<crate::brokers::types::Candle>, String> {
+        Err("Candle history is not available".into())
+    }
     /// The Bridge 1.0.7: last prices for many contracts in one request
     /// (premium-based strike selection reads a strip of the chain). One
     /// entry per key, in order; `None` where no usable price came back.
@@ -703,6 +716,32 @@ impl OrderGateway for AppGateway {
                 Some(b)
             })
             .collect())
+    }
+
+    async fn history(
+        &self,
+        symbol: &str,
+        exchange: &str,
+        interval: &str,
+        from: chrono::NaiveDate,
+        to: chrono::NaiveDate,
+    ) -> Result<Vec<crate::brokers::types::Candle>, String> {
+        let ctx = self
+            .ctx
+            .upgrade()
+            .ok_or_else(|| "The Bridge is shutting down".to_string())?;
+        let h = broker_handle(&ctx).map_err(|_| NO_BROKER_SESSION.to_string())?;
+        drop(ctx);
+        let req = crate::brokers::types::HistoryRequest {
+            key: crate::brokers::types::QuoteKey::new(exchange, symbol),
+            interval: interval.to_string(),
+            start: from,
+            end: to,
+        };
+        h.broker
+            .get_history(&h.auth, &req)
+            .await
+            .map_err(|e| format!("Could not read candles for {}. {}", symbol, e.client_message()))
     }
 
     async fn ltps(&self, keys: &[(String, String)]) -> Result<Vec<Option<f64>>, String> {

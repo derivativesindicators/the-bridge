@@ -144,7 +144,9 @@ fn run_breach(
     }
     // The daily loss limit is a limit on the session, not the run.
     if let (Some(limit), Some(banked)) = (limit, banked) {
-        let day = banked + run.pnl_total;
+        // A run carried in from an earlier session counts only what it
+        // made or lost since this session began.
+        let day = banked + run.pnl_total - run.day_base.map(|b| b.1).unwrap_or(0.0);
         if day <= -limit {
             events.push(Event::run(
                 "overall_sl_hit",
@@ -244,8 +246,15 @@ impl StrategyModule {
             return;
         };
 
+        let session_start = self.session_start();
+        let carried = ctx.run_started.is_some_and(|s| s < session_start);
         // In-memory arithmetic only.
         let decided = self.state.with_run(run_id, |run| {
+            // The Bridge 1.0.8: the day's P&L baseline, once per session.
+            let ss = session_start.timestamp();
+            if run.day_base.map(|b| b.0) != Some(ss) {
+                run.day_base = Some((ss, if carried { run.pnl_total } else { 0.0 }));
+            }
             let (leg_exits, mut events) = evaluate_legs(
                 run,
                 run_id,

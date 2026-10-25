@@ -782,6 +782,15 @@ pub fn validate_strategy_config(payload: &Value, g: &SymbolGeneration) -> R<Valu
     );
     c.insert("legs".into(), Value::Array(legs.clone()));
     risk_settings(raw, &mut c)?;
+    c.insert(
+        "signal_options".into(),
+        crate::strategy::signal_options::validate(
+            get(raw, "signal_options"),
+            kind,
+            stype,
+            product,
+        )?,
+    );
 
     let (entry, exit) = session_times(raw, stype)?;
     c.insert("entry_time".into(), json!(entry));

@@ -56,6 +56,9 @@ pub struct TickContext {
     /// `strategy.to_dict(false)`, what the risk core reads.
     pub strategy_dict: Value,
     pub mode: RunMode,
+    /// When the run started (The Bridge 1.0.8: a run started before this
+    /// session was carried overnight).
+    pub run_started: Option<DateTime<Utc>>,
     /// The banked P&L and the session it was read for.
     banked: Mutex<Option<(DateTime<Utc>, f64)>>,
 }
@@ -251,6 +254,7 @@ impl StrategyModule {
         let ctx = Arc::new(TickContext {
             strategy_dict: strategy.to_dict(false),
             mode: self.mode_of(&run.mode),
+            run_started: super::store::parse_utc(&run.started_at),
             strategy,
             banked: Mutex::new(None),
         });
@@ -292,7 +296,7 @@ impl StrategyModule {
     }
 
     /// When this session began: what banked P&L is read for.
-    fn session_start(&self) -> DateTime<Utc> {
+    pub(crate) fn session_start(&self) -> DateTime<Utc> {
         super::session::session_started_at(self.clock.now(), self.session.0, self.session.1)
     }
 }

@@ -40,7 +40,7 @@ mod webhook_audit;
 
 pub use by_mode::ModedOrder;
 pub use management::{
-    migrate_revision, migrate_webhook_messages, ClaimOutcome, StartClaim, ALREADY_RUNNING,
+    migrate_revision, migrate_signal_options, migrate_webhook_messages, ClaimOutcome, StartClaim, ALREADY_RUNNING,
     CHANGED_WHILE_EDITING, CHANGED_WHILE_STARTING, LIVE_NOT_ENABLED, WEBHOOK_LOCKED,
 };
 pub use runs::migrate_run_account;
@@ -128,6 +128,12 @@ pub const EVENT_KINDS: &[&str] = &[
     "tick_source_stale",
     "recovery_succeeded",
     "recovery_failed",
+    "position_carried",
+    "expiry_roll",
+    "entry_deferred",
+    "pending_entry_placed",
+    "cas_exit",
+    "cas_tracking_unavailable",
 ];
 pub const WEBHOOK_RESULTS: &[&str] = &[
     "ok",
@@ -167,6 +173,7 @@ pub const UPDATABLE_FIELDS: &[&str] = &[
     "daily_loss_limit_inr",
     "webhook_ip_allowlist",
     "webhook_messages",
+    "signal_options",
 ];
 
 // ---------------------------------------------------------------- migration
@@ -455,6 +462,9 @@ pub struct StrategyRow {
     pub revision: i64,
     /// The Bridge 1.0.7: plain-text alert rules (`null`: the defaults).
     pub webhook_messages: Value,
+    /// The Bridge 1.0.8: overnight carry, expiry roll and CAS exit (`null`:
+    /// all off).
+    pub signal_options: Value,
 }
 
 const STRATEGY_COLS: &str =
@@ -462,7 +472,7 @@ const STRATEGY_COLS: &str =
     underlying_exchange, strategy_type, entry_time, exit_time, product, pricetype, legs, \
     overall_sl_mtm, overall_target_mtm, lock_profit, trail_sl_to_entry, scheduler, live_enabled, \
     webhook_token_hash, webhook_ip_allowlist, webhook_locked, daily_loss_limit_inr, status, \
-    current_run_id, created_at, updated_at, revision, webhook_messages";
+    current_run_id, created_at, updated_at, revision, webhook_messages, signal_options";
 
 fn strategy_from(r: &Row<'_>) -> rusqlite::Result<StrategyRow> {
     Ok(StrategyRow {
@@ -503,6 +513,7 @@ fn strategy_from(r: &Row<'_>) -> rusqlite::Result<StrategyRow> {
         updated_at: r.get(27)?,
         revision: r.get(28)?,
         webhook_messages: read_json(r.get(29)?),
+        signal_options: read_json(r.get(30)?),
     })
 }
 
@@ -540,6 +551,7 @@ impl StrategyRow {
             self.webhook_ip_allowlist.clone(),
         );
         m.insert("webhook_messages".into(), self.webhook_messages.clone());
+        m.insert("signal_options".into(), self.signal_options.clone());
         m.insert(
             "daily_loss_limit_inr".into(),
             f64_json(self.daily_loss_limit_inr),
@@ -817,6 +829,11 @@ pub struct Store {
 impl Store {
     pub fn new(db: Arc<SqliteDb>, clock: Arc<dyn crate::clock::Clock>) -> Self {
         Self { db, clock }
+    }
+
+    /// A connection for the market calendar (`None` when none is free).
+    pub(crate) fn conn_for_calendar(&self) -> Option<crate::db::sqlite::DbConn> {
+        self.conn().ok()
     }
 
     fn conn(&self) -> Result<crate::db::sqlite::DbConn> {

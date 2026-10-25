@@ -53,6 +53,8 @@ pub mod risk_adapter;
 mod run_owner;
 pub mod scheduler;
 pub mod session;
+pub mod signal_options;
+pub mod signal_timers;
 pub mod signals;
 mod start_claim;
 pub mod state;
@@ -115,6 +117,8 @@ pub struct StrategyModule {
     /// What the tick path needs of each running run, read once.
     pub tick_contexts: tick_context::TickContexts,
     pub scheduler: scheduler::Scheduler,
+    /// The Bridge 1.0.8: signal strategies' roll / CAS timer state.
+    pub(crate) timers: signal_timers::SignalTimers,
     /// The per-strategy position book fed by `order.placed` tags.
     pub book: Arc<book::StrategyBook>,
     /// A strategy's order history, read once for the books that ask at once.
@@ -157,6 +161,7 @@ impl StrategyModule {
             feed: tick_feed::TickFeed::new(deps.prices),
             tick_contexts: tick_context::TickContexts::default(),
             scheduler: scheduler::Scheduler::new(),
+            timers: signal_timers::SignalTimers::default(),
             book,
             histories: crate::services::report_flight::KeyedFlight::new(
                 "a strategy's order history",

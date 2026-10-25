@@ -10,7 +10,7 @@ use crate::strategy::store::{EventFields, NewOrder, StrategyRow};
 use serde_json::Value;
 
 impl StrategyModule {
-    pub(super) async fn signal_enter(
+    pub(crate) async fn signal_enter(
         &self,
         strategy: &StrategyRow,
         run_id: i64,
@@ -82,6 +82,15 @@ impl StrategyModule {
         } else {
             self.resolve_signal_leg(leg, lid, side)
         };
+        // The Bridge 1.0.8: an entry into a contract too near its expiry
+        // waits for the next session (the backtest engine's defer rule).
+        if let Ok(s) = &resolved {
+            if crate::strategy::validate::is_resolved_signal_leg(leg) {
+                if let Some(note) = self.maybe_defer_entry(strategy, run_id, leg, lid, s).await {
+                    return note;
+                }
+            }
+        }
         let spec = match resolved {
             Ok(mut s) => {
                 s.position_ref = Some(claim.position_ref.clone());
@@ -142,11 +151,19 @@ impl StrategyModule {
         side: &str,
     ) -> Result<LegSpec, String> {
         let g = self.symbols.snapshot();
-        let today = self
+        let mut today = self
             .clock
             .now()
             .with_timezone(&chrono_tz::Asia::Kolkata)
             .date_naive();
+        // The Bridge 1.0.8: an expiry roll reopening the same day ranks
+        // expiries from the day after the one it left.
+        if let Some(after) = leg["_resolve_after"]
+            .as_str()
+            .and_then(|d| chrono::NaiveDate::parse_from_str(d, "%Y-%m-%d").ok())
+        {
+            today = today.max(after + chrono::Duration::days(1));
+        }
         let r = crate::strategy::resolver::resolve_leg(
             &g,
             self.gateway.as_ref(),

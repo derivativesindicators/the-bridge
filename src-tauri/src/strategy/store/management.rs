@@ -53,6 +53,67 @@ pub fn migrate_webhook_messages(conn: &Connection) -> Result<()> {
     Ok(())
 }
 
+/// Migration `099_strategy_signal_options` (The Bridge 1.0.8): a signal
+/// strategy's optional overnight carry / expiry roll / CAS exit settings,
+/// and its durable pending re-entries (expiry roll, deferred entry).
+/// Idempotent.
+pub fn migrate_signal_options(conn: &Connection) -> Result<()> {
+    for col in ["signal_options", "signal_pending"] {
+        if !crate::db::sqlite::migrations::column_exists(conn, "sm_strategy", col)? {
+            conn.execute_batch(&format!("ALTER TABLE sm_strategy ADD COLUMN {} TEXT", col))?;
+        }
+    }
+    Ok(())
+}
+
+impl Store {
+    /// The Bridge 1.0.8: ids of signal strategies with options or a pending
+    /// re-entry (what the signal timers look at each second).
+    pub fn signal_timer_strategy_ids(&self) -> Result<Vec<i64>> {
+        let conn = self.conn()?;
+        let mut st = conn.prepare(
+            "SELECT id FROM sm_strategy WHERE strategy_kind = 'signal' \
+             AND (signal_options IS NOT NULL OR signal_pending IS NOT NULL) ORDER BY id",
+        )?;
+        let ids = st
+            .query_map([], |r| r.get::<_, i64>(0))?
+            .collect::<rusqlite::Result<Vec<_>>>()?;
+        Ok(ids)
+    }
+
+    /// A strategy's pending re-entry, `Null` when none.
+    pub fn signal_pending(&self, strategy_id: i64) -> Result<Value> {
+        let conn = self.conn()?;
+        let text: Option<String> = conn
+            .query_row(
+                "SELECT signal_pending FROM sm_strategy WHERE id = ?1",
+                [strategy_id],
+                |r| r.get(0),
+            )
+            .optional()?
+            .flatten();
+        Ok(text
+            .and_then(|t| serde_json::from_str(&t).ok())
+            .unwrap_or(Value::Null))
+    }
+
+    /// Replace (or with `Null`, clear) a strategy's pending re-entry. Not a
+    /// configuration write: the revision is untouched.
+    pub fn set_signal_pending(&self, strategy_id: i64, pending: &Value) -> Result<()> {
+        let conn = self.conn()?;
+        let text = if pending.is_null() {
+            None
+        } else {
+            Some(pending.to_string())
+        };
+        conn.execute(
+            "UPDATE sm_strategy SET signal_pending = ?1 WHERE id = ?2",
+            rusqlite::params![text, strategy_id],
+        )?;
+        Ok(())
+    }
+}
+
 /// What a start decided on, checked again by the statement that moves the
 /// strategy to running (SM-01).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -154,7 +215,7 @@ fn check_editable(
 fn column_value(field: &str, value: &Value) -> rusqlite::types::Value {
     match field {
         "entry_time" | "exit_time" => time_col(value).into(),
-        "legs" | "lock_profit" | "scheduler" | "webhook_ip_allowlist" | "webhook_messages" => {
+        "legs" | "lock_profit" | "scheduler" | "webhook_ip_allowlist" | "webhook_messages" | "signal_options" => {
             json_col(value).into()
         }
         "overall_sl_mtm" | "overall_target_mtm" | "daily_loss_limit_inr" => num_param(value).into(),

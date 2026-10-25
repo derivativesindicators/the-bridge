@@ -109,6 +109,10 @@ const RUST_MIGRATIONS: &[(&str, Step)] = &[
         "098_strategy_webhook_messages",
         crate::strategy::store::migrate_webhook_messages,
     ),
+    (
+        "099_strategy_signal_options",
+        crate::strategy::store::migrate_signal_options,
+    ),
 ];
 
 /// Run all database migrations

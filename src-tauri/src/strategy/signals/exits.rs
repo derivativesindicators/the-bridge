@@ -62,7 +62,7 @@ impl StrategyModule {
     }
 
     /// Close a leg held on `side`, or say it was not held.
-    pub(super) fn signal_exit<'a>(
+    pub(crate) fn signal_exit<'a>(
         &'a self,
         strategy: &'a StrategyRow,
         run_id: i64,

@@ -100,7 +100,7 @@ fn position_of(side: &str) -> &'static str {
     }
 }
 
-fn leg_id_of(leg: &Value) -> Option<i64> {
+pub(crate) fn leg_id_of(leg: &Value) -> Option<i64> {
     leg.get("id")
         .or_else(|| leg.get("leg_id"))
         .and_then(Value::as_i64)
@@ -137,7 +137,7 @@ pub fn find_leg(
 }
 
 /// Legs chosen at signal time, optionally only those firing on `side`.
-fn resolved_legs(strategy: &StrategyRow, side: Option<&str>) -> Vec<Value> {
+pub(crate) fn resolved_legs(strategy: &StrategyRow, side: Option<&str>) -> Vec<Value> {
     strategy
         .legs
         .as_array()
@@ -153,7 +153,7 @@ fn resolved_legs(strategy: &StrategyRow, side: Option<&str>) -> Vec<Value> {
 
 /// A resolved leg's order side as the engine's long/short: a bought
 /// contract is held long, a sold one short, whichever signal fired it.
-fn order_side(leg: &Value) -> &'static str {
+pub(crate) fn order_side(leg: &Value) -> &'static str {
     if leg["position"].as_str().unwrap_or("B").eq_ignore_ascii_case("S") {
         "short"
     } else {
@@ -219,6 +219,10 @@ impl StrategyModule {
             );
         }
         let side = side_of(action);
+        // The Bridge 1.0.8: a signal supersedes a pending re-entry the way
+        // the backtest engine's does: any entry clears it, an exit clears
+        // the pending entry of its own side.
+        self.clear_pending_for_signal(strategy, action, side);
         let allowed = match strategy.direction.as_str() {
             "long_only" => side == "long",
             "short_only" => side == "short",
@@ -416,6 +420,30 @@ impl StrategyModule {
         if !stale {
             return Some(run_id);
         }
+        // The Bridge 1.0.8: overnight carry keeps a run that still holds a
+        // position (or an order that may become one) into the new day.
+        let opts = super::signal_options::SignalOptions::from_value(&current.signal_options);
+        if opts.carry_overnight {
+            let holds = self
+                .state
+                .with_run(run_id, |r| r.legs.values().any(|l| l.requires_management()))
+                .unwrap_or(false);
+            if holds {
+                tracing::info!("Signal run {} carried into a new day", run_id);
+                self.emit(
+                    strategy.id,
+                    &current.user_id,
+                    "position_carried",
+                    "Open position carried overnight into this session (overnight carry is on)",
+                    EventFields {
+                        run_id: Some(run_id),
+                        ..Default::default()
+                    },
+                )
+                .await;
+                return Some(run_id);
+            }
+        }
         tracing::info!("Rolling signal run {} through end-of-day stop", run_id);
         let r = self.stop_run(run_id, &current.user_id, "eod").await;
         if !r.ok || r.stop_pending {
@@ -485,7 +513,7 @@ impl StrategyModule {
 
     /// The run this signal belongs to, opening one if the session has none.
     /// Serialised per strategy so two alerts on one bar join one run.
-    async fn day_run(&self, strategy: &StrategyRow) -> Result<i64, String> {
+    pub(crate) async fn day_run(&self, strategy: &StrategyRow) -> Result<i64, String> {
         let lock = self.day_run_lock(strategy.id);
         let _held = lock.lock().await;
         let current = self

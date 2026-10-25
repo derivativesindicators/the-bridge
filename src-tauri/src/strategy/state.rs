@@ -199,6 +199,11 @@ pub struct RunState {
     pub stopping: bool,
     pub signal_entry_claims: BTreeMap<String, EntryClaim>,
     pub legs: BTreeMap<String, LegState>,
+    /// The Bridge 1.0.8: (session start, epoch seconds; the run's total
+    /// P&L when that session began). A run carried overnight measures the
+    /// daily loss limit from here, not from its first day.
+    #[serde(default)]
+    pub day_base: Option<(i64, f64)>,
 }
 
 impl RunState {
@@ -217,6 +222,7 @@ impl RunState {
             tick_source_degraded: false,
             stopping: false,
             signal_entry_claims: BTreeMap::new(),
+            day_base: None,
             legs: legs
                 .into_iter()
                 .map(|l| (l.leg_id.to_string(), l))
@@ -274,6 +280,7 @@ impl RunState {
             "pnl_trough": self.pnl_trough,
             "lock_floor": self.lock_floor,
             "trail_to_entry_active": self.trail_to_entry_active,
+            "day_base": self.day_base,
             "leg_state": serde_json::to_value(&self.legs).unwrap_or(Value::Null),
         })
     }
