@@ -129,7 +129,10 @@ impl SignalOptions {
             cas_start: tm("cas_start", d.cas_start),
             session_end: tm("session_end", d.session_end),
             cas_timeframe: v["cas_timeframe"].as_i64().unwrap_or(d.cas_timeframe),
-            cas_st_atr: v["cas_st_atr"].as_u64().map(|n| n as usize).unwrap_or(d.cas_st_atr),
+            cas_st_atr: v["cas_st_atr"]
+                .as_u64()
+                .map(|n| n as usize)
+                .unwrap_or(d.cas_st_atr),
             cas_st_mult: v["cas_st_mult"].as_f64().unwrap_or(d.cas_st_mult),
             cas_leg: s("cas_leg", &d.cas_leg),
             cas_at_end: s("cas_at_end", &d.cas_at_end),
@@ -142,7 +145,11 @@ impl SignalOptions {
     /// then, 15:30 to 15:45. On a held contract's expiry day the window ends
     /// no later than 15:30 from 7 Dec 2026 (expiring index contracts stop
     /// then).
-    pub fn effective(&self, date: chrono::NaiveDate, expiring_today: bool) -> (NaiveTime, NaiveTime) {
+    pub fn effective(
+        &self,
+        date: chrono::NaiveDate,
+        expiring_today: bool,
+    ) -> (NaiveTime, NaiveTime) {
         let (start, end) = if self.session_times == "custom" {
             (self.cas_start, self.session_end)
         } else if date >= regime_change() {
@@ -194,10 +201,18 @@ fn pick(m: &Map<String, Value>, k: &str, allowed: &[&str]) -> Result<String, Str
             if allowed.contains(&s.as_str()) {
                 Ok(s)
             } else {
-                Err(format!("signal_options.{} must be one of {}", k, allowed.join(", ")))
+                Err(format!(
+                    "signal_options.{} must be one of {}",
+                    k,
+                    allowed.join(", ")
+                ))
             }
         }
-        _ => Err(format!("signal_options.{} must be one of {}", k, allowed.join(", "))),
+        _ => Err(format!(
+            "signal_options.{} must be one of {}",
+            k,
+            allowed.join(", ")
+        )),
     }
 }
 
@@ -389,7 +404,10 @@ mod tests {
 
     #[test]
     fn null_is_everything_off() {
-        assert_eq!(validate(None, "signal", "intraday", "MIS").unwrap(), Value::Null);
+        assert_eq!(
+            validate(None, "signal", "intraday", "MIS").unwrap(),
+            Value::Null
+        );
         let o = SignalOptions::from_value(&Value::Null);
         assert!(!o.carry_overnight && !o.expiry_roll && !o.cas_exit && !o.defers());
         assert_eq!(o.session_end, t(15, 40));
@@ -398,7 +416,9 @@ mod tests {
         assert_eq!(o.effective(d(2026, 11, 3), true), (t(15, 15), t(15, 40)));
         assert_eq!(o.effective(d(2026, 12, 7), false), (t(15, 30), t(15, 45)));
         assert_eq!(o.effective(d(2026, 12, 8), true), (t(15, 30), t(15, 30)));
-        let c = SignalOptions::from_value(&json!({"session_times": "custom", "cas_start": "15:20", "session_end": "15:39"}));
+        let c = SignalOptions::from_value(
+            &json!({"session_times": "custom", "cas_start": "15:20", "session_end": "15:39"}),
+        );
         assert_eq!(c.effective(d(2026, 11, 3), false), (t(15, 20), t(15, 39)));
     }
 
@@ -406,7 +426,9 @@ mod tests {
     fn carry_needs_positional_nrml() {
         let on = json!({"carry_overnight": true});
         assert!(validate(Some(&on), "signal", "intraday", "NRML").is_err());
-        assert!(validate(Some(&on), "signal", "positional", "MIS").unwrap_err().contains("NRML"));
+        assert!(validate(Some(&on), "signal", "positional", "MIS")
+            .unwrap_err()
+            .contains("NRML"));
         assert!(validate(Some(&on), "signal", "positional", "NRML").is_ok());
         assert!(validate(Some(&on), "batch", "positional", "NRML").is_err());
     }
@@ -433,7 +455,11 @@ mod tests {
             json!({"cas_leg": "both"}),
             json!({"min_days_to_expiry": -1}),
         ] {
-            assert!(validate(Some(&bad), "signal", "intraday", "MIS").is_err(), "{}", bad);
+            assert!(
+                validate(Some(&bad), "signal", "intraday", "MIS").is_err(),
+                "{}",
+                bad
+            );
         }
         let ok = validate(
             Some(&json!({"cas_exit": true, "session_end": "15:39", "cas_timeframe": 3, "cas_st_atr": 10, "cas_st_mult": 3})),

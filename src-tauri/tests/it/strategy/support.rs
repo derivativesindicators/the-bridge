@@ -152,6 +152,9 @@ pub struct FakeGateway {
     pub place_gate: Mutex<Option<Arc<Gate>>>,
     /// The rows of the position book, whichever mode is read.
     pub position_rows: Mutex<Vec<Value>>,
+    /// The Bridge 1.0.8: candles every history request returns (empty: none).
+    pub candles: Mutex<Vec<openalgo_desktop_lib::brokers::types::Candle>>,
+    pub history_calls: Mutex<Vec<(String, String)>>,
     n: AtomicU64,
 }
 
@@ -269,6 +272,23 @@ impl OrderGateway for FakeGateway {
             }
             _ => json!({"status": "success", "data": []}),
         })
+    }
+
+    async fn history(
+        &self,
+        symbol: &str,
+        _exchange: &str,
+        interval: &str,
+        _from: chrono::NaiveDate,
+        _to: chrono::NaiveDate,
+    ) -> Result<Vec<openalgo_desktop_lib::brokers::types::Candle>, String> {
+        self.history_calls.lock().push((symbol.to_string(), interval.to_string()));
+        let c = self.candles.lock().clone();
+        if c.is_empty() {
+            Err("no candles".into())
+        } else {
+            Ok(c)
+        }
     }
 
     async fn ltp(&self, symbol: &str, exchange: &str) -> Result<f64, String> {

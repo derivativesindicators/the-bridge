@@ -24,7 +24,6 @@ const PENDING_WAIT_MINUTES: i64 = 5;
 /// One CAS tracker: the option-premium Supertrend of a position's main leg.
 struct CasTracker {
     symbol: String,
-    exchange: String,
     favourable: i8,
     st: Supertrend,
     /// The open candle: (slot start minute of day, high, low, close).
@@ -100,7 +99,12 @@ impl StrategyModule {
 
     /// A signal clears the pending re-entry it supersedes: any entry, or
     /// an exit of the pending side.
-    pub(crate) fn clear_pending_for_signal(&self, strategy: &StrategyRow, action: &str, side: &str) {
+    pub(crate) fn clear_pending_for_signal(
+        &self,
+        strategy: &StrategyRow,
+        action: &str,
+        side: &str,
+    ) {
         let Ok(p) = self.store.signal_pending(strategy.id) else {
             return;
         };
@@ -109,7 +113,11 @@ impl StrategyModule {
         }
         if action.ends_with("_entry") || p["side"].as_str() == Some(side) {
             let _ = self.store.set_signal_pending(strategy.id, &Value::Null);
-            tracing::info!("Strategy {}: pending re-entry cleared by {}", strategy.id, action);
+            tracing::info!(
+                "Strategy {}: pending re-entry cleared by {}",
+                strategy.id,
+                action
+            );
         }
     }
 
@@ -124,7 +132,10 @@ impl StrategyModule {
         reason: &str,
         resolve_after: Option<NaiveDate>,
     ) {
-        let mut p = self.store.signal_pending(strategy.id).unwrap_or(Value::Null);
+        let mut p = self
+            .store
+            .signal_pending(strategy.id)
+            .unwrap_or(Value::Null);
         if p["side"].as_str() != Some(side) || p["reason"].as_str() != Some(reason) {
             p = json!({"side": side, "legs": [], "reason": reason});
         }
@@ -140,7 +151,11 @@ impl StrategyModule {
             }
         }
         if let Err(e) = self.store.set_signal_pending(strategy.id, &p) {
-            tracing::error!("Strategy {}: pending re-entry not saved: {}", strategy.id, e);
+            tracing::error!(
+                "Strategy {}: pending re-entry not saved: {}",
+                strategy.id,
+                e
+            );
         }
     }
 
@@ -161,7 +176,8 @@ impl StrategyModule {
         let expiry = spec.expiry.as_deref().and_then(parse_oa_expiry)?;
         let today = self.ist_now().date_naive();
         let days = (expiry - today).num_days();
-        let defer = days < opts.min_days_to_expiry || (days == 0 && opts.expiry_day_entry == "defer");
+        let defer =
+            days < opts.min_days_to_expiry || (days == 0 && opts.expiry_day_entry == "defer");
         if !defer {
             return None;
         }
@@ -214,7 +230,11 @@ impl StrategyModule {
             let opts = SignalOptions::from_value(&strategy.signal_options);
             self.run_pending_entry(&strategy, &opts).await;
             let run_id = match strategy.current_run_id {
-                Some(r) if strategy.status == "running" && self.state.with_run(r, |_| ()).is_some() => r,
+                Some(r)
+                    if strategy.status == "running" && self.state.with_run(r, |_| ()).is_some() =>
+                {
+                    r
+                }
                 _ => {
                     self.timers.cas.lock().retain(|(sid, _), _| *sid != id);
                     continue;
@@ -235,11 +255,14 @@ impl StrategyModule {
             }
             if opts.cas_exit {
                 let g = self.symbols.snapshot();
-                let expiring = self.open_resolved_legs(&strategy, run_id).iter().any(|(_, s, e)| {
-                    g.by_symbol(e, s)
-                        .and_then(|r| parse_oa_expiry(&r.expiry))
-                        .is_some_and(|d| d == today)
-                });
+                let expiring =
+                    self.open_resolved_legs(&strategy, run_id)
+                        .iter()
+                        .any(|(_, s, e)| {
+                            g.by_symbol(e, s)
+                                .and_then(|r| parse_oa_expiry(&r.expiry))
+                                .is_some_and(|d| d == today)
+                        });
                 let (start, end) = opts.effective(today, expiring);
                 if time >= start {
                     let mut eff = opts.clone();
@@ -252,7 +275,11 @@ impl StrategyModule {
     }
 
     /// The configured legs held open (or working) in the run, with config.
-    fn open_resolved_legs(&self, strategy: &StrategyRow, run_id: i64) -> Vec<(Value, String, String)> {
+    fn open_resolved_legs(
+        &self,
+        strategy: &StrategyRow,
+        run_id: i64,
+    ) -> Vec<(Value, String, String)> {
         let legs = strategy.legs.as_array().cloned().unwrap_or_default();
         legs.into_iter()
             .filter(crate::strategy::validate::is_resolved_signal_leg)
@@ -273,7 +300,13 @@ impl StrategyModule {
 
     /// The expiry-day roll: close the legs whose contract expires today and
     /// queue their re-entry in the next expiry.
-    async fn expiry_roll(&self, strategy: &StrategyRow, opts: &SignalOptions, run_id: i64, today: NaiveDate) {
+    async fn expiry_roll(
+        &self,
+        strategy: &StrategyRow,
+        opts: &SignalOptions,
+        run_id: i64,
+        today: NaiveDate,
+    ) {
         let g = self.symbols.snapshot();
         let expiring: Vec<(Value, String)> = self
             .open_resolved_legs(strategy, run_id)
@@ -291,7 +324,10 @@ impl StrategyModule {
         let (due, resolve_after) = if opts.reopen == "immediate" {
             let now = self.ist_now().time();
             (
-                (today, NaiveTime::from_hms_opt(now.hour(), now.minute(), 0).unwrap_or(now)),
+                (
+                    today,
+                    NaiveTime::from_hms_opt(now.hour(), now.minute(), 0).unwrap_or(now),
+                ),
                 Some(today),
             )
         } else {
@@ -408,7 +444,11 @@ impl StrategyModule {
         let run_id = match self.day_run(strategy).await {
             Ok(id) => id,
             Err(e) => {
-                tracing::warn!("Strategy {}: pending re-entry not placed: {}", strategy.id, e);
+                tracing::warn!(
+                    "Strategy {}: pending re-entry not placed: {}",
+                    strategy.id,
+                    e
+                );
                 return;
             }
         };
@@ -427,7 +467,11 @@ impl StrategyModule {
                     format!(
                         "Leg {}: {} entry placed ({})",
                         lid,
-                        if reason == "roll" { "expiry-roll" } else { "deferred" },
+                        if reason == "roll" {
+                            "expiry-roll"
+                        } else {
+                            "deferred"
+                        },
                         r.note.clone().unwrap_or_else(|| "ok".into())
                     ),
                     "info",
@@ -437,7 +481,11 @@ impl StrategyModule {
                     format!(
                         "Leg {}: {} entry not placed: {}",
                         lid,
-                        if reason == "roll" { "expiry-roll" } else { "deferred" },
+                        if reason == "roll" {
+                            "expiry-roll"
+                        } else {
+                            "deferred"
+                        },
                         r.error.clone().unwrap_or_default()
                     ),
                     "warn",
@@ -482,7 +530,9 @@ impl StrategyModule {
                 if !open.is_empty() {
                     for (cfg, _, _) in &open {
                         let lid = leg_id_of(cfg).unwrap_or(1);
-                        let _ = self.signal_exit(strategy, run_id, cfg, lid, order_side(cfg)).await;
+                        let _ = self
+                            .signal_exit(strategy, run_id, cfg, lid, order_side(cfg))
+                            .await;
                     }
                     self.emit(
                         strategy.id,
@@ -505,8 +555,10 @@ impl StrategyModule {
         }
         let open = self.open_resolved_legs(strategy, run_id);
         for side in ["long", "short"] {
-            let legs: Vec<&(Value, String, String)> =
-                open.iter().filter(|(c, _, _)| c["side"].as_str() == Some(side)).collect();
+            let legs: Vec<&(Value, String, String)> = open
+                .iter()
+                .filter(|(c, _, _)| c["side"].as_str() == Some(side))
+                .collect();
             let key = (id, side.to_string());
             if legs.is_empty() {
                 self.timers.cas.lock().remove(&key);
@@ -530,7 +582,12 @@ impl StrategyModule {
                 .lock()
                 .get(&key)
                 .map(|t| t.symbol == *symbol && !t.done);
-            let done = self.timers.cas.lock().get(&key).is_some_and(|t| t.symbol == *symbol && t.done);
+            let done = self
+                .timers
+                .cas
+                .lock()
+                .get(&key)
+                .is_some_and(|t| t.symbol == *symbol && t.done);
             if done {
                 continue;
             }
@@ -538,11 +595,15 @@ impl StrategyModule {
                 if self.timers.cas_failed.lock().get(&(id, symbol.clone())) == Some(&today) {
                     continue;
                 }
-                match self.warm_cas(opts, symbol, exchange, favourable, today, time).await {
+                match self
+                    .warm_cas(opts, symbol, exchange, favourable, today, time)
+                    .await
+                {
                     Ok((tracker, flipped)) => {
                         self.timers.cas.lock().insert(key.clone(), tracker);
                         if let Some(at) = flipped {
-                            self.cas_close_side(strategy, run_id, side, symbol, at, opts).await;
+                            self.cas_close_side(strategy, run_id, side, symbol, at, opts)
+                                .await;
                             if let Some(t) = self.timers.cas.lock().get_mut(&key) {
                                 t.done = true;
                             }
@@ -550,7 +611,10 @@ impl StrategyModule {
                         }
                     }
                     Err(why) => {
-                        self.timers.cas_failed.lock().insert((id, symbol.clone()), today);
+                        self.timers
+                            .cas_failed
+                            .lock()
+                            .insert((id, symbol.clone()), today);
                         self.emit(
                             strategy.id,
                             &strategy.user_id,
@@ -605,7 +669,8 @@ impl StrategyModule {
                 flipped
             };
             if let Some(at) = flipped_at {
-                self.cas_close_side(strategy, run_id, side, symbol, at, opts).await;
+                self.cas_close_side(strategy, run_id, side, symbol, at, opts)
+                    .await;
             }
         }
     }
@@ -669,7 +734,6 @@ impl StrategyModule {
         Ok((
             CasTracker {
                 symbol: symbol.to_string(),
-                exchange: exchange.to_string(),
                 favourable,
                 st,
                 candle: None,
@@ -689,9 +753,14 @@ impl StrategyModule {
         opts: &SignalOptions,
     ) {
         let open = self.open_resolved_legs(strategy, run_id);
-        for (cfg, _, _) in open.iter().filter(|(c, _, _)| c["side"].as_str() == Some(side)) {
+        for (cfg, _, _) in open
+            .iter()
+            .filter(|(c, _, _)| c["side"].as_str() == Some(side))
+        {
             let lid = leg_id_of(cfg).unwrap_or(1);
-            let _ = self.signal_exit(strategy, run_id, cfg, lid, order_side(cfg)).await;
+            let _ = self
+                .signal_exit(strategy, run_id, cfg, lid, order_side(cfg))
+                .await;
         }
         self.emit(
             strategy.id,
