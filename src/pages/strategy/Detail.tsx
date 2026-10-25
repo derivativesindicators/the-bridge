@@ -678,8 +678,19 @@ function SetupTab({ strategy }: { strategy: Strategy }) {
                   {strategy.legs.map((leg) => (
                     <tr key={leg.id} className="border-t">
                       <td className="px-2 py-1.5 font-mono">{leg.id}</td>
-                      <td className="px-2 py-1.5 font-mono">{leg.symbol ?? '—'}</td>
-                      <td className="px-2 py-1.5 font-mono">{leg.exchange ?? '—'}</td>
+                      <td className="px-2 py-1.5 font-mono">
+                        {leg.symbol ??
+                          (leg.position
+                            ? `${leg.position === 'B' ? 'Buy' : 'Sell'} ${strategy.underlying} ${
+                                leg.segment === 'options'
+                                  ? `${leg.atm_offset ?? leg.strike ?? 'ATM'} ${leg.option_type ?? ''}`
+                                  : 'FUT'
+                              } (at signal)`
+                            : '—')}
+                      </td>
+                      <td className="px-2 py-1.5 font-mono">
+                        {leg.exchange ?? (leg.position ? strategy.underlying_exchange : '—')}
+                      </td>
                       <td className="px-2 py-1.5">{leg.segment}</td>
                       <td className="px-2 py-1.5">
                         <Badge variant="outline" className="text-xs">
@@ -689,7 +700,10 @@ function SetupTab({ strategy }: { strategy: Strategy }) {
                       {/* A bare 5 reads as five shares. It is five lots on a
                           derivative, so the unit travels with the number. */}
                       <td className="px-2 py-1.5 text-right font-mono">
-                        {leg.qty ?? '—'}
+                        {leg.qty ?? (leg.position ? `${leg.lots ?? 1}` : '—')}
+                        {leg.qty == null && leg.position && (
+                          <span className="ml-1 text-[10px] text-muted-foreground">lots</span>
+                        )}
                         {leg.qty != null && (
                           <span className="ml-1 text-[10px] text-muted-foreground">
                             {qtyModeFor(leg) === 'lots'
@@ -1767,9 +1781,9 @@ function WebhookTab({
           <CardTitle>TradingView webhook</CardTitle>
           <CardDescription>
             The URL carries a per-strategy secret token. The token is shown once on create or
-            rotate, and stored only as a hash. Through a tunnel (ngrok, Cloudflare Tunnel) The Bridge
-            cannot see the caller's address, so an IP allowlist does not apply there: keep the URL
-            secret, it is what protects the webhook.
+            rotate, and stored only as a hash. Through a tunnel (ngrok, Cloudflare Tunnel) The
+            Bridge cannot see the caller's address, so an IP allowlist does not apply there: keep
+            the URL secret, it is what protects the webhook.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

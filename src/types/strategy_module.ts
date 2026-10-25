@@ -601,7 +601,29 @@ export const LEG_SIDE_LABELS: Record<LegSide, string> = {
  * Signal mode does not do option spreads - a signal leg carries no option
  * fields at all - so the two index-options tabs have nothing to offer it.
  */
-export const SIGNAL_MODE_TABS: UniverseTab[] = ['stocks_fno', 'mcx']
+export const SIGNAL_MODE_TABS: UniverseTab[] = [
+  'weekly_monthly',
+  'monthly_only',
+  'stocks_fno',
+  'mcx',
+]
+
+/**
+ * The Bridge 1.0.6: index tabs in signal mode. Their legs name no symbol: the
+ * future or ATM-relative option on the strategy's underlying is chosen when
+ * the alert arrives, and each leg fires on one signal side (long or short).
+ */
+export const INDEX_SIGNAL_TABS: UniverseTab[] = ['weekly_monthly', 'monthly_only']
+
+/** A signal leg whose contract is chosen at signal time. */
+export function isResolvedSignalLeg(leg: Leg): boolean {
+  return !leg.symbol && leg.position != null
+}
+
+/** A new signal leg on an index tab: buy the ATM call on long_entry. */
+export function freshResolvedSignalLeg(id: number, tab: UniverseTab): Leg {
+  return { ...freshBatchLeg(id, tab), position: 'B', side: 'long' }
+}
 
 /** Segments a signal leg may take. Narrower than a batch leg's: no options. */
 export const SIGNAL_LEG_SEGMENTS: Segment[] = ['cash', 'futures']
@@ -900,6 +922,7 @@ export function freshBatchLeg(id: number, tab: UniverseTab): Leg {
  * invites a strategy that trades something nobody chose.
  */
 export function freshSignalLeg(id: number, tab: UniverseTab): Leg {
+  if (INDEX_SIGNAL_TABS.includes(tab)) return freshResolvedSignalLeg(id, tab)
   const segment: Segment = tab === 'mcx' ? 'futures' : 'cash'
   const exchange =
     segment === 'futures'
@@ -932,6 +955,11 @@ export function convertLegKind(leg: Leg, kind: StrategyKind, tab: UniverseTab): 
     sl_pts: leg.sl_pts ?? null,
     target_pts: leg.target_pts ?? null,
     trail: leg.trail ?? { x: 0, y: 0 },
+  }
+
+  if (kind === 'signal' && INDEX_SIGNAL_TABS.includes(tab)) {
+    const base = convertLegKind({ ...leg, symbol: null, exchange: null }, 'batch', tab)
+    return { ...base, side: leg.side === 'short' ? 'short' : 'long' }
   }
 
   if (kind === 'signal') {
@@ -983,6 +1011,11 @@ export function convertLegKind(leg: Leg, kind: StrategyKind, tab: UniverseTab): 
  */
 export function legToPayload(leg: Leg, kind: StrategyKind = 'batch'): Leg {
   const clean: Leg = { id: leg.id, segment: leg.segment }
+
+  if (kind === 'signal' && isResolvedSignalLeg(leg)) {
+    const base = legToPayload(leg, 'batch')
+    return { ...base, side: leg.side === 'short' ? 'short' : 'long' }
+  }
 
   if (kind === 'signal') {
     clean.symbol = (leg.symbol ?? '').trim().toUpperCase()

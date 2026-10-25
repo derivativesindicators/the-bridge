@@ -20,8 +20,10 @@ import {
   formatIst,
   formatListPnl,
   formatPnl,
+  freshBatchLeg,
   freshSignalLeg,
   isDerivativeExchange,
+  isResolvedSignalLeg,
   isWholeLots,
   type Leg,
   legToPayload,
@@ -1197,10 +1199,31 @@ describe('freshSignalLeg', () => {
 })
 
 describe('signal mode universe', () => {
-  it('offers only the tabs that have something for a signal leg to trade', () => {
-    expect(SIGNAL_MODE_TABS).toEqual(['stocks_fno', 'mcx'])
-    expect(SIGNAL_MODE_TABS).not.toContain('weekly_monthly')
-    expect(SIGNAL_MODE_TABS).not.toContain('monthly_only')
+  it('offers every tab: index tabs choose the contract at signal time (The Bridge 1.0.6)', () => {
+    expect(SIGNAL_MODE_TABS).toEqual(['weekly_monthly', 'monthly_only', 'stocks_fno', 'mcx'])
+  })
+
+  it('builds index signal legs as underlying-relative contracts with a firing side', () => {
+    const leg = freshSignalLeg(1, 'weekly_monthly')
+    expect(isResolvedSignalLeg(leg)).toBe(true)
+    expect(leg).toMatchObject({
+      segment: 'options',
+      position: 'B',
+      option_type: 'CE',
+      side: 'long',
+    })
+    const payload = legToPayload({ ...leg, side: 'short', option_type: 'PE' }, 'signal')
+    expect(payload).toMatchObject({
+      side: 'short',
+      position: 'B',
+      option_type: 'PE',
+      strike_mode: 'atm',
+    })
+    expect(payload.symbol).toBeUndefined()
+    expect(isResolvedSignalLeg(freshSignalLeg(1, 'stocks_fno'))).toBe(false)
+    const converted = convertLegKind(freshBatchLeg(1, 'monthly_only'), 'signal', 'monthly_only')
+    expect(converted.side).toBe('long')
+    expect(isResolvedSignalLeg(converted)).toBe(true)
   })
 
   it('offers no options segment, because a signal leg carries no option fields', () => {

@@ -45,6 +45,7 @@ import {
   filterStrikes,
   freshBatchLeg,
   freshSignalLeg,
+  INDEX_SIGNAL_TABS,
   isDerivativeExchange,
   isWholeLots,
   LEG_SIDE_LABELS,
@@ -1091,6 +1092,10 @@ export default function StrategyWizard({ editing }: StrategyWizardProps = {}) {
   const isSignal = kind === 'signal'
 
   const [tab, setTab] = useState<UniverseTab>(initialTab)
+  // The Bridge 1.0.6: signal mode on an index tab - legs trade the
+  // strategy's underlying, the contract chosen when the alert arrives.
+  const isIndexSignal = isSignal && INDEX_SIGNAL_TABS.includes(tab)
+  const usesBatchLegs = !isSignal || isIndexSignal
   const [name, setName] = useState(editing?.name ?? '')
   const [chosenExchange, setChosenExchange] = useState<string | null>(
     editing?.underlying_exchange ?? null
@@ -1181,12 +1186,12 @@ export default function StrategyWizard({ editing }: StrategyWizardProps = {}) {
   // Signal legs resolve their own expiries per card, against their own symbol,
   // so the strategy-level lookup is batch-only.
   const hasOptionsLeg = useMemo(
-    () => !isSignal && legs.some((leg) => leg.segment === 'options'),
-    [legs, isSignal]
+    () => usesBatchLegs && legs.some((leg) => leg.segment === 'options'),
+    [legs, usesBatchLegs]
   )
   const hasFuturesLeg = useMemo(
-    () => !isSignal && legs.some((leg) => leg.segment === 'futures'),
-    [legs, isSignal]
+    () => usesBatchLegs && legs.some((leg) => leg.segment === 'futures'),
+    [legs, usesBatchLegs]
   )
   const optionExpiries = useExpiryResolution(
     underlying,
@@ -1302,7 +1307,7 @@ export default function StrategyWizard({ editing }: StrategyWizardProps = {}) {
   /** Everything the server would refuse, refused here with a clearer message. */
   const validate = (): string | null => {
     if (!name.trim()) return 'Name is required'
-    if (!isSignal && !underlying.trim()) return 'Underlying is required'
+    if (usesBatchLegs && !underlying.trim()) return 'Underlying is required'
     if (strategyType === 'intraday') {
       if (!entryTime) return 'Entry time is required for an intraday strategy'
       if (!exitTime) return 'Exit time is required for an intraday strategy'
@@ -1321,7 +1326,15 @@ export default function StrategyWizard({ editing }: StrategyWizardProps = {}) {
       }
     }
     for (const leg of legs) {
-      if (isSignal) {
+      if (isIndexSignal) {
+        if (leg.side !== 'long' && leg.side !== 'short') {
+          return `Leg ${leg.id}: choose whether it fires on long or short signals`
+        }
+        if (!DIRECTION_ACCEPTS[direction].includes(leg.side)) {
+          return `Leg ${leg.id}: a ${direction} strategy never sends ${leg.side} signals. Change the leg, or the strategy direction.`
+        }
+      }
+      if (isSignal && !isIndexSignal) {
         if (!leg.symbol?.trim()) return `Leg ${leg.id}: symbol is required`
         if (!leg.exchange?.trim()) return `Leg ${leg.id}: exchange is required`
         if (!SIGNAL_LEG_EXCHANGES.includes(leg.exchange.trim().toUpperCase())) {
@@ -1396,10 +1409,10 @@ export default function StrategyWizard({ editing }: StrategyWizardProps = {}) {
     // legs each name their own instrument. The first leg stands in, so the
     // list and the detail header have something meaningful to show.
     const firstLeg = legs[0]
-    const submittedUnderlying = isSignal
+    const submittedUnderlying = !usesBatchLegs
       ? firstLeg?.symbol?.trim().toUpperCase() || 'MULTI'
       : underlying.trim().toUpperCase()
-    const submittedExchange = isSignal
+    const submittedExchange = !usesBatchLegs
       ? firstLeg?.exchange?.trim().toUpperCase() || TAB_DEFAULT_EXCHANGE[tab]
       : underlyingExchange
 
@@ -1587,7 +1600,7 @@ export default function StrategyWizard({ editing }: StrategyWizardProps = {}) {
               />
             </div>
 
-            {isSignal ? (
+            {!usesBatchLegs ? (
               <div className="space-y-1.5 rounded-md bg-muted/40 p-2 text-xs text-muted-foreground">
                 Signal mode: each leg picks its own symbol below. The strategy row shows the first
                 leg's symbol as its label.
@@ -1741,8 +1754,21 @@ export default function StrategyWizard({ editing }: StrategyWizardProps = {}) {
               the four the strategy accepts at all; each leg's Side narrows that further.
             </p>
           )}
+          {isIndexSignal && (
+            <p
+              className="rounded-md bg-primary/10 p-2 text-xs text-muted-foreground"
+              data-testid="index-signal-help"
+            >
+              Each leg below trades {underlying || 'the underlying'}: its future, or the option at
+              the chosen ATM offset and expiry, picked when the alert arrives. Set{' '}
+              <strong>Fires on</strong> per leg, e.g. Long → buy CE, Short → buy PE. Send alerts
+              without a leg_id: <code>{'{"action":"long_entry"}'}</code> opens the Long legs
+              (closing any open Short legs first), <code>{'{"action":"long_exit"}'}</code> closes
+              them, and the same for short. Exits close the exact contract that was opened.
+            </p>
+          )}
           {legs.map((leg, index) =>
-            isSignal ? (
+            isSignal && !isIndexSignal ? (
               <SignalLegCard
                 key={leg.id}
                 leg={leg}
@@ -1753,17 +1779,37 @@ export default function StrategyWizard({ editing }: StrategyWizardProps = {}) {
                 removable={legs.length > 1}
               />
             ) : (
-              <LegCard
-                key={leg.id}
-                leg={leg}
-                tab={tab}
-                index={index}
-                expiry={expiryStateFor(leg)}
-                onChange={(next) => updateLeg(index, next)}
-                onRemove={() => removeLeg(index)}
-                onOpenStrikePicker={() => setStrikePickerLegIndex(index)}
-                removable={legs.length > 1}
-              />
+              <div key={leg.id} className="space-y-2">
+                {isIndexSignal && (
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor={`fires-on-${leg.id}`} className="text-xs uppercase">
+                      Leg {index + 1} fires on
+                    </Label>
+                    <select
+                      id={`fires-on-${leg.id}`}
+                      value={leg.side === 'short' ? 'short' : 'long'}
+                      onChange={(event) =>
+                        updateLeg(index, { ...leg, side: event.target.value as 'long' | 'short' })
+                      }
+                      className={`${SELECT_CLASS_SM} w-44`}
+                    >
+                      <option value="long">Long signals</option>
+                      <option value="short">Short signals</option>
+                    </select>
+                  </div>
+                )}
+                <LegCard
+                  key={leg.id}
+                  leg={leg}
+                  tab={tab}
+                  index={index}
+                  expiry={expiryStateFor(leg)}
+                  onChange={(next) => updateLeg(index, next)}
+                  onRemove={() => removeLeg(index)}
+                  onOpenStrikePicker={() => setStrikePickerLegIndex(index)}
+                  removable={legs.length > 1}
+                />
+              </div>
             )
           )}
         </CardContent>
