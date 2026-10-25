@@ -318,6 +318,16 @@ opened. Only these four actions are accepted (not `buy` / `sell`).
   order, and a failure stops the legs after it, so put a hedge (bought) leg
   before the leg it protects.
 
+### Advanced signal options (The Bridge 1.0.8)
+
+The "Advanced signal options" card on a signal strategy holds three optional behaviours, **all off by default**. With them off, the strategy simply follows your BUY/SELL/CLOSE alerts.
+
+- **Carry positions overnight**: positions stay open across days until an exit or flip alert, a stop, target or trail, or an expiry roll. Needs a Positional strategy with product NRML. The daily loss limit counts only the current day's P&L. Carried positions are restored after a restart.
+- **Roll on expiry day**: at the roll time (default 15:25, must be before 15:30), legs whose contract expires today are closed and reopened in the next expiry, with the strike chosen again by the leg's own rule. They reopen at the next session's reopen time (default 09:20, needs carry) or immediately. Related settings: *Minimum days to expiry for a new entry* and *Entry signal on expiry day: Defer*.
+- **Closing-session (CAS) exit**: after the spot's last continuous bar, a Supertrend (default 5, 2 on 5-minute candles) on the traded option's premium closes the position when it flips against it. *Session times: Auto* uses 15:15–15:40 until 6 Dec 2026, and 15:30–15:45 from 7 Dec 2026, ending at 15:30 on the held contract's expiry day. *Custom* uses your own times.
+
+Events: `position_carried`, `expiry_roll`, `entry_deferred`, `pending_entry_placed`, `cas_exit`, `cas_tracking_unavailable`.
+
 ## Testing
 
 1. Switch to **analyzer mode** (top bar). Check the badge reads **Analyze
