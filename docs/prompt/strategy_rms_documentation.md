@@ -980,9 +980,10 @@ The same list as the web, each pinned by a test in
 
 ## Not built yet
 
-- **Resolving an expiry rank on a signal leg.** A signal leg must name the
-  contract itself; a base symbol with an expiry rank is refused rather than
-  resolved.
+- **Resolving an expiry rank on a signal leg.** A signal leg that names a
+  symbol must name the contract itself. (The Bridge 1.0.6 adds signal legs
+  without a symbol, resolved against the strategy's underlying at signal
+  time; see api/strategy-services/README.md.)
 - **A joined Socket.IO room outliving the session that joined it.** Ownership
   is checked on the join and not re-checked later; low risk on a single-user
   app.

@@ -230,6 +230,18 @@ commodity has no spot. A signal leg takes `cash` or `futures` only; an exact
 option contract is named as a symbol instead. A signal leg's segment and its
 exchange must agree.
 
+**The Bridge 1.0.6: signal legs chosen at signal time.** A signal leg may
+instead omit `symbol` and carry the batch leg fields (`segment` futures or
+options, `position`, `lots`, `option_type`, `strike_mode`, `atm_offset` /
+`strike`, `expiry`) plus `side` = `long` or `short`. It trades the strategy's
+`underlying` (e.g. NIFTY on NSE_INDEX, any universe tab): when an alert
+arrives the contract is resolved like a batch leg (expiry rank, ATM from the
+live price) and the run holds that exact contract, which its exit closes. An
+alert without `leg_id` drives every such leg on its side; an `_entry` first
+closes the open legs of the other side (and opens nothing if that close is
+refused). Example: leg 1 `side: long, position: B, option_type: CE`; leg 2
+`side: short, position: B, option_type: PE`.
+
 ### Directions
 
 `both`, `long_only`, `short_only`
