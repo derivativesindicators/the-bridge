@@ -15,6 +15,7 @@ use crate::brokers::common::symbols::SymbolGeneration;
 use serde_json::{json, Map, Value};
 
 mod legs;
+pub use legs::is_resolved_signal_leg;
 
 use legs::validate_legs;
 
@@ -669,6 +670,9 @@ fn cross_field_rules(
     }
     if kind == "signal" {
         for (i, leg) in legs.iter().enumerate() {
+            if legs::is_resolved_signal_leg(leg) {
+                continue;
+            }
             let seg = leg["segment"].as_str().unwrap_or("");
             let ex = leg["exchange"].as_str().unwrap_or("");
             if seg == "cash" && is_derivative_exchange(ex) {

@@ -136,6 +136,31 @@ pub fn find_leg(
         .cloned()
 }
 
+/// Legs chosen at signal time, optionally only those firing on `side`.
+fn resolved_legs(strategy: &StrategyRow, side: Option<&str>) -> Vec<Value> {
+    strategy
+        .legs
+        .as_array()
+        .map(|legs| {
+            legs.iter()
+                .filter(|l| crate::strategy::validate::is_resolved_signal_leg(l))
+                .filter(|l| side.is_none_or(|s| l["side"].as_str() == Some(s)))
+                .cloned()
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
+/// A resolved leg's order side as the engine's long/short: a bought
+/// contract is held long, a sold one short, whichever signal fired it.
+fn order_side(leg: &Value) -> &'static str {
+    if leg["position"].as_str().unwrap_or("B").eq_ignore_ascii_case("S") {
+        "short"
+    } else {
+        "long"
+    }
+}
+
 fn hhmm(text: Option<&str>) -> Option<NaiveTime> {
     NaiveTime::parse_from_str(text?, "%H:%M").ok()
 }
@@ -210,8 +235,32 @@ impl StrategyModule {
             );
         }
         let Some(leg) = find_leg(strategy, leg_id, symbol, exchange) else {
+            // The Bridge 1.0.6: an alert naming no leg drives every leg chosen
+            // at signal time that fires on this side (e.g. long_entry buys the
+            // CE leg, short_entry buys the PE leg).
+            if leg_id.is_none_or(Value::is_null) && symbol.is_none_or(str::is_empty) {
+                let targets = resolved_legs(strategy, Some(side));
+                if !targets.is_empty() {
+                    return self.handle_resolved(strategy, action, side, targets).await;
+                }
+            }
             return SignalResult::refuse("No leg matches this signal", None, None);
         };
+        if crate::strategy::validate::is_resolved_signal_leg(&leg) {
+            let lid = leg_id_of(&leg).unwrap_or(1);
+            if leg["side"].as_str() != Some(side) {
+                return SignalResult::refuse(
+                    format!(
+                        "Leg {} only accepts {} signals",
+                        lid,
+                        leg["side"].as_str().unwrap_or("?")
+                    ),
+                    Some(lid),
+                    None,
+                );
+            }
+            return self.handle_resolved(strategy, action, side, vec![leg]).await;
+        }
         let lid = leg_id_of(&leg).unwrap_or(1);
         let leg_side = leg["side"].as_str().unwrap_or("both").to_ascii_lowercase();
         if leg_side != "both" && leg_side != side {
@@ -243,6 +292,102 @@ impl StrategyModule {
             return self.signal_enter(strategy, run_id, &leg, lid, side).await;
         }
         self.signal_exit(strategy, run_id, &leg, lid, side).await
+    }
+
+    /// Signals for legs whose contract is chosen at signal time. Each such
+    /// leg has a fixed order side (`position`) and fires on one signal side,
+    /// so its own claim and P&L use the real order side. An entry first
+    /// closes the opposite side's open legs (the flip), and opens nothing if
+    /// one of those closes is refused.
+    async fn handle_resolved(
+        &self,
+        strategy: &StrategyRow,
+        action: &str,
+        side: &str,
+        targets: Vec<Value>,
+    ) -> SignalResult {
+        let first = targets.first().and_then(leg_id_of);
+        if let Some(note) = self.window_note(strategy, action) {
+            return SignalResult::note(note, first, None);
+        }
+        let run_id = match self.day_run(strategy).await {
+            Ok(id) => id,
+            Err(e) => return SignalResult::refuse(e, first, None),
+        };
+        let entry = action.ends_with("_entry");
+        if entry {
+            if let Ok(Some(run)) = self.store.get_run(run_id) {
+                if run.stop_requested_reason.is_some() {
+                    return SignalResult {
+                        ok: false,
+                        note: Some("run_stopping".into()),
+                        leg_id: first,
+                        run_id: Some(run_id),
+                        ..Default::default()
+                    };
+                }
+            }
+            let opposite = if side == "long" { "short" } else { "long" };
+            let mut flipped = false;
+            for leg in resolved_legs(strategy, Some(opposite)) {
+                let lid = leg_id_of(&leg).unwrap_or(1);
+                let held = self
+                    .state
+                    .with_run(run_id, |r| r.leg(lid).is_some_and(|l| l.status == "open"))
+                    .unwrap_or(false);
+                if !held {
+                    continue;
+                }
+                let closed = self
+                    .signal_exit(strategy, run_id, &leg, lid, order_side(&leg))
+                    .await;
+                if !closed.ok {
+                    return closed;
+                }
+                flipped = true;
+            }
+            let mut out = SignalResult {
+                ok: true,
+                leg_id: first,
+                run_id: Some(run_id),
+                flipped,
+                ..Default::default()
+            };
+            for leg in &targets {
+                let lid = leg_id_of(leg).unwrap_or(1);
+                let r = self
+                    .signal_enter(strategy, run_id, leg, lid, order_side(leg))
+                    .await;
+                if !r.ok {
+                    return r;
+                }
+                if out.note.is_none() {
+                    out.note = r.note;
+                }
+            }
+            return out;
+        }
+        let mut out = SignalResult {
+            ok: true,
+            leg_id: first,
+            run_id: Some(run_id),
+            ..Default::default()
+        };
+        let mut any = false;
+        for leg in &targets {
+            let lid = leg_id_of(leg).unwrap_or(1);
+            let r = self
+                .signal_exit(strategy, run_id, leg, lid, order_side(leg))
+                .await;
+            if !r.ok {
+                return r;
+            }
+            any |= r.note.is_none();
+        }
+        if !any {
+            out.note = Some("no_matching_position".into());
+        }
+        out
     }
 
     /// The strategy's open run, kept while it started this session. A

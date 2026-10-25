@@ -31,6 +31,7 @@ mod strategy_module_order_events;
 mod strategy_module_recovery;
 mod strategy_module_risk;
 mod strategy_module_scheduler;
+mod signal_index_legs;
 mod strategy_module_signals;
 mod strategy_module_state;
 mod strategy_module_validation;

@@ -19,7 +19,46 @@ fn leg_id(leg: &Map<String, Value>, label: &str, index: usize) -> R<i64> {
     }
 }
 
+/// The Bridge 1.0.6: is this a signal leg whose contract is chosen when the
+/// signal arrives (no `symbol`, a batch-style `position`)? It trades the
+/// strategy's underlying: a future or an ATM-relative option, resolved
+/// with the batch resolver at signal time.
+pub fn is_resolved_signal_leg(leg: &Value) -> bool {
+    leg.get("symbol").map_or(true, Value::is_null) && leg.get("position").is_some()
+}
+
+/// A resolved signal leg: the batch leg's contract and risk fields, plus
+/// the signal `side` it fires on (long or short; never both, because the
+/// contract and the order side differ per direction).
+fn validate_resolved_signal_leg(raw: &Value, index: usize) -> R<Value> {
+    let label = format!("legs[{}]", index);
+    let leg = mapping(raw, &label)?;
+    let side = choice(
+        required(leg, "side", &label)?,
+        &["long", "short"],
+        &format!("{}.side", label),
+    )?;
+    let mut rest = leg.clone();
+    rest.remove("side");
+    rest.remove("symbol");
+    let mut c = match validate_leg(&Value::Object(rest), index)? {
+        Value::Object(m) => m,
+        _ => unreachable!(),
+    };
+    if c["segment"] == "cash" {
+        return Err(format!(
+            "{}.segment is 'cash'. A leg chosen at signal time trades futures or options; name a cash symbol instead.",
+            label
+        ));
+    }
+    c.insert("side".into(), json!(side));
+    Ok(Value::Object(c))
+}
+
 fn validate_signal_leg(raw: &Value, index: usize, g: &SymbolGeneration) -> R<Value> {
+    if is_resolved_signal_leg(raw) {
+        return validate_resolved_signal_leg(raw, index);
+    }
     let label = format!("legs[{}]", index);
     let leg = mapping(raw, &label)?;
     reject_unknown(leg, SIGNAL_LEG_FIELDS, &label)?;

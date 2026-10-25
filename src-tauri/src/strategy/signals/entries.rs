@@ -77,7 +77,12 @@ impl StrategyModule {
             }
             flipped = true;
         }
-        let spec = match self.resolve_signal_leg(leg, lid, side) {
+        let resolved = if crate::strategy::validate::is_resolved_signal_leg(leg) {
+            self.resolve_signal_contract(strategy, leg, lid, side).await
+        } else {
+            self.resolve_signal_leg(leg, lid, side)
+        };
+        let spec = match resolved {
             Ok(mut s) => {
                 s.position_ref = Some(claim.position_ref.clone());
                 s
@@ -97,6 +102,54 @@ impl StrategyModule {
             },
             Err(e) => SignalResult::refuse(e, Some(lid), Some(run_id)),
         }
+    }
+
+    /// The Bridge 1.0.6: a leg chosen at signal time, resolved now against
+    /// the strategy's underlying with the batch resolver (expiry rank, ATM
+    /// offset from the live price), so the run holds the exact contract and
+    /// its exit closes that contract.
+    async fn resolve_signal_contract(
+        &self,
+        strategy: &StrategyRow,
+        leg: &Value,
+        lid: i64,
+        side: &str,
+    ) -> Result<LegSpec, String> {
+        let g = self.symbols.snapshot();
+        let today = self
+            .clock
+            .now()
+            .with_timezone(&chrono_tz::Asia::Kolkata)
+            .date_naive();
+        let r = crate::strategy::resolver::resolve_leg(
+            &g,
+            self.gateway.as_ref(),
+            leg,
+            &strategy.underlying,
+            &strategy.underlying_exchange,
+            today,
+            None,
+        )
+        .await
+        .map_err(|f| f.error)?;
+        let trail = &leg["trail"];
+        Ok(LegSpec {
+            leg_id: lid,
+            position: position_of(side).into(),
+            symbol: r.symbol,
+            exchange: r.exchange,
+            lots: r.lots,
+            quantity: r.quantity,
+            position_ref: None,
+            sl_pts: leg["sl_pts"].as_f64(),
+            target_pts: leg["target_pts"].as_f64(),
+            trail_x: trail["x"].as_f64().unwrap_or(0.0),
+            trail_y: trail["y"].as_f64().unwrap_or(0.0),
+            risk_unit: leg["risk_unit"].as_str().unwrap_or("points").to_string(),
+            expiry: r.expiry,
+            expiry_fallback: r.expiry_fallback,
+            expiry_rank: r.expiry_rank,
+        })
     }
 
     /// A signal leg in run-state shape. The side comes from the signal.
