@@ -29,6 +29,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
+import { SignalOptionsCard } from './SignalOptionsCard'
 import { cn } from '@/lib/utils'
 import {
   ATM_OFFSETS,
@@ -93,6 +94,10 @@ import {
   UNIVERSE_TAB_LABELS,
   UNIVERSE_TABS,
   type UniverseTab,
+  type SignalOptions,
+  signalOptionsError,
+  signalOptionsFrom,
+  signalOptionsPayload,
   type WebhookMessageRule,
   webhookMessagesError,
   withQtyMode,
@@ -602,7 +607,10 @@ function LegCard({
               min={0}
               value={leg.trail?.x ?? 0}
               onChange={(event) =>
-                update('trail', { x: Number(event.target.value || 0), y: leg.trail?.y ?? 0 })
+                update('trail', {
+                  x: Number(event.target.value || 0),
+                  y: leg.trail?.y ?? 0,
+                })
               }
               className="h-9"
             />
@@ -619,7 +627,10 @@ function LegCard({
               min={0}
               value={leg.trail?.y ?? 0}
               onChange={(event) =>
-                update('trail', { x: leg.trail?.x ?? 0, y: Number(event.target.value || 0) })
+                update('trail', {
+                  x: leg.trail?.x ?? 0,
+                  y: Number(event.target.value || 0),
+                })
               }
               className="h-9"
             />
@@ -1001,7 +1012,10 @@ function SignalLegCard({ leg, tab, index, onChange, onRemove, removable }: Signa
               min={0}
               value={leg.trail?.x ?? 0}
               onChange={(event) =>
-                update('trail', { x: Number(event.target.value || 0), y: leg.trail?.y ?? 0 })
+                update('trail', {
+                  x: Number(event.target.value || 0),
+                  y: leg.trail?.y ?? 0,
+                })
               }
               className="h-9"
             />
@@ -1018,7 +1032,10 @@ function SignalLegCard({ leg, tab, index, onChange, onRemove, removable }: Signa
               min={0}
               value={leg.trail?.y ?? 0}
               onChange={(event) =>
-                update('trail', { x: leg.trail?.x ?? 0, y: Number(event.target.value || 0) })
+                update('trail', {
+                  x: leg.trail?.x ?? 0,
+                  y: Number(event.target.value || 0),
+                })
               }
               className="h-9"
             />
@@ -1207,6 +1224,9 @@ export default function StrategyWizard({ editing }: StrategyWizardProps = {}) {
   const [messageRules, setMessageRules] = useState<WebhookMessageRule[]>(
     editing?.webhook_messages ?? DEFAULT_WEBHOOK_MESSAGES
   )
+  const [signalOpts, setSignalOpts] = useState<SignalOptions>(
+    signalOptionsFrom(editing?.signal_options)
+  )
   const [dailyLossLimit, setDailyLossLimit] = useState(
     editing?.daily_loss_limit_inr != null ? String(editing.daily_loss_limit_inr) : ''
   )
@@ -1349,7 +1369,10 @@ export default function StrategyWizard({ editing }: StrategyWizardProps = {}) {
   const createMutation = useMutation({
     mutationFn: (payload: StrategyConfigPayload) => createStrategy(payload),
     onSuccess: (created) => {
-      setRevealedToken({ token: created.webhook_token, strategyId: created.strategy.id })
+      setRevealedToken({
+        token: created.webhook_token,
+        strategyId: created.strategy.id,
+      })
     },
     onError: (err: Error) => showToast.error(err.message || 'Failed to create strategy'),
   })
@@ -1385,6 +1408,8 @@ export default function StrategyWizard({ editing }: StrategyWizardProps = {}) {
       }
     }
     if (isSignal) {
+      const so = signalOptionsError(signalOpts, strategyType, product)
+      if (so) return so
       const why = webhookMessagesError(messageRules)
       if (why) return why
     }
@@ -1508,6 +1533,7 @@ export default function StrategyWizard({ editing }: StrategyWizardProps = {}) {
       overall_target_mtm: overallTarget ? Number(overallTarget) : null,
       trail_sl_to_entry: trailToEntry,
       daily_loss_limit_inr: dailyLossLimit ? Number(dailyLossLimit) : null,
+      signal_options: signalOptionsPayload(signalOpts, kind),
       webhook_messages: isSignal
         ? messageRules.map((r) => ({ ...r, match: r.match.trim() }))
         : null,
@@ -1627,6 +1653,8 @@ export default function StrategyWizard({ editing }: StrategyWizardProps = {}) {
         </CardContent>
       </Card>
 
+      {isSignal && <SignalOptionsCard value={signalOpts} onChange={setSignalOpts} />}
+
       {isSignal && (
         <Card data-testid="webhook-messages">
           <CardHeader className="pb-3">
@@ -1676,7 +1704,10 @@ export default function StrategyWizard({ editing }: StrategyWizardProps = {}) {
                     setMessageRules(
                       messageRules.map((r, j) =>
                         j === i
-                          ? { ...r, action: event.target.value as WebhookMessageRule['action'] }
+                          ? {
+                              ...r,
+                              action: event.target.value as WebhookMessageRule['action'],
+                            }
                           : r
                       )
                     )
@@ -1967,7 +1998,10 @@ export default function StrategyWizard({ editing }: StrategyWizardProps = {}) {
                       id={`fires-on-${leg.id}`}
                       value={leg.side === 'short' ? 'short' : 'long'}
                       onChange={(event) =>
-                        updateLeg(index, { ...leg, side: event.target.value as 'long' | 'short' })
+                        updateLeg(index, {
+                          ...leg,
+                          side: event.target.value as 'long' | 'short',
+                        })
                       }
                       className={`${SELECT_CLASS_SM} w-44`}
                     >

@@ -226,6 +226,8 @@ export interface StrategySummary {
   webhook_ip_allowlist: string[] | null
   /** The Bridge 1.0.7: plain-text alert rules; null means the defaults. */
   webhook_messages?: WebhookMessageRule[] | null
+  /** The Bridge 1.0.8: carry / roll / closing-session options; null means all off. */
+  signal_options?: Partial<SignalOptions> | null
   daily_loss_limit_inr: number | null
   status: StrategyStatus
   current_run_id: number | null
@@ -267,6 +269,7 @@ export interface StrategyConfigPayload {
   daily_loss_limit_inr?: number | null
   webhook_ip_allowlist?: string[] | null
   webhook_messages?: WebhookMessageRule[] | null
+  signal_options?: SignalOptions | null
 }
 
 /**
@@ -595,7 +598,11 @@ export const TAB_DEFAULT_UNDERLYINGS: Record<UniverseTab, UnderlyingChoice[]> = 
   monthly_only: [
     { symbol: 'BANKNIFTY', name: 'Nifty Bank', exchange: 'NSE_INDEX' },
     { symbol: 'FINNIFTY', name: 'Nifty Fin Service', exchange: 'NSE_INDEX' },
-    { symbol: 'MIDCPNIFTY', name: 'Nifty Midcap Select', exchange: 'NSE_INDEX' },
+    {
+      symbol: 'MIDCPNIFTY',
+      name: 'Nifty Midcap Select',
+      exchange: 'NSE_INDEX',
+    },
     { symbol: 'BANKEX', name: 'BSE Bankex', exchange: 'BSE_INDEX' },
   ],
   stocks_fno: [
@@ -1391,4 +1398,97 @@ export function pnlToneClass(value: number | null | undefined): string {
   if (value > 0) return 'text-green-600'
   if (value < 0) return 'text-red-600'
   return ''
+}
+
+/**
+ * The Bridge 1.0.8: optional behaviours of a signal-driven strategy, each off
+ * by default (plain BUY/SELL automation is unchanged).
+ */
+export interface SignalOptions {
+  carry_overnight: boolean
+  expiry_roll: boolean
+  roll_time: string
+  reopen: 'next_session' | 'immediate'
+  reopen_time: string
+  min_days_to_expiry: number
+  expiry_day_entry: 'same' | 'defer'
+  cas_exit: boolean
+  session_times: 'auto' | 'custom'
+  cas_start: string
+  session_end: string
+  cas_timeframe: number
+  cas_st_atr: number
+  cas_st_mult: number
+  cas_leg: 'auto' | 'sell' | 'buy'
+  cas_at_end: 'hold' | 'close'
+}
+
+export const DEFAULT_SIGNAL_OPTIONS: SignalOptions = {
+  carry_overnight: false,
+  expiry_roll: false,
+  roll_time: '15:25',
+  reopen: 'next_session',
+  reopen_time: '09:20',
+  min_days_to_expiry: 0,
+  expiry_day_entry: 'same',
+  cas_exit: false,
+  session_times: 'auto',
+  cas_start: '15:15',
+  session_end: '15:40',
+  cas_timeframe: 5,
+  cas_st_atr: 5,
+  cas_st_mult: 2,
+  cas_leg: 'auto',
+  cas_at_end: 'hold',
+}
+
+export const CAS_TIMEFRAMES = [1, 3, 5, 10, 15, 30, 60]
+
+/** Stored options merged onto the defaults. */
+export function signalOptionsFrom(v: Partial<SignalOptions> | null | undefined): SignalOptions {
+  return { ...DEFAULT_SIGNAL_OPTIONS, ...(v ?? {}) }
+}
+
+/** The body value: null unless the strategy is signal-driven and something differs from off. */
+export function signalOptionsPayload(o: SignalOptions, kind: StrategyKind): SignalOptions | null {
+  if (kind !== 'signal') return null
+  const any =
+    o.carry_overnight ||
+    o.expiry_roll ||
+    o.cas_exit ||
+    o.min_days_to_expiry > 0 ||
+    o.expiry_day_entry === 'defer'
+  return any ? { ...o } : null
+}
+
+/** Mirrors the server's checks; null when fine. */
+export function signalOptionsError(
+  o: SignalOptions,
+  strategyType: StrategyType,
+  product: Product
+): string | null {
+  const carries = o.carry_overnight || (o.expiry_roll && o.reopen === 'next_session')
+  if (carries) {
+    if (strategyType !== 'positional')
+      return 'Overnight carry (or a roll that reopens next session) needs a positional strategy.'
+    if (!o.carry_overnight)
+      return 'An expiry roll that reopens next session needs overnight carry on, or set it to reopen immediately.'
+    if (product !== 'NRML')
+      return 'Overnight carry needs product NRML: the broker squares MIS positions off before the close.'
+  }
+  if (o.expiry_roll && o.roll_time >= '15:30')
+    return 'Roll time must be before 15:30: expiring index contracts stop trading at 15:30 on expiry day from 7 Dec 2026.'
+  if (o.cas_exit && o.session_times === 'custom' && o.cas_start >= o.session_end)
+    return 'Closing-session start must be earlier than the session end.'
+  if (
+    !Number.isInteger(o.min_days_to_expiry) ||
+    o.min_days_to_expiry < 0 ||
+    o.min_days_to_expiry > 30
+  )
+    return 'Minimum days to expiry must be a whole number from 0 to 30.'
+  if (!Number.isInteger(o.cas_st_atr) || o.cas_st_atr < 1 || o.cas_st_atr > 100)
+    return 'Supertrend ATR period must be 1 to 100.'
+  if (!(o.cas_st_mult >= 0.1 && o.cas_st_mult <= 20))
+    return 'Supertrend multiplier must be 0.1 to 20.'
+  return null
 }
