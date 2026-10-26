@@ -4,6 +4,7 @@ import { useLocation } from 'react-router'
 const PAGE_TITLES: Record<string, string> = {
   '/': 'Home',
   '/faq': 'FAQ',
+  '/about': 'About & licence',
   '/setup': 'Setup',
   '/login': 'Login',
   '/reset-password': 'Reset Password',

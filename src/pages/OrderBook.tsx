@@ -55,6 +55,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { type OrderEventType, useOrderEventRefresh } from '@/hooks/useOrderEventRefresh'
 // Note: AlertDialog still used for Cancel All Orders
 import { useSupportedExchanges } from '@/hooks/useSupportedExchanges'
+import { sideBadgeClass } from '@/lib/sideColor'
 import { cn, makeFormatCurrency, sanitizeCSV } from '@/lib/utils'
 import { useAuthStore } from '@/stores/authStore'
 import { onModeChange } from '@/stores/themeStore'
@@ -725,10 +726,7 @@ export default function OrderBook() {
                               <Badge variant="outline">{order.exchange}</Badge>
                             </TableCell>
                             <TableCell>
-                              <Badge
-                                variant={order.action === 'BUY' ? 'default' : 'destructive'}
-                                className={order.action === 'BUY' ? 'bg-green-500' : ''}
-                              >
+                              <Badge className={sideBadgeClass(order.action, order.symbol)}>
                                 {order.action}
                               </Badge>
                             </TableCell>

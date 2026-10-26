@@ -24,6 +24,8 @@ pub struct DeskStrategy {
     pub name: String,
     pub status: String,
     pub product: String,
+    /// The mode of the current (unstopped) run, when running.
+    pub run_mode: Option<String>,
 }
 
 fn round2(x: f64) -> f64 {
@@ -132,8 +134,13 @@ impl StrategyModule {
             Ok(p) => Some(rows(&p["data"])),
             Err(_) => None,
         };
-        let mut out = Vec::new();
-        let (mut t_real, mut t_unreal) = (0.0, 0.0);
+        // Every strategy's own residuals first, so a contract held by more
+        // than one owner (two strategies, or two legs) is known before any
+        // broker row is attributed: the broker nets such a contract into one
+        // row that belongs to none of them (A long 1 lot + B short 1 lot is a
+        // flat row), so each owner keeps its OWN quantity and average, and
+        // only the LTP is read from the book.
+        let mut gathered = Vec::new();
         for s in strategies {
             let history = self.order_history(s.id, None).await?;
             if !history.iter().any(|o| o.mode == mode.as_str()) {
@@ -141,14 +148,49 @@ impl StrategyModule {
             }
             let product = s.product.to_ascii_uppercase();
             let owners = residual_owners(placed_in(&history, mode), &product);
-            let mut positions: Vec<Value> = if owners.is_empty() {
-                Vec::new()
-            } else {
-                match &book {
-                    Some(b) => overlay(b.clone(), owners, &product),
-                    None => owners,
+            gathered.push((s, history, product, owners));
+        }
+        let holders = owner_counts(gathered.iter().map(|g| &g.3));
+        let net = {
+            let fills: Vec<&OrderRow> = gathered.iter().flat_map(|g| placed_in(&g.1, mode)).collect();
+            let mut rows = net_positions(&fills, today);
+            for r in rows.iter_mut() {
+                self.describe(r);
+                let row = book.as_deref().and_then(|b| b.iter().find(|x| {
+                    text(&x["symbol"]).eq_ignore_ascii_case(&text(&r["symbol"]))
+                        && text(&x["exchange"]).eq_ignore_ascii_case(&text(&r["exchange"]))
+                        && {
+                            let p = text(&x["product"]).to_ascii_uppercase();
+                            p.is_empty() || p == text(&r["product"])
+                        }
+                }));
+                if let Some(x) = row {
+                    r["ltp"] = x["ltp"].clone();
+                    if mode == RunMode::Live {
+                        let bq = number(&x["quantity"]);
+                        r["broker_quantity"] = json!(bq);
+                        r["mismatch"] = json!(bq != number(&r["quantity"]));
+                    }
+                } else if mode == RunMode::Live && number(&r["quantity"]) != 0.0 && book.is_some() {
+                    r["broker_quantity"] = json!(0);
+                    r["mismatch"] = json!(true);
                 }
-            };
+                let (q, ltp) = (number(&r["quantity"]), r["ltp"].clone());
+                if q != 0.0 && !ltp.is_null() {
+                    let u = round2((number(&ltp) - number(&r["average_price"])) * q);
+                    r["unrealized"] = json!(u);
+                    r["pnl"] = json!(round2(u + number(&r["realized"])));
+                    let avg = number(&r["average_price"]);
+                    r["change_percent"] = if avg > 0.0 { json!(round2((number(&ltp) - avg) / avg * 100.0)) } else { Value::Null };
+                }
+            }
+            rows
+        };
+        let net_total: f64 = net.iter().map(|r| number(&r["pnl"])).sum();
+        let mut out = Vec::new();
+        let (mut t_real, mut t_unreal) = (0.0, 0.0);
+        for (s, history, product, owners) in gathered {
+            let mut positions = attribute(owners, book.as_deref(), &product, &holders);
             positions.retain(|r| number(&r["quantity"]) != 0.0);
             for p in positions.iter_mut() {
                 self.describe(p);
@@ -170,6 +212,7 @@ impl StrategyModule {
             t_unreal += unrealized;
             out.push(json!({
                 "id": s.id, "name": s.name, "status": s.status, "product": product,
+                "run_mode": s.run_mode,
                 "positions": positions, "closed_today": closed,
                 "realized": round2(realized), "unrealized": round2(unrealized),
                 "total": round2(realized + unrealized),
@@ -179,9 +222,146 @@ impl StrategyModule {
             "mode": mode.as_str(),
             "book_available": book.is_some(),
             "strategies": out,
+            "net": net,
+            "net_total": round2(net_total),
             "totals": {"realized": round2(t_real), "unrealized": round2(t_unreal), "total": round2(t_real + t_unreal)},
         }}))
     }
+}
+
+fn contract(row: &Value) -> (String, String, String) {
+    (
+        text(&row["symbol"]).to_ascii_uppercase(),
+        text(&row["exchange"]).to_ascii_uppercase(),
+        text(&row["product"]).to_ascii_uppercase(),
+    )
+}
+
+/// How many owners (strategy legs, across every strategy of the mode) hold
+/// each contract.
+pub fn owner_counts<'a>(
+    owners: impl IntoIterator<Item = &'a Vec<Value>>,
+) -> BTreeMap<(String, String, String), usize> {
+    let mut n = BTreeMap::new();
+    for list in owners {
+        for o in list {
+            *n.entry(contract(o)).or_insert(0) += 1;
+        }
+    }
+    n
+}
+
+/// One strategy's open positions: a contract it alone holds is the broker
+/// row (the authority for money); a contract held by any other owner keeps
+/// this owner's own quantity and average from its fills, priced at the
+/// book's LTP and marked `local/shared`, because the netted broker row
+/// cannot be divided (and may read flat while both strategies are open).
+pub fn attribute(
+    owners: Vec<Value>,
+    book: Option<&[Value]>,
+    product: &str,
+    holders: &BTreeMap<(String, String, String), usize>,
+) -> Vec<Value> {
+    let (shared, exclusive): (Vec<Value>, Vec<Value>) = owners
+        .into_iter()
+        .partition(|o| holders.get(&contract(o)).copied().unwrap_or(0) > 1);
+    let mut out = if exclusive.is_empty() {
+        Vec::new()
+    } else {
+        match book {
+            Some(b) => overlay(b.to_vec(), exclusive, product),
+            None => exclusive,
+        }
+    };
+    for mut o in shared {
+        let key = contract(&o);
+        if let Some(row) = book.and_then(|b| b.iter().find(|r| {
+            let (s, e, p) = contract(r);
+            (s.as_str(), e.as_str()) == (key.0.as_str(), key.1.as_str()) && (p.is_empty() || p == key.2)
+        })) {
+            o["ltp"] = row["ltp"].clone();
+        }
+        o["source"] = json!("local/shared");
+        o["shared"] = json!(true);
+        out.push(o);
+    }
+    out
+}
+
+/// The Bridge 1.0.11: Kite-style net positions. Every strategy's fills of
+/// one mode, netted by contract (symbol + exchange + product) the way a
+/// broker nets an account: fills in time order; adding to the net side
+/// re-averages, reducing keeps the average and books realized P&L, crossing
+/// zero books the closed part and opens the rest at the fill price. No
+/// strategy names. A contract netted to zero is listed (qty 0, realized)
+/// only when it traded `today` (IST). `realized` is today's realized P&L.
+pub fn net_positions(fills: &[&OrderRow], today: NaiveDate) -> Vec<Value> {
+    #[derive(Default)]
+    struct Net {
+        qty: i64,
+        avg: f64,
+        realized_today: f64,
+        traded_today: bool,
+        buy_qty: i64,
+        sell_qty: i64,
+    }
+    let mut list: Vec<&OrderRow> = fills
+        .iter()
+        .copied()
+        .filter(|o| filled_quantity(o) > 0 && fill_price(o).is_some())
+        .collect();
+    let when = |o: &OrderRow| o.filled_at.clone().unwrap_or_else(|| o.placed_at.clone());
+    list.sort_by(|a, b| (when(a), a.id).cmp(&(when(b), b.id)));
+    let mut nets: BTreeMap<(String, String, String), Net> = BTreeMap::new();
+    for o in list {
+        let key = (
+            o.symbol.to_ascii_uppercase(),
+            o.exchange.to_ascii_uppercase(),
+            o.product.clone().unwrap_or_default().to_ascii_uppercase(),
+        );
+        let n = nets.entry(key).or_default();
+        let q = filled_quantity(o);
+        let signed = if o.action.eq_ignore_ascii_case("BUY") { q } else { -q };
+        let price = fill_price(o).unwrap_or(0.0);
+        let is_today = ist_date(&when(o)) == Some(today);
+        if is_today {
+            n.traded_today = true;
+            if signed > 0 { n.buy_qty += q } else { n.sell_qty += q }
+        }
+        let mut realized = 0.0;
+        if n.qty == 0 || n.qty.signum() == signed.signum() {
+            let total = n.qty + signed;
+            n.avg = (n.avg * n.qty.abs() as f64 + price * signed.abs() as f64) / total.abs() as f64;
+            n.qty = total;
+        } else {
+            let closing = signed.abs().min(n.qty.abs());
+            realized = (price - n.avg) * closing as f64 * n.qty.signum() as f64;
+            let total = n.qty + signed;
+            if total == 0 {
+                n.avg = 0.0;
+            } else if total.signum() != n.qty.signum() {
+                n.avg = price;
+            }
+            n.qty = total;
+        }
+        if is_today {
+            n.realized_today += realized;
+        }
+    }
+    nets.into_iter()
+        .filter(|(_, n)| n.qty != 0 || n.traded_today)
+        .map(|((symbol, exchange, product), n)| {
+            json!({
+                "symbol": symbol, "exchange": exchange,
+                "product": if product.is_empty() { "NRML".to_string() } else { product },
+                "quantity": n.qty,
+                "average_price": if n.qty != 0 { json!(round2(n.avg * 10000.0) / 10000.0) } else { Value::Null },
+                "realized": round2(n.realized_today),
+                "buy_quantity": n.buy_qty, "sell_quantity": n.sell_qty,
+                "ltp": Value::Null, "unrealized": Value::Null, "pnl": round2(n.realized_today),
+            })
+        })
+        .collect()
 }
 
 /// Margin request rows (the `/api/v1/margin` shape) for open positions:
@@ -251,6 +431,125 @@ mod tests {
         assert_eq!(c[0]["side"], "long");
         // Live view sees none of the sandbox orders.
         assert!(closed_on(&h, RunMode::Live, today).is_empty());
+    }
+
+    fn owner(run: i64, qty: i64, avg: f64) -> Value {
+        json!({"symbol": "NIFTY27OCT2623000CE", "exchange": "NFO", "product": "NRML",
+            "quantity": qty, "average_price": avg, "ltp": null, "source": "local/unreconciled",
+            "run_id": run, "leg_id": 1})
+    }
+
+    #[test]
+    fn opposite_strategies_on_one_contract_keep_their_own_quantities() {
+        // Strategy A long 1 lot, B short 1 lot: the broker row nets to flat.
+        let a = vec![owner(1, 75, 100.0)];
+        let b = vec![owner(2, -75, 110.0)];
+        let holders = owner_counts([&a, &b]);
+        let book = vec![json!({"symbol": "NIFTY27OCT2623000CE", "exchange": "NFO",
+            "product": "NRML", "quantity": 0, "average_price": 0.0, "ltp": 120.0})];
+        let pa = attribute(a, Some(&book), "NRML", &holders);
+        let pb = attribute(b, Some(&book), "NRML", &holders);
+        assert_eq!((pa.len(), pb.len()), (1, 1));
+        assert_eq!(number(&pa[0]["quantity"]), 75.0);
+        assert_eq!(number(&pb[0]["quantity"]), -75.0);
+        assert_eq!(number(&pa[0]["ltp"]), 120.0);
+        assert_eq!(pa[0]["source"], "local/shared");
+        assert_eq!(number(&pb[0]["average_price"]), 110.0);
+    }
+
+    #[test]
+    fn a_contract_one_strategy_alone_holds_is_the_broker_row() {
+        let a = vec![owner(1, 75, 100.0)];
+        let holders = owner_counts([&a]);
+        let book = vec![json!({"symbol": "NIFTY27OCT2623000CE", "exchange": "NFO",
+            "product": "NRML", "quantity": 75, "average_price": 101.0, "ltp": 120.0})];
+        let p = attribute(a, Some(&book), "NRML", &holders);
+        assert_eq!(p[0]["source"], "broker");
+        assert_eq!(number(&p[0]["average_price"]), 101.0);
+    }
+
+    #[test]
+    fn same_side_strategies_are_not_double_counted() {
+        // Both long 1 lot: the broker row is 2 lots, but each shows its own 1.
+        let a = vec![owner(1, 75, 100.0)];
+        let b = vec![owner(2, 75, 100.0)];
+        let holders = owner_counts([&a, &b]);
+        let book = vec![json!({"symbol": "NIFTY27OCT2623000CE", "exchange": "NFO",
+            "product": "NRML", "quantity": 150, "average_price": 100.0, "ltp": 120.0})];
+        let total: f64 = attribute(a, Some(&book), "NRML", &holders)
+            .iter()
+            .chain(attribute(b, Some(&book), "NRML", &holders).iter())
+            .map(|p| number(&p["quantity"]))
+            .sum();
+        assert_eq!(total, 150.0);
+    }
+
+    fn fill(id: i64, sym: &str, product: &str, action: &str, qty: i64, price: f64) -> OrderRow {
+        let mut o = order(id, 1, "entry", action, qty, price, "2026-10-26 04:00:00").order;
+        o.symbol = sym.into();
+        o.product = Some(product.into());
+        o.filled_at = Some(format!("2026-10-26 04:{:02}:00", id));
+        o
+    }
+
+    fn today() -> NaiveDate {
+        NaiveDate::from_ymd_opt(2026, 10, 26).unwrap()
+    }
+
+    #[test]
+    fn net_partial_offset_is_one_row_on_the_bigger_side() {
+        // A sells 10 lots (750), B buys 20 lots (1500): net +750 at B's price.
+        let a = fill(1, "X", "NRML", "SELL", 750, 100.0);
+        let b = fill(2, "X", "NRML", "BUY", 1500, 90.0);
+        let n = net_positions(&[&a, &b], today());
+        assert_eq!(n.len(), 1);
+        assert_eq!(number(&n[0]["quantity"]), 750.0);
+        assert_eq!(number(&n[0]["average_price"]), 90.0);
+        assert_eq!(number(&n[0]["realized"]), 7500.0);
+    }
+
+    #[test]
+    fn net_full_offset_is_a_closed_row_with_realized() {
+        let a = fill(1, "X", "NRML", "BUY", 75, 100.0);
+        let b = fill(2, "X", "NRML", "SELL", 75, 110.0);
+        let n = net_positions(&[&a, &b], today());
+        assert_eq!(n.len(), 1);
+        assert_eq!(number(&n[0]["quantity"]), 0.0);
+        assert!(n[0]["average_price"].is_null());
+        assert_eq!(number(&n[0]["realized"]), 750.0);
+    }
+
+    #[test]
+    fn net_flips_from_long_to_short() {
+        let a = fill(1, "X", "NRML", "BUY", 10, 100.0);
+        let b = fill(2, "X", "NRML", "BUY", 10, 110.0);
+        let c = fill(3, "X", "NRML", "SELL", 25, 120.0);
+        let n = net_positions(&[&a, &b, &c], today());
+        assert_eq!(number(&n[0]["quantity"]), -5.0);
+        assert_eq!(number(&n[0]["average_price"]), 120.0);
+        assert_eq!(number(&n[0]["realized"]), 300.0); // 20 * (120 - 105)
+    }
+
+    #[test]
+    fn different_products_do_not_net() {
+        let a = fill(1, "X", "MIS", "BUY", 75, 100.0);
+        let b = fill(2, "X", "NRML", "SELL", 75, 100.0);
+        let n = net_positions(&[&a, &b], today());
+        assert_eq!(n.len(), 2);
+        let q: Vec<f64> = n.iter().map(|r| number(&r["quantity"])).collect();
+        assert!(q.contains(&75.0) && q.contains(&-75.0));
+    }
+
+    #[test]
+    fn a_contract_closed_on_an_earlier_day_is_not_listed() {
+        let mut a = fill(1, "X", "NRML", "BUY", 75, 100.0);
+        let mut b = fill(2, "X", "NRML", "SELL", 75, 110.0);
+        a.filled_at = Some("2026-10-20 04:00:00".into());
+        b.filled_at = Some("2026-10-20 05:00:00".into());
+        assert!(net_positions(&[&a, &b], today()).is_empty());
+        // Carried open from an earlier day: listed, no realized today.
+        let n = net_positions(&[&a], today());
+        assert_eq!((number(&n[0]["quantity"]), number(&n[0]["realized"])), (75.0, 0.0));
     }
 
     #[test]

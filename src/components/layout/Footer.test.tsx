@@ -1,4 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/react'
+import { MemoryRouter } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useSessionStore } from '@/stores/sessionStore'
 import { Footer } from './Footer'
@@ -34,7 +35,7 @@ describe('Footer', () => {
     mockAppInfoResponse({ status: 'success', version: '2.5.0' })
     useSessionStore.setState({ activeSessionCount: 2 })
 
-    render(<Footer />)
+    render(<Footer />, { wrapper: MemoryRouter })
 
     expect(await screen.findByText('2.5.0')).toBeInTheDocument()
     expect(screen.getByText('2 sessions')).toBeInTheDocument()
@@ -45,7 +46,7 @@ describe('Footer', () => {
     mockAppInfoResponse({ status: 'success', version: '1.0.0' })
     useSessionStore.setState({ activeSessionCount: 1 })
 
-    render(<Footer />)
+    render(<Footer />, { wrapper: MemoryRouter })
 
     expect(await screen.findByText('1.0.0')).toBeInTheDocument()
     expect(screen.getByText('1 session')).toBeInTheDocument()
@@ -54,11 +55,11 @@ describe('Footer', () => {
   it('omits version and session badges when optional fields are missing', async () => {
     const json = mockAppInfoResponse({ status: 'success' })
 
-    render(<Footer />)
+    render(<Footer />, { wrapper: MemoryRouter })
 
     await waitFor(() => expect(json).toHaveBeenCalled())
     expect(screen.queryByText(/session/)).not.toBeInTheDocument()
-    expect(screen.getByText('Based on OpenAlgo (AGPL-3.0)')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'About & licence' })).toHaveAttribute('href', '/about')
     expect(separatorCount()).toBe(1)
   })
 
@@ -66,7 +67,7 @@ describe('Footer', () => {
     const json = mockAppInfoResponse({ status: 'success' })
     useSessionStore.setState({ activeSessionCount: 3 })
 
-    render(<Footer />)
+    render(<Footer />, { wrapper: MemoryRouter })
 
     await waitFor(() => expect(json).toHaveBeenCalled())
     expect(screen.getByText('3 sessions')).toBeInTheDocument()
@@ -78,12 +79,21 @@ describe('Footer', () => {
     const request = Promise.reject(new Error('network error'))
     vi.stubGlobal('fetch', vi.fn().mockReturnValue(request))
 
-    render(<Footer />)
+    render(<Footer />, { wrapper: MemoryRouter })
 
     await request.catch(() => undefined)
     await waitFor(() => expect(fetch).toHaveBeenCalledWith('/auth/app-info'))
     expect(screen.getByText('Copyright 2026 Derivatives Indicators')).toBeInTheDocument()
-    expect(screen.getByText('Based on OpenAlgo (AGPL-3.0)')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'About & licence' })).toHaveAttribute('href', '/about')
     expect(separatorCount()).toBe(1)
+  })
+
+  it('is slim: no inline credit line, the About & licence link carries the notices', async () => {
+    mockAppInfoResponse({ status: 'success', version: '1.0.11' })
+    render(<Footer />, { wrapper: MemoryRouter })
+    expect(await screen.findByText('1.0.11')).toBeInTheDocument()
+    expect(screen.queryByText('Based on OpenAlgo (AGPL-3.0)')).not.toBeInTheDocument()
+    expect(screen.queryByText('Upstream')).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'About & licence' })).toBeInTheDocument()
   })
 })

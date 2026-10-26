@@ -34,6 +34,7 @@ import {
 } from '@/components/ui/table'
 import { useOrderEventRefresh } from '@/hooks/useOrderEventRefresh'
 import { useSupportedExchanges } from '@/hooks/useSupportedExchanges'
+import { sideBadgeClass } from '@/lib/sideColor'
 import { cn, makeFormatCurrency, sanitizeCSV } from '@/lib/utils'
 import { useAuthStore } from '@/stores/authStore'
 import { onModeChange } from '@/stores/themeStore'
@@ -560,10 +561,7 @@ export default function TradeBook() {
                         </TableCell>
                       )}
                       <TableCell>
-                        <Badge
-                          variant={trade.action === 'BUY' ? 'default' : 'destructive'}
-                          className={cn('gap-1', trade.action === 'BUY' ? 'bg-green-500' : '')}
-                        >
+                        <Badge className={cn('gap-1', sideBadgeClass(trade.action, trade.symbol))}>
                           {trade.action === 'BUY' ? (
                             <TrendingUp className="h-3 w-3" />
                           ) : (

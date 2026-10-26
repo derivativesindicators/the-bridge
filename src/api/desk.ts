@@ -42,6 +42,7 @@ export interface DeskStrategy {
   name: string
   status: string
   product: string
+  run_mode?: string | null
   positions: DeskPosition[]
   closed_today: DeskTrip[]
   realized: number
@@ -49,9 +50,32 @@ export interface DeskStrategy {
   total: number
 }
 
+/** A Kite-style net row: every strategy's fills netted by contract. */
+export interface NetPosition {
+  symbol: string
+  exchange: string
+  product: string
+  quantity: number
+  average_price: number | null
+  ltp: number | null
+  realized: number
+  unrealized: number | null
+  pnl: number
+  change_percent?: number | null
+  buy_quantity: number
+  sell_quantity: number
+  lots?: number | null
+  lot_size?: number | null
+  instrument_type?: string
+  broker_quantity?: number
+  mismatch?: boolean
+}
+
 export interface DeskData {
   mode: DeskMode
   book_available: boolean
+  net?: NetPosition[]
+  net_total?: number
   any_live_enabled?: boolean
   strategies: DeskStrategy[]
   totals: { realized: number; unrealized: number; total: number }
@@ -102,4 +126,51 @@ export function contractText(
   if (p.instrument_type && p.instrument_type !== 'EQ') parts.push(p.instrument_type)
   if (p.expiry) parts.push(p.expiry)
   return parts.join(' · ')
+}
+
+// The Bridge 1.0.11: close a strategy's open positions now (it keeps running).
+
+export interface ClosePositionsResult {
+  id: number
+  name?: string
+  mode?: string | null
+  ok: boolean
+  closed?: number
+  error?: string | null
+  message?: string
+}
+
+function errorBody(e: unknown): ClosePositionsResult | undefined {
+  return (e as { response?: { data?: ClosePositionsResult } })?.response?.data
+}
+
+/** Square off this strategy's own open legs at MARKET; the strategy keeps running. */
+export async function closeStrategyPositions(id: number): Promise<ClosePositionsResult> {
+  try {
+    const r = await webClient.post<ClosePositionsResult>(
+      `/strategy/api/strategies/${id}/close_positions`,
+      {}
+    )
+    return r.data
+  } catch (e) {
+    const b = errorBody(e)
+    return { ...(b ?? {}), id, ok: false, error: b?.error ?? b?.message ?? 'Close failed' }
+  }
+}
+
+export interface CloseAllReply {
+  status: string
+  results: ClosePositionsResult[]
+  closed_strategies: number
+  failed: number
+}
+
+/** Close every open position of every running strategy, sandbox and live. */
+export async function closeAllStrategyPositions(): Promise<CloseAllReply> {
+  try {
+    const r = await webClient.post<CloseAllReply>('/strategy/api/desk/close_all', {})
+    return r.data
+  } catch (e) {
+    throw new Error(errorBody(e)?.message ?? 'Close all could not run')
+  }
 }

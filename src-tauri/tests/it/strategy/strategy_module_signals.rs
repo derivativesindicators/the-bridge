@@ -262,3 +262,59 @@ async fn a_stale_run_from_an_earlier_session_is_rolled_on_the_next_signal() {
     assert_ne!(first, second);
     assert_eq!(t.run(first).stop_reason.as_deref(), Some("eod"));
 }
+
+// The Bridge 1.0.11: "Close positions" keeps a signal strategy running and flat.
+
+#[tokio::test]
+async fn closing_positions_keeps_the_run_and_a_later_close_signal_is_a_noop() {
+    let t = t();
+    let s = strategy(&t, json!([signal_leg(1, "RELIANCE", "both")]), json!({}));
+    signal(&t, &s, "long_entry", 1).await;
+    let run = current_run(&t, &s);
+    t.m.apply_fill(run, 1, Some(1000.0), true, FillOpts::default())
+        .await;
+    let r = t.m.close_open_legs(run, USER).await;
+    assert!(r.ok, "{:?}", r);
+    assert_eq!(r.run_stopped, Some(false));
+    // A CLOSE LONG while the exit is working: no second (reversing) order.
+    let early = signal(&t, &s, "long_exit", 1).await;
+    assert!(early.ok, "{:?}", early);
+    assert_eq!(t.gw.actions(), vec!["BUY", "SELL"]);
+    let placed = t.gw.placed();
+    assert_eq!(placed[1].quantity, placed[0].quantity);
+    t.fill_last_exit(run, 1010.0).await;
+    assert!(t.run(run).stopped_at.is_none(), "the strategy keeps running");
+    assert_eq!(t.leg(run, 1).status, "closed");
+    // CLOSE LONG after the close filled: a no-op note, no order.
+    let late = signal(&t, &s, "long_exit", 1).await;
+    assert!(late.ok);
+    assert_eq!(late.note.as_deref(), Some("no_matching_position"));
+    assert_eq!(t.gw.actions(), vec!["BUY", "SELL"]);
+    // The next BUY opens a fresh long in the same run.
+    assert!(signal(&t, &s, "long_entry", 1).await.acted());
+    assert_eq!(current_run(&t, &s), run);
+    assert_eq!(t.gw.actions(), vec!["BUY", "SELL", "BUY"]);
+    assert_eq!(t.leg(run, 1).position, "B");
+    let ev = t.m.store.list_events(s.id, None, Some("manual_close"), None, 10).unwrap();
+    assert_eq!(ev.len(), 1);
+}
+
+#[tokio::test]
+async fn closing_one_strategy_never_touches_another_on_the_same_contract() {
+    // A long and B short on the same contract net to flat at a broker; A's
+    // close is A's own quantity only and B's leg stays open.
+    let t = t();
+    let a = strategy(&t, json!([signal_leg(1, "RELIANCE", "both")]), json!({"name": "A"}));
+    let b = strategy(&t, json!([signal_leg(1, "RELIANCE", "both")]), json!({"name": "B"}));
+    signal(&t, &a, "long_entry", 1).await;
+    signal(&t, &b, "short_entry", 1).await;
+    let (ra, rb) = (current_run(&t, &a), current_run(&t, &b));
+    t.m.apply_fill(ra, 1, Some(1000.0), true, FillOpts::default()).await;
+    t.m.apply_fill(rb, 1, Some(1000.0), true, FillOpts::default()).await;
+    assert!(t.m.close_open_legs(ra, USER).await.ok);
+    assert_eq!(t.gw.actions(), vec!["BUY", "SELL", "SELL"]);
+    let placed = t.gw.placed();
+    assert_eq!(placed[2].quantity, placed[0].quantity);
+    assert_eq!(t.leg(rb, 1).status, "open");
+    assert_eq!(t.leg(rb, 1).position, "S");
+}

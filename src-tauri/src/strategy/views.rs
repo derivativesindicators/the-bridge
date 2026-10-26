@@ -477,23 +477,44 @@ impl StrategyModule {
         };
         // Lifetime owners of this mode: a prior run can still own a position.
         let history = self.order_history(strategy_id, None).await?;
-        let (product, owners) = self
+        let (product, owners, others) = self
             .store
             .blocking(move |s| {
                 // A failed read must not silently drop the product filter.
-                let product = s
-                    .get_strategy_unscoped(strategy_id)?
+                let row = s.get_strategy_unscoped(strategy_id)?;
+                let product = row
+                    .as_ref()
                     .map(|s| s.product.to_ascii_uppercase())
                     .unwrap_or_default();
                 let owners = residual_owners(placed_in(&history, mode), &product);
-                Ok((product, owners))
+                // The owner's other strategies: a contract one of them also
+                // holds is netted at the broker and cannot be this one's row.
+                let others: Vec<(i64, String)> = match &row {
+                    Some(r) => s
+                        .list_strategies(&r.user_id, None, None)?
+                        .iter()
+                        .filter_map(|o| {
+                            let id = o["id"].as_i64().filter(|id| *id != strategy_id)?;
+                            Some((id, text(&o["product"]).to_ascii_uppercase()))
+                        })
+                        .collect(),
+                    None => Vec::new(),
+                };
+                Ok((product, owners, others))
             })
             .await?;
+        let mut all = vec![owners.clone()];
+        for (id, p) in others {
+            let h = self.order_history(id, None).await?;
+            all.push(residual_owners(placed_in(&h, mode), &p));
+        }
+        let holders = super::desk::owner_counts(all.iter());
         let mut payload = match self.gateway.book(mode, Book::Positions).await {
             Ok(p) => p,
             Err(e) => return Ok(Self::as_error(e, "Could not read the positions")),
         };
-        let positions = overlay(rows(&payload["data"]), owners, &product);
+        let book = rows(&payload["data"]);
+        let positions = super::desk::attribute(owners, Some(&book), &product, &holders);
         if let Some(m) = payload.as_object_mut() {
             for (key, field) in POSITION_TOTALS {
                 if m.contains_key(*key) {

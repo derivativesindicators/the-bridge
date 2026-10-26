@@ -32,9 +32,11 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 mod desk;
+mod close;
 mod history;
 
 pub use desk::{desk, desk_margin};
+pub use close::{close_all_targets, close_positions, desk_close_all};
 
 pub use history::{
     checkpoints, events, orderbook, orders, positions, runs, tradebook, webhook_events,

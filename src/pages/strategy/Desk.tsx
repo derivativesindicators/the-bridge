@@ -5,11 +5,15 @@
 // Strategy-module trades live in their own book, so they are not on the
 // Orderbook, Tradebook or Positions pages.
 
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ChevronDown, ChevronRight, Info } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
 import {
+  type CloseAllReply,
+  type ClosePositionsResult,
+  closeAllStrategyPositions,
+  closeStrategyPositions,
   contractText,
   type DeskMargin,
   type DeskMode,
@@ -17,9 +21,19 @@ import {
   fetchDesk,
   fetchDeskMargin,
   lotsText,
+  type NetPosition,
 } from '@/api/desk'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import {
@@ -31,6 +45,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { sideBadgeClass, sideTextClass } from '@/lib/sideColor'
 
 const inr = (v: number | null | undefined) =>
   v == null || !Number.isFinite(v)
@@ -83,7 +98,161 @@ function marginSub(m: DeskMargin | undefined, loading: boolean): string | undefi
   return m.sum_of_legs != null ? `Legs individually: ${inr(m.sum_of_legs)}` : undefined
 }
 
-function StrategyGroup({ s, margin }: { s: DeskStrategy; margin: number | undefined }) {
+const CLOSE_TIP =
+  "Book profit/loss on this strategy's open positions now. The strategy keeps running."
+
+/** Close positions: confirm naming the strategy, then square off its own legs; it keeps running. */
+function ClosePositionsButton({ s, onDone }: { s: DeskStrategy; onDone: () => void }) {
+  const [open, setOpen] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [result, setResult] = useState<ClosePositionsResult | null>(null)
+  const run = async () => {
+    setBusy(true)
+    setResult(await closeStrategyPositions(s.id))
+    setBusy(false)
+    onDone()
+  }
+  return (
+    <>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="destructive"
+            size="sm"
+            className="ml-3 h-6 px-2 text-xs"
+            onClick={() => {
+              setResult(null)
+              setOpen(true)
+            }}
+          >
+            Close positions
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>{CLOSE_TIP}</TooltipContent>
+      </Tooltip>
+      <Dialog open={open} onOpenChange={(o) => !busy && setOpen(o)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Close positions of “{s.name}”?</DialogTitle>
+            <DialogDescription>
+              Squares off this strategy's {s.positions.length} open position
+              {s.positions.length === 1 ? '' : 's'} now at MARKET, each for its own quantity
+              {s.run_mode === 'live' ? ' at the broker' : ' in the strategy sandbox book'}. The
+              strategy keeps running and takes new signals.
+            </DialogDescription>
+          </DialogHeader>
+          {result && (
+            <p className={`text-sm ${result.ok ? 'text-green-600' : 'text-red-600'}`}>
+              {result.ok ? (result.message ?? 'Closed') : (result.error ?? 'Close failed')}
+            </p>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpen(false)} disabled={busy}>
+              {result ? 'Close' : 'Cancel'}
+            </Button>
+            {!result && (
+              <Button variant="destructive" onClick={run} disabled={busy}>
+                {busy ? 'Closing…' : 'Close positions'}
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  )
+}
+
+/** Close all open positions of every strategy, sandbox and live; all keep running. */
+function CloseAllButton({
+  counts,
+  onDone,
+}: {
+  counts: { strategies: number; positions: number } | null
+  onDone: () => void
+}) {
+  const [open, setOpen] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [reply, setReply] = useState<CloseAllReply | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const fire = async () => {
+    setBusy(true)
+    try {
+      setReply(await closeAllStrategyPositions())
+    } catch (e) {
+      setError((e as Error).message)
+    }
+    setBusy(false)
+    onDone()
+  }
+  return (
+    <>
+      <Button
+        variant="destructive"
+        size="sm"
+        onClick={() => {
+          setReply(null)
+          setError(null)
+          setOpen(true)
+        }}
+      >
+        Close all open positions
+      </Button>
+      <Dialog open={open} onOpenChange={(o) => !busy && setOpen(o)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Close all open positions?</DialogTitle>
+            <DialogDescription>
+              {counts === null
+                ? 'Counting open positions…'
+                : `Closes ${counts.positions} open position${counts.positions === 1 ? '' : 's'} across ${counts.strategies} strateg${counts.strategies === 1 ? 'y' : 'ies'}, in BOTH the sandbox and the live book, at MARKET, each for the strategy's own quantity.`}{' '}
+              Every strategy keeps running and takes new signals. Other positions in your broker
+              account are not touched.
+            </DialogDescription>
+          </DialogHeader>
+          {error && <p className="text-sm text-red-600">{error}</p>}
+          {reply && (
+            <div className="space-y-1 text-sm">
+              <p>
+                {reply.results.length === 0
+                  ? 'Nothing was open.'
+                  : `Closed ${reply.closed_strategies}, failed ${reply.failed}.`}
+              </p>
+              <ul className="max-h-48 overflow-y-auto">
+                {reply.results.map((r) => (
+                  <li key={r.id} className={r.ok ? 'text-green-600' : 'text-red-600'}>
+                    {r.name ?? `Strategy ${r.id}`}
+                    {r.mode ? ` (${r.mode})` : ''}:{' '}
+                    {r.ok ? (r.message ?? 'closed') : (r.error ?? 'failed')}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpen(false)} disabled={busy}>
+              {reply ? 'Close' : 'Cancel'}
+            </Button>
+            {!reply && (
+              <Button variant="destructive" onClick={fire} disabled={busy || counts === null}>
+                {busy ? 'Closing…' : 'Close all'}
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  )
+}
+
+function StrategyGroup({
+  s,
+  margin,
+  onChanged,
+}: {
+  s: DeskStrategy
+  margin: number | undefined
+  onChanged: () => void
+}) {
   return (
     <>
       <TableRow className="bg-muted/50">
@@ -97,6 +266,9 @@ function StrategyGroup({ s, margin }: { s: DeskStrategy; margin: number | undefi
           {margin != null && (
             <span className="ml-3 text-xs text-muted-foreground">Margin {inr(margin)}</span>
           )}
+          {s.status === 'running' && s.positions.length > 0 && (
+            <ClosePositionsButton s={s} onDone={onChanged} />
+          )}
         </TableCell>
         <TableCell className="text-right text-xs text-muted-foreground">
           Realized <span className={pnlClass(s.realized)}>{inr(s.realized)}</span>
@@ -109,7 +281,7 @@ function StrategyGroup({ s, margin }: { s: DeskStrategy; margin: number | undefi
         <TableRow key={`${s.id}-${p.symbol}-${p.exchange}-${p.product}-${p.leg_id ?? ''}`}>
           <TableCell className="text-xs text-muted-foreground">
             {p.leg_id != null ? `Leg ${p.leg_id}` : '—'}
-            {p.source === 'broker/shared' && (
+            {(p.source === 'broker/shared' || p.source === 'local/shared') && (
               <Badge variant="outline" className="ml-1 text-[10px]">
                 shared
               </Badge>
@@ -123,7 +295,7 @@ function StrategyGroup({ s, margin }: { s: DeskStrategy; margin: number | undefi
             </div>
           </TableCell>
           <TableCell>
-            <Badge variant={p.side === 'long' ? 'default' : 'destructive'} className="text-xs">
+            <Badge className={`text-xs ${sideBadgeClass(p.side, p.symbol, p.instrument_type)}`}>
               {p.side === 'long' ? 'Long' : 'Short'}
             </Badge>
           </TableCell>
@@ -138,6 +310,91 @@ function StrategyGroup({ s, margin }: { s: DeskStrategy; margin: number | undefi
     </>
   )
 }
+
+/** Kite-style net positions: one row per contract, no strategy names. */
+export function NetPositionsTable({ rows, total }: { rows: NetPosition[]; total: number }) {
+  const ordered = [...rows.filter((r) => r.quantity !== 0), ...rows.filter((r) => r.quantity === 0)]
+  if (ordered.length === 0) return <p className="text-sm text-muted-foreground">No positions.</p>
+  return (
+    <div className="overflow-x-auto">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Product</TableHead>
+            <TableHead>Instrument</TableHead>
+            <TableHead className="text-right">Qty.</TableHead>
+            <TableHead className="text-right">Avg.</TableHead>
+            <TableHead className="text-right">LTP</TableHead>
+            <TableHead className="text-right">P&amp;L</TableHead>
+            <TableHead className="text-right">Chg.</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {ordered.map((r) => {
+            const flat = r.quantity === 0
+            return (
+              <TableRow
+                key={`${r.symbol}-${r.exchange}-${r.product}`}
+                className={flat ? 'text-muted-foreground' : ''}
+                data-testid="net-row"
+              >
+                <TableCell>
+                  <Badge variant="outline" className="text-xs">
+                    {r.product}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <span className="font-mono text-sm">{r.symbol}</span>{' '}
+                  <span className="text-xs text-muted-foreground">{r.exchange}</span>
+                  {r.mismatch && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="ml-2 cursor-help text-xs text-amber-600">⚠ broker</span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        Broker shows {r.broker_quantity ?? 0} for this contract; the strategies hold{' '}
+                        {r.quantity}.
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
+                </TableCell>
+                <TableCell
+                  className={`text-right font-mono ${
+                    flat ? '' : sideTextClass(r.quantity, r.symbol, r.instrument_type)
+                  }`}
+                >
+                  {r.quantity > 0 ? `+${r.quantity}` : r.quantity}
+                </TableCell>
+                <TableCell className="text-right font-mono">{price(r.average_price)}</TableCell>
+                <TableCell className="text-right font-mono">{price(r.ltp)}</TableCell>
+                <TableCell className={`text-right font-mono ${pnlClass(r.pnl)}`}>
+                  {inr(r.pnl)}
+                </TableCell>
+                <TableCell className={`text-right font-mono text-xs ${pnlClass(r.change_percent)}`}>
+                  {r.change_percent == null ? '' : `${r.change_percent.toFixed(2)}%`}
+                </TableCell>
+              </TableRow>
+            )
+          })}
+          <TableRow>
+            <TableCell colSpan={5} className="text-right font-medium">
+              Total P&amp;L
+            </TableCell>
+            <TableCell
+              className={`text-right font-mono font-medium ${pnlClass(total)}`}
+              data-testid="net-total"
+            >
+              {inr(total)}
+            </TableCell>
+            <TableCell />
+          </TableRow>
+        </TableBody>
+      </Table>
+    </div>
+  )
+}
+
+const VIEW_KEY = 'bridge.strategyPositions.view'
 
 const MODE_KEY = 'bridge.strategyPositions.mode'
 
@@ -179,6 +436,21 @@ export default function StrategyDesk() {
     }
   }
   const [showClosed, setShowClosed] = useState(true)
+  const [view, setView] = useState<'strategy' | 'net'>(() => {
+    try {
+      return localStorage.getItem(VIEW_KEY) === 'net' ? 'net' : 'strategy'
+    } catch {
+      return 'strategy'
+    }
+  })
+  const chooseView = (v: 'strategy' | 'net') => {
+    setView(v)
+    try {
+      localStorage.setItem(VIEW_KEY, v)
+    } catch {
+      /* not remembered */
+    }
+  }
   const desk = useQuery({
     queryKey: ['strategy-desk', mode],
     queryFn: () => fetchDesk(mode),
@@ -195,7 +467,29 @@ export default function StrategyDesk() {
   useEffect(() => {
     if (chosen === null && data?.any_live_enabled) setDefaultMode('live')
   }, [chosen, data?.any_live_enabled])
+  const qc = useQueryClient()
+  const refresh = () => {
+    qc.invalidateQueries({ queryKey: ['strategy-desk'] })
+    qc.invalidateQueries({ queryKey: ['strategy-desk-margin'] })
+  }
   const open = data?.strategies.filter((s) => s.positions.length > 0) ?? []
+  // Both books, for the Close all dialog's counts.
+  const other = useQuery({
+    queryKey: ['strategy-desk', mode === 'live' ? 'sandbox' : 'live'],
+    queryFn: () => fetchDesk(mode === 'live' ? 'sandbox' : 'live'),
+    refetchInterval: 10000,
+    retry: false,
+  })
+  const counts = (() => {
+    if (!data) return null
+    const all = [...data.strategies, ...(other.data?.strategies ?? [])].filter(
+      (s) => s.status === 'running' && s.positions.length > 0
+    )
+    return {
+      strategies: new Set(all.map((s) => s.id)).size,
+      positions: all.reduce((n, s) => n + s.positions.length, 0),
+    }
+  })()
   const openCount = open.reduce((n, s) => n + s.positions.length, 0)
   const closed = data?.strategies.flatMap((s) => s.closed_today.map((t) => ({ s, t }))) ?? []
   const m = margin.data
@@ -209,7 +503,10 @@ export default function StrategyDesk() {
             Open positions and today's P&amp;L of every strategy
           </p>
         </div>
-        <LiveSwitch mode={mode} onChange={choose} />
+        <div className="flex items-center gap-4">
+          <CloseAllButton counts={counts} onDone={refresh} />
+          <LiveSwitch mode={mode} onChange={choose} />
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
@@ -246,108 +543,150 @@ export default function StrategyDesk() {
         </p>
       )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Open positions</CardTitle>
-          <CardDescription>Grouped by strategy</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {open.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              {desk.isLoading ? 'Loading…' : 'No open positions.'}
-            </p>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Leg</TableHead>
-                    <TableHead>Symbol</TableHead>
-                    <TableHead>Side</TableHead>
-                    <TableHead className="text-right">Qty (lots/units)</TableHead>
-                    <TableHead>Product</TableHead>
-                    <TableHead className="text-right">Avg entry</TableHead>
-                    <TableHead className="text-right">LTP</TableHead>
-                    <TableHead />
-                    <TableHead className="text-right">MTM</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {open.map((s) => (
-                    <StrategyGroup key={s.id} s={s} margin={m?.per_strategy?.[String(s.id)]} />
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
+      <div className="inline-flex rounded-md border p-0.5" role="tablist" aria-label="View">
+        {(
+          [
+            ['strategy', 'By strategy'],
+            ['net', 'Net'],
+          ] as const
+        ).map(([v, label]) => (
           <button
+            key={v}
             type="button"
-            className="flex items-center gap-2 text-left"
-            onClick={() => setShowClosed((v) => !v)}
-            aria-expanded={showClosed}
+            role="tab"
+            aria-selected={view === v}
+            onClick={() => chooseView(v)}
+            className={`rounded px-3 py-1 text-sm ${
+              view === v ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'
+            }`}
           >
-            {showClosed ? (
-              <ChevronDown className="h-4 w-4" />
-            ) : (
-              <ChevronRight className="h-4 w-4" />
-            )}
-            <CardTitle>Closed today ({closed.length})</CardTitle>
+            {label}
           </button>
-        </CardHeader>
-        {showClosed && (
+        ))}
+      </div>
+
+      {view === 'net' ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Positions ({data?.net?.length ?? 0})</CardTitle>
+          </CardHeader>
           <CardContent>
-            {closed.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No trades closed today.</p>
-            ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Strategy</TableHead>
-                      <TableHead>Symbol</TableHead>
-                      <TableHead>Side</TableHead>
-                      <TableHead className="text-right">Qty</TableHead>
-                      <TableHead className="text-right">Entry</TableHead>
-                      <TableHead className="text-right">Exit</TableHead>
-                      <TableHead>Exit reason</TableHead>
-                      <TableHead className="text-right">P&amp;L</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {closed.map(({ s, t }) => (
-                      <TableRow key={`${s.id}-${t.run_id}-${t.leg_id}-${t.exit_time}`}>
-                        <TableCell>
-                          <Link to={`/strategy/${s.id}`} className="hover:underline">
-                            {s.name}
-                          </Link>
-                        </TableCell>
-                        <TableCell className="font-mono text-sm">{t.symbol}</TableCell>
-                        <TableCell>{t.side === 'long' ? 'Long' : 'Short'}</TableCell>
-                        <TableCell className="text-right font-mono">{t.qty}</TableCell>
-                        <TableCell className="text-right font-mono">
-                          {price(t.entry_price)}
-                        </TableCell>
-                        <TableCell className="text-right font-mono">
-                          {price(t.exit_price)}
-                        </TableCell>
-                        <TableCell className="text-xs">{t.exit_kind}</TableCell>
-                        <TableCell className={`text-right font-mono ${pnlClass(t.pnl)}`}>
-                          {inr(t.pnl)}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
+            <NetPositionsTable rows={data?.net ?? []} total={data?.net_total ?? 0} />
           </CardContent>
-        )}
-      </Card>
+        </Card>
+      ) : (
+        <>
+          <Card>
+            <CardHeader>
+              <CardTitle>Open positions</CardTitle>
+              <CardDescription>Grouped by strategy</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {open.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  {desk.isLoading ? 'Loading…' : 'No open positions.'}
+                </p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Leg</TableHead>
+                        <TableHead>Symbol</TableHead>
+                        <TableHead>Side</TableHead>
+                        <TableHead className="text-right">Qty (lots/units)</TableHead>
+                        <TableHead>Product</TableHead>
+                        <TableHead className="text-right">Avg entry</TableHead>
+                        <TableHead className="text-right">LTP</TableHead>
+                        <TableHead />
+                        <TableHead className="text-right">MTM</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {open.map((s) => (
+                        <StrategyGroup
+                          key={s.id}
+                          s={s}
+                          margin={m?.per_strategy?.[String(s.id)]}
+                          onChanged={refresh}
+                        />
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <button
+                type="button"
+                className="flex items-center gap-2 text-left"
+                onClick={() => setShowClosed((v) => !v)}
+                aria-expanded={showClosed}
+              >
+                {showClosed ? (
+                  <ChevronDown className="h-4 w-4" />
+                ) : (
+                  <ChevronRight className="h-4 w-4" />
+                )}
+                <CardTitle>Closed today ({closed.length})</CardTitle>
+              </button>
+            </CardHeader>
+            {showClosed && (
+              <CardContent>
+                {closed.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No trades closed today.</p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Strategy</TableHead>
+                          <TableHead>Symbol</TableHead>
+                          <TableHead>Side</TableHead>
+                          <TableHead className="text-right">Qty</TableHead>
+                          <TableHead className="text-right">Entry</TableHead>
+                          <TableHead className="text-right">Exit</TableHead>
+                          <TableHead>Exit reason</TableHead>
+                          <TableHead className="text-right">P&amp;L</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {closed.map(({ s, t }) => (
+                          <TableRow key={`${s.id}-${t.run_id}-${t.leg_id}-${t.exit_time}`}>
+                            <TableCell>
+                              <Link to={`/strategy/${s.id}`} className="hover:underline">
+                                {s.name}
+                              </Link>
+                            </TableCell>
+                            <TableCell className="font-mono text-sm">{t.symbol}</TableCell>
+                            <TableCell className={sideTextClass(t.side, t.symbol)}>
+                              {t.side === 'long' ? 'Long' : 'Short'}
+                            </TableCell>
+                            <TableCell className="text-right font-mono">{t.qty}</TableCell>
+                            <TableCell className="text-right font-mono">
+                              {price(t.entry_price)}
+                            </TableCell>
+                            <TableCell className="text-right font-mono">
+                              {price(t.exit_price)}
+                            </TableCell>
+                            <TableCell className="text-xs">{t.exit_kind}</TableCell>
+                            <TableCell className={`text-right font-mono ${pnlClass(t.pnl)}`}>
+                              {inr(t.pnl)}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            )}
+          </Card>
+        </>
+      )}
     </div>
   )
 }

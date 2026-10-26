@@ -760,6 +760,7 @@ fn strategy_management() -> Vec<RouteSpec> {
         // The Bridge 1.0.10: the Strategy desk.
         r!(GET, "/strategy/api/desk", User, strategy_module::desk),
         r!(GET, "/strategy/api/desk/margin", User, strategy_module::desk_margin),
+        r!(POST, "/strategy/api/desk/close_all", User, strategy_module::desk_close_all),
         r!(
             POST,
             "/strategy/api/strategies",
@@ -801,6 +802,12 @@ fn strategy_management() -> Vec<RouteSpec> {
             "/strategy/api/strategies/{sid}/kill_switch",
             User,
             strategy_module::kill_switch
+        ),
+        r!(
+            POST,
+            "/strategy/api/strategies/{sid}/close_positions",
+            User,
+            strategy_module::close_positions
         ),
     ]
 }

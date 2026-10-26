@@ -431,6 +431,74 @@ impl StrategyModule {
         }
     }
 
+    /// The Bridge 1.0.11: book the P&L of every open leg NOW and keep the
+    /// run (and the strategy) running. Each leg exits at MARKET for its OWN
+    /// held quantity through the same per-leg exit path as a manual leg
+    /// close (`exit_legs`, kind `exit_leg_manual`), so the broker's net
+    /// position is never read or closed. Unlike [`close_leg`], the run is
+    /// never finalised here: a signal run stays a trading day (the fill path
+    /// does not end it when it goes flat), so the next BUY/SELL opens fresh
+    /// legs and a CLOSE for the side already closed is a no-op note.
+    /// A run with nothing open answers ok with no exits.
+    pub async fn close_open_legs(&self, run_id: i64, user_id: &str) -> StopOutcome {
+        let (run_row, strategy) = match self.active_run(run_id, user_id) {
+            Ok(r) => r,
+            Err(refused) => return refused,
+        };
+        let strategy_id = run_row.strategy_id;
+        let mode = self.mode_of(&run_row.mode);
+        let leg_ids: Vec<i64> = self
+            .state
+            .with_run(run_id, |r| r.open_legs().iter().map(|l| l.leg_id).collect())
+            .unwrap_or_default();
+        if leg_ids.is_empty() {
+            return StopOutcome { ok: true, run_stopped: Some(false), ..Default::default() };
+        }
+        if let Err(e) = self.authorised_for(run_id, mode) {
+            return StopOutcome::err(e);
+        }
+        let exits = self
+            .exit_legs(
+                run_id,
+                &strategy,
+                (&leg_ids, ExitScope::Held),
+                "exit_leg_manual",
+                mode,
+                user_id,
+            )
+            .await;
+        let failed: Vec<String> = exits
+            .iter()
+            .filter(|e| e["ok"] != json!(true))
+            .map(|e| {
+                if e["unconfirmed"] == json!(true) {
+                    format!("leg {}: sent but not confirmed by the broker; check the order book", e["leg_id"])
+                } else {
+                    format!("leg {}: {}", e["leg_id"], e["error"].as_str().unwrap_or("refused"))
+                }
+            })
+            .collect();
+        self.emit(
+            strategy_id,
+            user_id,
+            "manual_close",
+            &if failed.is_empty() {
+                format!("Operator closed all open positions ({} leg(s)); the strategy keeps running", leg_ids.len())
+            } else {
+                format!("Operator close of open positions: {}", failed.join("; "))
+            },
+            ev(Some(run_id), None, if failed.is_empty() { "info" } else { "critical" }),
+        )
+        .await;
+        StopOutcome {
+            ok: failed.is_empty(),
+            error: (!failed.is_empty()).then(|| format!("Exit refused: {}", failed.join("; "))),
+            exits,
+            run_stopped: Some(false),
+            ..Default::default()
+        }
+    }
+
     /// Close the run row, release the strategy and drop the live state, once,
     /// and only when nothing is managed any more. Peak and trough are written
     /// on every path.

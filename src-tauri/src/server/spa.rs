@@ -54,6 +54,7 @@ pub const SPA_ROUTES: &[&str] = &[
     "/download",
     "/error",
     "/faq",
+    "/about",
     "/gammadensity",
     "/gex",
     "/gocharting",

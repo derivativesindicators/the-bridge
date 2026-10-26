@@ -1,5 +1,6 @@
 import { Github, Monitor } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router'
 import { ExternalAnchor } from '@/components/common/ExternalAnchor'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -42,20 +43,12 @@ export function Footer({ className }: FooterProps) {
               derivativesindicators.com
             </ExternalAnchor>
           </div>
-          <span className="text-center">Based on OpenAlgo (AGPL-3.0)</span>
-          <ExternalAnchor
-            href="https://github.com/marketcalls/openalgo-desktop"
-            className="text-primary hover:underline"
+          <Link
+            to="/about"
+            className="text-xs font-medium text-primary underline underline-offset-2"
           >
-            Upstream
-          </ExternalAnchor>
-          <ExternalAnchor
-            data-rebrand="source"
-            href="https://github.com/derivativesindicators/the-bridge"
-            className="text-primary hover:underline"
-          >
-            Source code
-          </ExternalAnchor>
+            About &amp; licence
+          </Link>
           {version && (
             <>
               <span className="hidden md:inline">|</span>

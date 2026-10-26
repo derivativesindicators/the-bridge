@@ -40,6 +40,11 @@ async fn desk_payload(ctx: &Arc<AppState>, user: &str, mode: RunMode) -> Result<
                 name: s["name"].as_str().unwrap_or("").to_string(),
                 status: s["status"].as_str().unwrap_or("").to_string(),
                 product: s["product"].as_str().unwrap_or("").to_string(),
+                run_mode: s["current_run_id"]
+                    .as_i64()
+                    .and_then(|rid| ctx.strategy.store.get_run(rid).ok().flatten())
+                    .filter(|r| r.stopped_at.is_none())
+                    .map(|r| r.mode),
             })
         })
         .collect();

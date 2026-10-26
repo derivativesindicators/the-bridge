@@ -145,6 +145,7 @@ async fn the_desk_lists_open_positions_of_one_mode_across_strategies() {
             name: row.name.clone(),
             status: row.status.clone(),
             product: row.product.clone(),
+            run_mode: None,
         }]
     };
     let live = t.m.desk(list(), RunMode::Live).await.unwrap();

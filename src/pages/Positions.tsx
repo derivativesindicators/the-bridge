@@ -56,6 +56,7 @@ import { useLivePrice } from '@/hooks/useLivePrice'
 import { useOrderEventRefresh } from '@/hooks/useOrderEventRefresh'
 import { usePageVisibility } from '@/hooks/usePageVisibility'
 import { useSupportedExchanges } from '@/hooks/useSupportedExchanges'
+import { sideTextClass } from '@/lib/sideColor'
 import { cn, makeFormatCurrency, sanitizeCSV } from '@/lib/utils'
 import { useAuthStore } from '@/stores/authStore'
 import { onModeChange } from '@/stores/themeStore'
@@ -999,9 +1000,7 @@ export default function Positions() {
                                     // short. Colouring its 0 red read as a short.
                                     !isOpen
                                       ? 'text-muted-foreground'
-                                      : quantity > 0
-                                        ? 'text-green-600'
-                                        : 'text-red-600'
+                                      : sideTextClass(quantity, position.symbol)
                                   )}
                                 >
                                   {position.quantity}

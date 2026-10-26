@@ -593,3 +593,65 @@ async fn the_page_reads_orders_with_their_run_mode_and_the_api_keeps_the_web_sha
         json!({"live": 0.0, "sandbox": 0.0})
     );
 }
+
+// The Bridge 1.0.11: "Close positions" and "Close all open positions".
+
+#[tokio::test]
+async fn close_positions_on_a_stopped_strategy_is_a_harmless_ok() {
+    let a = app();
+    let (_, b) = a.post("/strategy/api/strategies", create_body()).await;
+    let sid = b["data"]["id"].as_i64().unwrap();
+    let (s, b) = a
+        .post(&format!("/strategy/api/strategies/{}/close_positions", sid), json!({}))
+        .await;
+    assert_eq!(s, StatusCode::OK, "{}", b);
+    assert_eq!(b["closed"], 0);
+    let (s, _) = a
+        .post("/strategy/api/strategies/999999/close_positions", json!({}))
+        .await;
+    assert_eq!(s, StatusCode::NOT_FOUND);
+}
+
+#[tokio::test]
+async fn close_all_squares_off_each_running_strategy_by_its_own_quantity_and_keeps_it() {
+    let a = app();
+    let (_, b) = a.post("/strategy/api/strategies", create_body()).await;
+    let sid = b["data"]["id"].as_i64().unwrap();
+    let (s, b) = a
+        .post(&format!("/strategy/api/strategies/{}/start", sid), json!({"mode": "sandbox"}))
+        .await;
+    assert_eq!(s, StatusCode::OK, "{}", b);
+    let run = b["run_id"].as_i64().unwrap();
+    let m = a.ctx.strategy.clone();
+    assert!(
+        a.until(|| m
+            .state
+            .snapshot(run)
+            .map(|s| s.legs["1"].entry_status == "complete")
+            .unwrap_or(false))
+            .await
+    );
+    let (s, b) = a.post("/strategy/api/desk/close_all", json!({})).await;
+    assert_eq!(s, StatusCode::OK, "{}", b);
+    let results = b["results"].as_array().unwrap();
+    assert_eq!(results.len(), 1, "{}", b);
+    assert_eq!(results[0]["id"], sid);
+    assert_eq!(results[0]["ok"], true, "{}", b);
+    assert_eq!(results[0]["closed"], 1);
+    let store = a.ctx.strategy.store.clone();
+    // The exit is the leg's own fixed quantity, opposite the entry.
+    let (_, orders) = a.get(&format!("/strategy/api/strategies/{}/orders", sid)).await;
+    let rows = orders["data"].as_array().unwrap();
+    assert_eq!(rows.len(), 2);
+    assert_eq!(rows[1]["action"], "BUY");
+    assert_eq!(rows[1]["qty"], rows[0]["qty"]);
+    let ev = store.list_events(sid, None, Some("manual_close"), None, 10).unwrap();
+    assert_eq!(ev.len(), 1);
+    // The strategy is not disabled: its webhook stays unlocked.
+    assert!(!store.get_strategy(sid, USER).unwrap().unwrap().webhook_locked);
+    // Nothing reached the live broker.
+    assert!(!a.mock.calls().iter().any(|c| matches!(
+        c,
+        openalgo_desktop_lib::brokers::mock::MockCall::PlaceOrder(_)
+    )));
+}

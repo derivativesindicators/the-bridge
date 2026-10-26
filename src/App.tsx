@@ -12,6 +12,7 @@ import { useBrokerStore } from '@/stores/brokerStore'
 // Public pages
 const Home = lazy(() => import('@/pages/Home'))
 const Faq = lazy(() => import('@/pages/Faq'))
+const About = lazy(() => import('@/pages/About'))
 const Setup = lazy(() => import('@/pages/Setup'))
 const Login = lazy(() => import('@/pages/Login'))
 const ResetPassword = lazy(() => import('@/pages/ResetPassword'))
@@ -160,6 +161,7 @@ function App() {
               {/* Public routes */}
               <Route path="/" element={<Home />} />
               <Route path="/faq" element={<Faq />} />
+              <Route path="/about" element={<About />} />
               <Route path="/setup" element={<Setup />} />
               <Route path="/login" element={<Login />} />
               <Route path="/reset-password" element={<ResetPassword />} />

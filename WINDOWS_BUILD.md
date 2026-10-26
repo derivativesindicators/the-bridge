@@ -33,7 +33,7 @@ python rebrand.py --repo . --name "The Bridge" --slug the-bridge --app-id com.de
 npm ci
 npx tauri build --bundles nsis
 ```
-The installer is written to `src-tauri\target\release\bundle\nsis\The Bridge_1.0.10_x64-setup.exe`.
+The installer is written to `src-tauri\target\release\bundle\nsis\The Bridge_1.0.11_x64-setup.exe`.
 
 ## 5. Optional
 - **Code signing** (to avoid SmartScreen warnings): buy an OV/EV certificate, put its thumbprint in `bundle.windows.certificateThumbprint` in `src-tauri/tauri.conf.json`, and set `timestampUrl` (e.g. `http://timestamp.digicert.com`).

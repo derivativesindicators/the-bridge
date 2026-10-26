@@ -59,6 +59,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { sideBadgeClass } from '@/lib/sideColor'
 import { cn } from '@/lib/utils'
 import {
   defaultQtyMode,
@@ -1054,7 +1055,11 @@ export function PositionsTab({
                                   ? 'secondary'
                                   : 'outline'
                           }
-                          className="text-xs"
+                          className={`text-xs ${
+                            position.side === 'long' || position.side === 'short'
+                              ? sideBadgeClass(position.side, position.symbol)
+                              : ''
+                          }`}
                         >
                           {position.side ?? 'Unavailable'}
                         </Badge>
@@ -1225,10 +1230,7 @@ function LocalTradeAudit({ orders, loading }: { orders: Order[]; loading: boolea
                     <TableCell className="font-mono">{trade.symbol}</TableCell>
                     <TableCell className="font-mono text-xs">{trade.exchange}</TableCell>
                     <TableCell>
-                      <Badge
-                        variant={trade.action === 'BUY' ? 'default' : 'destructive'}
-                        className="text-xs"
-                      >
+                      <Badge className={`text-xs ${sideBadgeClass(trade.action, trade.symbol)}`}>
                         {trade.action}
                       </Badge>
                     </TableCell>
@@ -2429,8 +2431,7 @@ function HistoryTab({ runs, orders }: { runs: Run[]; orders: Order[] }) {
                         </TableCell>
                         <TableCell>
                           <Badge
-                            variant={trip.side === 'long' ? 'default' : 'destructive'}
-                            className="text-[10px]"
+                            className={`text-[10px] ${sideBadgeClass(trip.side, trip.symbol)}`}
                           >
                             {trip.side}
                           </Badge>
