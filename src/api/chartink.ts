@@ -1,3 +1,4 @@
+import { chartinkWebhookUrl } from '@/lib/webhookUrl'
 import type {
   AddChartinkSymbolRequest,
   ChartinkStrategy,
@@ -121,8 +122,7 @@ export const chartinkApi = {
   /**
    * Get webhook URL for a strategy
    */
-  getWebhookUrl: (webhookId: string): string => {
-    const baseUrl = window.location.origin
-    return `${baseUrl}/chartink/webhook/${webhookId}`
+  getWebhookUrl: (webhookId: string, baseUrl: string = window.location.origin): string => {
+    return chartinkWebhookUrl(baseUrl.replace(/\/+$/, ''), webhookId)
   },
 }

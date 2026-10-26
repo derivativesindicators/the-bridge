@@ -13,6 +13,7 @@ import {
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { chartinkApi } from '@/api/chartink'
+import { LocalWebhookHint } from '@/components/tunnel/WebhookUrlField'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -305,6 +306,7 @@ export default function ViewChartinkStrategy() {
                   )}
                 </Button>
               </div>
+              {hostConfig?.is_localhost && <LocalWebhookHint service="Chartink" />}
             </div>
 
             {/* Setup Instructions */}

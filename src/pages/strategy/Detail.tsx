@@ -36,6 +36,7 @@ import {
   useBrokerBook,
   useStrategyLive,
 } from '@/api/strategy_module'
+import { StrategyWebhookUrlField } from '@/components/tunnel/WebhookUrlField'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -1792,11 +1793,7 @@ function WebhookTab({
         <CardContent className="space-y-4">
           <div className="space-y-1.5">
             <Label>Webhook URL (token redacted)</Label>
-            <Input
-              readOnly
-              value={`${window.location.origin}/strategy/webhook/••••••••••••`}
-              className="font-mono text-xs"
-            />
+            <StrategyWebhookUrlField token="••••••••••••" copyable={false} />
             <p className="text-xs text-muted-foreground">
               Lost the token? Rotate it below; the previous one stops working immediately.
             </p>
@@ -3062,24 +3059,7 @@ export default function StrategyDetail() {
             <div className="space-y-3">
               <div className="space-y-1.5">
                 <Label>New webhook URL</Label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    readOnly
-                    value={`${window.location.origin}/strategy/webhook/${rotatedToken}`}
-                    className="font-mono text-xs"
-                  />
-                  <Button
-                    size="sm"
-                    onClick={() => {
-                      navigator.clipboard.writeText(
-                        `${window.location.origin}/strategy/webhook/${rotatedToken}`
-                      )
-                      showToast.success('Copied URL')
-                    }}
-                  >
-                    Copy
-                  </Button>
-                </div>
+                <StrategyWebhookUrlField token={rotatedToken} />
               </div>
             </div>
           )}

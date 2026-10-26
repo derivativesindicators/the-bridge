@@ -15,6 +15,7 @@ import {
   useOptionStrikes,
   useUnderlyingSearch,
 } from '@/api/strategy_module'
+import { StrategyWebhookUrlField } from '@/components/tunnel/WebhookUrlField'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -29,7 +30,6 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
-import { SignalOptionsCard } from './SignalOptionsCard'
 import { cn } from '@/lib/utils'
 import {
   ATM_OFFSETS,
@@ -73,6 +73,7 @@ import {
   type Segment,
   SIGNAL_LEG_EXCHANGES,
   SIGNAL_MODE_TABS,
+  type SignalOptions,
   STRATEGY_DIRECTION_LABELS,
   STRATEGY_KIND_HINT,
   STRATEGY_KIND_LABELS,
@@ -83,6 +84,9 @@ import {
   type StrategyType,
   type StrategyUpdatePayload,
   segmentSuitsExchange,
+  signalOptionsError,
+  signalOptionsFrom,
+  signalOptionsPayload,
   signalSegmentsForTab,
   TAB_DEFAULT_EXCHANGE,
   TAB_DEFAULT_UNDERLYINGS,
@@ -94,15 +98,12 @@ import {
   UNIVERSE_TAB_LABELS,
   UNIVERSE_TABS,
   type UniverseTab,
-  type SignalOptions,
-  signalOptionsError,
-  signalOptionsFrom,
-  signalOptionsPayload,
   type WebhookMessageRule,
   webhookMessagesError,
   withQtyMode,
 } from '@/types/strategy_module'
 import { showToast } from '@/utils/toast'
+import { SignalOptionsCard } from './SignalOptionsCard'
 
 const SELECT_CLASS_SM = 'flex h-9 w-full rounded-md border border-input bg-background px-2 text-sm'
 const SELECT_CLASS_MD = 'flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm'
@@ -2260,24 +2261,7 @@ export default function StrategyWizard({ editing }: StrategyWizardProps = {}) {
             <div className="space-y-3">
               <div className="space-y-1.5">
                 <Label>Webhook URL</Label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    readOnly
-                    value={`${window.location.origin}/strategy/webhook/${revealedToken.token}`}
-                    className="font-mono text-xs"
-                  />
-                  <Button
-                    size="sm"
-                    onClick={() => {
-                      navigator.clipboard.writeText(
-                        `${window.location.origin}/strategy/webhook/${revealedToken.token}`
-                      )
-                      showToast.success('Copied URL')
-                    }}
-                  >
-                    Copy
-                  </Button>
-                </div>
+                <StrategyWebhookUrlField token={revealedToken.token} />
               </div>
               <div className="space-y-1.5">
                 <Label>TradingView alert message body</Label>

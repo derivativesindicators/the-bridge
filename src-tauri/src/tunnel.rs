@@ -438,6 +438,61 @@ pub fn command_args(s: &TunnelSettings, http_port: u16) -> (Vec<String>, &'stati
     }
 }
 
+/// What one line of the tunnel child's log means for the status card.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum LogLine {
+    /// A real error: shown as the problem on the card.
+    Problem,
+    /// The tunnel is up (ngrok "started tunnel", cloudflared "Registered tunnel connection").
+    Ready,
+    /// Informational or warning noise.
+    Other,
+}
+
+/// Classify a log line by its level, never by words in the message: ngrok
+/// logfmt `lvl=info ... err="..."` lines (e.g. "ignoring default config
+/// path") are harmless; only `lvl=eror|error|crit` are problems. cloudflared
+/// prints `<time> INF|WRN|ERR|FTL ...`; only ERR/FTL are problems. A line
+/// with no recognised level counts as a problem only when it starts with an
+/// error marker (ngrok's fatal `ERROR:` start-up message, panics).
+pub fn classify_line(line: &str) -> LogLine {
+    let low = line.to_ascii_lowercase();
+    let ready = low.contains("started tunnel")
+        || low.contains("registered tunnel connection")
+        || low.contains("url=https://");
+    // ngrok logfmt level
+    if let Some(lvl) = low
+        .split_whitespace()
+        .find_map(|w| w.strip_prefix("lvl="))
+        .map(|v| v.trim_matches('"').to_string())
+    {
+        return match lvl.as_str() {
+            "eror" | "error" | "crit" | "fatal" | "panic" => LogLine::Problem,
+            _ if ready => LogLine::Ready,
+            _ => LogLine::Other,
+        };
+    }
+    // cloudflared: first or second token is the level
+    let words: Vec<&str> = line.split_whitespace().take(2).collect();
+    for w in &words {
+        match *w {
+            "ERR" | "FTL" | "PNC" => return LogLine::Problem,
+            "INF" | "WRN" | "DBG" | "TRC" => {
+                return if ready { LogLine::Ready } else { LogLine::Other };
+            }
+            _ => {}
+        }
+    }
+    if ready {
+        return LogLine::Ready;
+    }
+    let t = low.trim_start();
+    if t.starts_with("error") || t.starts_with("err:") || t.starts_with("fatal") || t.starts_with("panic") {
+        return LogLine::Problem;
+    }
+    LogLine::Other
+}
+
 /// Lines worth showing from the child's log (errors), with anything that
 /// looks like a credential removed.
 pub fn redact_line(line: &str) -> String {
@@ -516,19 +571,26 @@ pub async fn start(ctx: &Arc<AppState>) -> Result<RunState> {
             use tokio::io::AsyncBufReadExt;
             let mut lines = tokio::io::BufReader::new(pipe).lines();
             while let Ok(Some(l)) = lines.next_line().await {
-                let low = l.to_ascii_lowercase();
-                if low.contains("lvl=eror") || low.contains("err=") || low.contains(" err ") || low.contains("error") {
-                    let m = redact_line(&l);
-                    tracing::warn!("Tunnel: {}", m);
-                    let mut r = runner().lock();
-                    if r.state != RunState::Off {
-                        r.state = RunState::Failed { message: m };
+                match classify_line(&l) {
+                    LogLine::Problem => {
+                        let m = redact_line(&l);
+                        tracing::warn!("Tunnel: {}", m);
+                        let mut r = runner().lock();
+                        if r.state != RunState::Off {
+                            r.state = RunState::Failed { message: m };
+                        }
                     }
-                } else if low.contains("started tunnel") || low.contains("registered tunnel connection") || low.contains("url=https://") {
-                    let mut r = runner().lock();
-                    if matches!(r.state, RunState::Starting) {
-                        r.state = RunState::Running;
+                    LogLine::Ready => {
+                        let mut r = runner().lock();
+                        // A connection (re)established after a transient error
+                        // means the tunnel works again while the child lives.
+                        if matches!(r.state, RunState::Starting)
+                            || (matches!(r.state, RunState::Failed { .. }) && r.child.is_some())
+                        {
+                            r.state = RunState::Running;
+                        }
                     }
+                    LogLine::Other => {}
                 }
             }
         });
@@ -669,6 +731,31 @@ mod tests {
         let s = TunnelSettings { provider: Provider::Cloudflare, ..s };
         let (args, env) = command_args(&s, 5050);
         assert_eq!((args.join(" ").as_str(), env), ("tunnel --no-autoupdate run", "TUNNEL_TOKEN"));
+    }
+
+    #[test]
+    fn only_error_levels_are_problems() {
+        let info = r#"t=2026-10-26T09:00:00+0530 lvl=info msg="ignoring default config path" path=C:\Users\me\AppData\Local\ngrok\ngrok.yml err="GetFileAttributesEx C:\Users\me\AppData\Local\ngrok\ngrok.yml: The system cannot find the path specified.""#;
+        assert_eq!(classify_line(info), LogLine::Other);
+        assert_eq!(classify_line(r#"t=1 lvl=warn msg="failed to check for update" err="timeout""#), LogLine::Other);
+        assert_eq!(classify_line(r#"t=1 lvl=eror msg="session closing" err="authentication failed""#), LogLine::Problem);
+        assert_eq!(classify_line(r#"t=1 lvl=crit msg="boom""#), LogLine::Problem);
+        assert_eq!(classify_line(r#"t=1 lvl=info msg="started tunnel" obj=tunnels name=command_line addr=http://127.0.0.1:5001 url=https://x.ngrok-free.dev"#), LogLine::Ready);
+        assert_eq!(classify_line("ERROR:  authentication failed: Usage of ngrok requires a verified account"), LogLine::Problem);
+        // cloudflared
+        assert_eq!(classify_line("2026-10-26T03:30:00Z INF Registered tunnel connection connIndex=0 location=bom01 protocol=quic"), LogLine::Ready);
+        assert_eq!(classify_line("2026-10-26T03:30:00Z WRN Your version 2024.1.0 is outdated error=\"none\""), LogLine::Other);
+        assert_eq!(classify_line("2026-10-26T03:30:00Z INF Initial protocol quic"), LogLine::Other);
+        assert_eq!(classify_line("2026-10-26T03:30:00Z ERR Failed to serve quic connection error=\"timeout\""), LogLine::Problem);
+        assert_eq!(classify_line("2026-10-26T03:30:00Z FTL tunnel token is invalid"), LogLine::Problem);
+    }
+
+    #[test]
+    fn strategy_webhooks_pass_the_tunnel() {
+        assert!(tunnel_path_allowed("/strategy/webhook/oaws_abc"));
+        assert!(tunnel_path_allowed("/chartink/webhook/abc"));
+        assert!(tunnel_path_allowed("/api/v1/placesmartorder"));
+        assert!(!tunnel_path_allowed("/strategy/1"));
     }
 
     #[test]
