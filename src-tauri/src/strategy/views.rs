@@ -46,7 +46,7 @@ fn err(message: impl Into<String>) -> Value {
     json!({"status": "error", "message": message.into()})
 }
 
-fn text(v: &Value) -> String {
+pub(crate) fn text(v: &Value) -> String {
     match v {
         Value::Null => String::new(),
         Value::String(s) => s.trim().to_string(),
@@ -54,11 +54,11 @@ fn text(v: &Value) -> String {
     }
 }
 
-fn number(v: &Value) -> f64 {
+pub(crate) fn number(v: &Value) -> f64 {
     crate::risk::value_to_f64(v).unwrap_or(0.0)
 }
 
-fn rows(v: &Value) -> Vec<Value> {
+pub(crate) fn rows(v: &Value) -> Vec<Value> {
     v.as_array()
         .map(|a| a.iter().filter(|r| r.is_object()).cloned().collect())
         .unwrap_or_default()
@@ -120,7 +120,7 @@ pub fn statistics(orders: &[Value], template: &Value) -> Value {
     )
 }
 
-fn filled_quantity(row: &OrderRow) -> i64 {
+pub(crate) fn filled_quantity(row: &OrderRow) -> i64 {
     match row.filled_qty {
         Some(q) if q > 0 => q,
         None if row.status.eq_ignore_ascii_case("complete")
@@ -137,7 +137,7 @@ fn filled_quantity(row: &OrderRow) -> i64 {
 }
 
 /// Lifetime local residuals, one per durable position owner.
-fn residual_owners<'a>(
+pub(crate) fn residual_owners<'a>(
     orders: impl IntoIterator<Item = &'a OrderRow>,
     product: &str,
 ) -> Vec<Value> {
@@ -228,7 +228,7 @@ fn contract_key(row: &Value, product: &str) -> (String, String, String) {
     )
 }
 
-fn overlay(broker_rows: Vec<Value>, owners: Vec<Value>, product: &str) -> Vec<Value> {
+pub(crate) fn overlay(broker_rows: Vec<Value>, owners: Vec<Value>, product: &str) -> Vec<Value> {
     let mut by_contract: BTreeMap<(String, String, String), Vec<Value>> = BTreeMap::new();
     for o in owners {
         by_contract
@@ -316,7 +316,7 @@ fn view_mode(
 }
 
 /// The orders of `history` placed in `mode` (SM-03).
-fn placed_in(history: &[ModedOrder], mode: RunMode) -> impl Iterator<Item = &OrderRow> {
+pub(crate) fn placed_in(history: &[ModedOrder], mode: RunMode) -> impl Iterator<Item = &OrderRow> {
     history
         .iter()
         .filter(move |o| o.mode == mode.as_str())

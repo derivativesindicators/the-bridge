@@ -96,6 +96,7 @@ pub const SPA_ROUTES: &[&str] = &[
     "/straddle",
     "/straddlepnl",
     "/strategy",
+    "/strategy-positions",
     "/strategy/:strategyId",
     "/strategy/:strategyId/edit",
     "/strategy/new",

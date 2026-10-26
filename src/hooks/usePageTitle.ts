@@ -46,6 +46,7 @@ const PAGE_TITLES: Record<string, string> = {
   // Desktop: /python and /flow titles removed (out of scope).
   '/strategy': 'Strategies',
   '/strategy/new': 'New Strategy',
+  '/strategy-positions': 'Strategy Positions',
   '/chartink': 'Chartink Strategies',
   '/chartink/new': 'New Chartink Strategy',
   '/leverage': 'Leverage',

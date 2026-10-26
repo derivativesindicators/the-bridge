@@ -757,6 +757,9 @@ fn strategy_management() -> Vec<RouteSpec> {
     vec![
         // Strategy module (web blueprints/strategy_module.py)
         r!(GET, "/strategy/api/strategies", User, strategy_module::list),
+        // The Bridge 1.0.10: the Strategy desk.
+        r!(GET, "/strategy/api/desk", User, strategy_module::desk),
+        r!(GET, "/strategy/api/desk/margin", User, strategy_module::desk_margin),
         r!(
             POST,
             "/strategy/api/strategies",

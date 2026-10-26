@@ -43,6 +43,7 @@
 pub mod book;
 pub mod broadcast;
 pub mod checkpoint;
+pub mod desk;
 pub mod dispatch;
 pub mod engine;
 pub mod order_events;

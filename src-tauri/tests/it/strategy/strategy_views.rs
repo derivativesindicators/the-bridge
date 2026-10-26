@@ -129,3 +129,37 @@ fn realized_pnl_is_summed_per_mode_over_every_finalised_run() {
     );
     assert_eq!(detail["id"], json!(sid), "the strategy record is kept");
 }
+
+/// The Bridge 1.0.10: the Strategy desk lists each mode's open positions
+/// across strategies, with MTM from the book's LTP, and only that mode's.
+#[tokio::test]
+async fn the_desk_lists_open_positions_of_one_mode_across_strategies() {
+    use openalgo_desktop_lib::strategy::desk::DeskStrategy;
+    use openalgo_desktop_lib::strategy::dispatch::RunMode;
+    let t = t();
+    let (sid, _sandbox, _live) = sandbox_residual_then_live(&t);
+    let row = t.row(sid);
+    let list = || {
+        vec![DeskStrategy {
+            id: sid,
+            name: row.name.clone(),
+            status: row.status.clone(),
+            product: row.product.clone(),
+        }]
+    };
+    let live = t.m.desk(list(), RunMode::Live).await.unwrap();
+    let s = &live["data"]["strategies"][0];
+    assert_eq!(s["id"], json!(sid));
+    let p = s["positions"].as_array().unwrap();
+    assert_eq!(p.len(), 1, "{:?}", p);
+    assert_eq!(p[0]["symbol"], Y);
+    assert_eq!(p[0]["side"], "long");
+    // (101 - 100) x 65
+    assert_eq!(p[0]["mtm"], json!(65.0));
+    assert_eq!(live["data"]["totals"]["unrealized"], json!(65.0));
+
+    let sandbox = t.m.desk(list(), RunMode::Sandbox).await.unwrap();
+    let p = sandbox["data"]["strategies"][0]["positions"].as_array().unwrap().clone();
+    assert_eq!(p.len(), 1, "{:?}", p);
+    assert_eq!(p[0]["symbol"], X);
+}
