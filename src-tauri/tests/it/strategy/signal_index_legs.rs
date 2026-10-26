@@ -405,3 +405,19 @@ fn bad_message_rules_are_refused() {
         .unwrap_err()
         .contains("webhook_messages"));
 }
+
+#[tokio::test]
+async fn a_side_without_a_leg_names_the_side_in_the_refusal() {
+    let t = t();
+    let (_, token) = t.make_with_token(index_signal(json!([
+        option_leg(1, "long", "B", "CE"),
+        option_leg(2, "long", "B", "PE"),
+    ])));
+    let r = hook(&t, &token, json!({"action": "short_entry"})).await;
+    assert_ne!(r.result, "ok");
+    assert!(
+        r.message.contains("No leg on the Short side for this SELL/short_entry signal"),
+        "{}",
+        r.message
+    );
+}

@@ -92,6 +92,20 @@ fn side_of(action: &str) -> &'static str {
     }
 }
 
+/// The Bridge 1.0.9: the refusal when a signal's side has no leg at all
+/// (e.g. a Long+Short strategy whose legs are all on the Long side).
+pub(crate) fn no_leg_on_side_message(action: &str, side: &str) -> String {
+    let sig = match action {
+        "long_entry" => "BUY/long_entry".to_string(),
+        "short_entry" => "SELL/short_entry".to_string(),
+        a => a.to_string(),
+    };
+    let s = if side == "long" { "Long" } else { "Short" };
+    format!(
+        "No leg on the {s} side for this {sig} signal; edit the strategy and add or move a leg to the {s} side"
+    )
+}
+
 fn position_of(side: &str) -> &'static str {
     if side == "long" {
         "B"
@@ -246,6 +260,9 @@ impl StrategyModule {
                 let targets = resolved_legs(strategy, Some(side));
                 if !targets.is_empty() {
                     return self.handle_resolved(strategy, action, side, targets).await;
+                }
+                if !resolved_legs(strategy, None).is_empty() {
+                    return SignalResult::refuse(no_leg_on_side_message(action, side), None, None);
                 }
             }
             return SignalResult::refuse("No leg matches this signal", None, None);
@@ -606,4 +623,19 @@ fn reject_uncarryable_short(strategy: &StrategyRow, leg: &Value, side: &str) -> 
         "cash cannot be held short overnight, and product {} carries the position. Use MIS for an intraday short.",
         strategy.product.to_ascii_uppercase()
     ))
+}
+
+#[cfg(test)]
+mod no_leg_side_tests {
+    use super::no_leg_on_side_message;
+
+    #[test]
+    fn names_the_side_without_a_leg() {
+        assert_eq!(
+            no_leg_on_side_message("short_entry", "short"),
+            "No leg on the Short side for this SELL/short_entry signal; edit the strategy and add or move a leg to the Short side"
+        );
+        assert!(no_leg_on_side_message("short_exit", "short").contains("short_exit signal"));
+        assert!(no_leg_on_side_message("long_entry", "long").contains("Long side for this BUY/long_entry"));
+    }
 }

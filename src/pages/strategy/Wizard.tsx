@@ -41,6 +41,7 @@ import {
   defaultProductForLegs,
   defaultQtyMode,
   derivativeExchangeFor,
+  directionSidesWithoutLegError,
   EXPIRY_RANK_LABELS,
   type ExpiryRank,
   expiriesFor,
@@ -1488,6 +1489,10 @@ export default function StrategyWizard({ editing }: StrategyWizardProps = {}) {
       if (lockMode === 'lock_and_trail' && (!lockTrailStep || Number(lockTrailStep) <= 0)) {
         return 'Lock-profit: a trail step is required for Lock + Trail'
       }
+    }
+    if (isSignal) {
+      const gap = directionSidesWithoutLegError(direction, legs)
+      if (gap) return gap
     }
     if (schedulerEnabled) {
       if (!schedulerStart) return 'Scheduler: a start time is required'

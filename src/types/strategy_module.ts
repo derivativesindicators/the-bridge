@@ -766,6 +766,42 @@ export const DIRECTION_ACCEPTS: Record<StrategyDirection, LegSide[]> = {
   short_only: ['short', 'both'],
 }
 
+/**
+ * The Bridge 1.0.9: the signal sides a direction listens to that no leg
+ * covers. A Long+Short strategy whose legs are all 'long' rejects every
+ * short_entry/short_exit with "no leg"; this catches it before saving.
+ */
+export function directionSidesWithoutLeg(
+  direction: StrategyDirection,
+  legs: ReadonlyArray<{ side?: LegSide | null }>
+): Array<'long' | 'short'> {
+  const wanted: Array<'long' | 'short'> =
+    direction === 'long_only'
+      ? ['long']
+      : direction === 'short_only'
+        ? ['short']
+        : ['long', 'short']
+  return wanted.filter(
+    (w) => !legs.some((l) => (l.side ?? 'both') === w || (l.side ?? 'both') === 'both')
+  )
+}
+
+export function directionSidesWithoutLegError(
+  direction: StrategyDirection,
+  legs: ReadonlyArray<{ side?: LegSide | null }>
+): string | null {
+  const missing = directionSidesWithoutLeg(direction, legs)
+  if (missing.length === 0) return null
+  const name = (s: string) => (s === 'long' ? 'Long' : 'Short')
+  const dir =
+    direction === 'both' ? 'Long+Short' : direction === 'long_only' ? 'Long only' : 'Short only'
+  return `This ${dir} strategy has no leg on the ${missing.map(name).join(' or ')} side, so ${missing
+    .map((m) => (m === 'long' ? 'BUY/long_entry' : 'SELL/short_entry'))
+    .join(
+      ' and '
+    )} signals would be rejected. Add a leg (or set a leg's side) to ${missing.map(name).join(' and ')}, or change the strategy direction.`
+}
+
 /** Whether a signal leg's segment and exchange describe the same instrument. */
 export function segmentSuitsExchange(segment: Segment, exchange: string | null | undefined) {
   const venue = (exchange ?? '').trim().toUpperCase()
