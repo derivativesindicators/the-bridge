@@ -160,7 +160,10 @@ async fn the_desk_lists_open_positions_of_one_mode_across_strategies() {
     assert_eq!(live["data"]["totals"]["unrealized"], json!(65.0));
 
     let sandbox = t.m.desk(list(), RunMode::Sandbox).await.unwrap();
-    let p = sandbox["data"]["strategies"][0]["positions"].as_array().unwrap().clone();
+    let p = sandbox["data"]["strategies"][0]["positions"]
+        .as_array()
+        .unwrap()
+        .clone();
     assert_eq!(p.len(), 1, "{:?}", p);
     assert_eq!(p[0]["symbol"], X);
 }

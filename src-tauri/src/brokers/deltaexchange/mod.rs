@@ -427,7 +427,8 @@ async fn read_envelope(resp: reqwest::Response, path: &str) -> Result<Envelope> 
             Err(AppError::Broker(if status.is_server_error() {
                 "Delta Exchange's servers are not responding normally. Try again shortly.".into()
             } else {
-                "Delta Exchange sent a response The Bridge could not read. Try again shortly.".into()
+                "Delta Exchange sent a response The Bridge could not read. Try again shortly."
+                    .into()
             }))
         }
     }

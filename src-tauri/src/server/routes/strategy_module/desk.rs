@@ -7,7 +7,11 @@ use crate::server::middleware::User;
 use crate::state::AppState;
 use crate::strategy::desk::{margin_positions, DeskStrategy};
 use crate::strategy::dispatch::RunMode;
-use axum::{extract::{Query, State}, http::StatusCode, response::Response};
+use axum::{
+    extract::{Query, State},
+    http::StatusCode,
+    response::Response,
+};
 use serde_json::{json, Value};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -20,9 +24,8 @@ const MAX_STRATEGY_BASKETS: usize = 20;
 fn mode_of(q: &HashMap<String, String>) -> Result<RunMode, Box<Response>> {
     match q.get("mode").map(String::as_str).unwrap_or("sandbox") {
         "" => Ok(RunMode::Sandbox),
-        m => RunMode::parse(m).ok_or_else(|| {
-            Box::new(err("mode must be sandbox or live", StatusCode::BAD_REQUEST))
-        }),
+        m => RunMode::parse(m)
+            .ok_or_else(|| Box::new(err("mode must be sandbox or live", StatusCode::BAD_REQUEST))),
     }
 }
 
@@ -48,7 +51,9 @@ async fn desk_payload(ctx: &Arc<AppState>, user: &str, mode: RunMode) -> Result<
             })
         })
         .collect();
-    let any_live = listed.iter().any(|s| s["live_enabled"].as_bool() == Some(true) || s["live_enabled"].as_i64() == Some(1));
+    let any_live = listed.iter().any(|s| {
+        s["live_enabled"].as_bool() == Some(true) || s["live_enabled"].as_i64() == Some(1)
+    });
     let mut payload = ctx
         .strategy
         .desk(strategies, mode)
@@ -74,9 +79,14 @@ pub async fn desk(State(ctx): Ctx, User(u): User, Query(q): Q) -> Response {
 async fn margin_of(ctx: &AppState, rows: &[Value]) -> Result<f64, String> {
     let r = crate::services::market_data_service::margin(ctx, rows).await;
     if r.status == 200 && r.body["status"] == "success" {
-        Ok(r.body["data"]["total_margin_required"].as_f64().unwrap_or(0.0))
+        Ok(r.body["data"]["total_margin_required"]
+            .as_f64()
+            .unwrap_or(0.0))
     } else {
-        Err(r.body["message"].as_str().unwrap_or("Margin is not available").to_string())
+        Err(r.body["message"]
+            .as_str()
+            .unwrap_or("Margin is not available")
+            .to_string())
     }
 }
 
@@ -114,14 +124,20 @@ pub async fn desk_margin(State(ctx): Ctx, User(u): User, Query(q): Q) -> Respons
         Ok(p) => p,
         Err(r) => return r,
     };
-    let strategies = payload["data"]["strategies"].as_array().cloned().unwrap_or_default();
+    let strategies = payload["data"]["strategies"]
+        .as_array()
+        .cloned()
+        .unwrap_or_default();
     let all = margin_positions(&unique_open(&strategies));
     let estimate = mode == RunMode::Sandbox;
     if all.is_empty() {
-        return json_response(StatusCode::OK, json!({"status": "success", "data": {
-            "mode": mode.as_str(), "estimate": estimate, "available": true,
-            "combined": 0.0, "sum_of_legs": 0.0, "legs": 0, "per_strategy": {},
-        }}));
+        return json_response(
+            StatusCode::OK,
+            json!({"status": "success", "data": {
+                "mode": mode.as_str(), "estimate": estimate, "available": true,
+                "combined": 0.0, "sum_of_legs": 0.0, "legs": 0, "per_strategy": {},
+            }}),
+        );
     }
     let combined = margin_of(&ctx, &all).await;
     let (combined, message) = match combined {
@@ -148,7 +164,8 @@ pub async fn desk_margin(State(ctx): Ctx, User(u): User, Query(q): Q) -> Respons
             }
         }
         for s in strategies.iter().take(MAX_STRATEGY_BASKETS) {
-            let rows = margin_positions(s["positions"].as_array().map(Vec::as_slice).unwrap_or(&[]));
+            let rows =
+                margin_positions(s["positions"].as_array().map(Vec::as_slice).unwrap_or(&[]));
             if rows.is_empty() {
                 continue;
             }
@@ -157,10 +174,13 @@ pub async fn desk_margin(State(ctx): Ctx, User(u): User, Query(q): Q) -> Respons
             }
         }
     }
-    json_response(StatusCode::OK, json!({"status": "success", "data": {
-        "mode": mode.as_str(), "estimate": estimate,
-        "available": combined.is_some(), "message": message,
-        "combined": combined, "sum_of_legs": sum_of_legs, "legs": all.len(),
-        "per_strategy": per_strategy,
-    }}))
+    json_response(
+        StatusCode::OK,
+        json!({"status": "success", "data": {
+            "mode": mode.as_str(), "estimate": estimate,
+            "available": combined.is_some(), "message": message,
+            "combined": combined, "sum_of_legs": sum_of_legs, "legs": all.len(),
+            "per_strategy": per_strategy,
+        }}),
+    )
 }

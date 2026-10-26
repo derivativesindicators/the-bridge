@@ -416,7 +416,8 @@ async fn a_side_without_a_leg_names_the_side_in_the_refusal() {
     let r = hook(&t, &token, json!({"action": "short_entry"})).await;
     assert_ne!(r.result, "ok");
     assert!(
-        r.message.contains("No leg on the Short side for this SELL/short_entry signal"),
+        r.message
+            .contains("No leg on the Short side for this SELL/short_entry signal"),
         "{}",
         r.message
     );

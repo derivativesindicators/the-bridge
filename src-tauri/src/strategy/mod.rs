@@ -46,6 +46,7 @@ pub mod checkpoint;
 pub mod desk;
 pub mod dispatch;
 pub mod engine;
+pub mod external;
 pub mod order_events;
 pub mod reconcile;
 pub mod recovery;
@@ -269,8 +270,22 @@ impl StrategyModule {
         for (run_id, symbols) in &recovered {
             self.follow_prices(*run_id, symbols).await;
         }
+        // The Bridge 1.0.11: legs the books closed while the app was shut
+        // (expiry settlement, MIS square-off, an outside close) are closed
+        // now, before any exit could be sent for them.
+        for id in self.state.active_run_ids() {
+            self.settle_expired_legs(id).await;
+        }
+        let closed = self.reconcile_positions(dispatch::RunMode::Sandbox).await;
+        if !closed.is_empty() {
+            tracing::info!(
+                "Closed {} strategy leg(s) the sandbox book no longer holds",
+                closed.len()
+            );
+        }
         tick_feed::start(self);
         checkpoint::start(self);
+        external_start(self);
         scheduler::start(self);
         serde_json::json!({
             "recovery": recovered.len(),
@@ -289,4 +304,29 @@ impl StrategyModule {
         while tasks.join_next().await.is_some() {}
         self.feed.release_all().await;
     }
+}
+
+/// The Bridge 1.0.11: every 5 s, the sandbox book reconciled (expiry
+/// settlement and MIS square-off while the app is open) and live legs on
+/// expired contracts settled. Ends on module shutdown.
+fn external_start(module: &Arc<StrategyModule>) {
+    let weak = Arc::downgrade(module);
+    let token = module.shutdown_token();
+    module.spawn(async move {
+        let mut tick = tokio::time::interval(std::time::Duration::from_secs(5));
+        tick.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
+        tick.tick().await;
+        loop {
+            tokio::select! {
+                _ = token.cancelled() => break,
+                _ = tick.tick() => {
+                    let Some(m) = weak.upgrade() else { break };
+                    m.reconcile_positions(dispatch::RunMode::Sandbox).await;
+                    for id in m.state.active_run_ids() {
+                        m.settle_expired_legs(id).await;
+                    }
+                }
+            }
+        }
+    });
 }

@@ -15,19 +15,27 @@
  */
 
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { render, screen, within } from '@/test/test-utils'
+import { fireEvent, render, screen, waitFor, within } from '@/test/test-utils'
 import type { Position } from '@/types/trading'
 
 const mocks = vi.hoisted(() => ({
   getPositions: vi.fn(),
   closePosition: vi.fn(),
+  closeAllPositions: vi.fn(),
+  openLegs: vi.fn(),
+  reconcile: vi.fn(),
+}))
+
+vi.mock('@/api/desk', () => ({
+  fetchOpenStrategyLegs: mocks.openLegs,
+  reconcileStrategyLegs: mocks.reconcile,
 }))
 
 vi.mock('@/api/trading', () => ({
   tradingApi: {
     getPositions: mocks.getPositions,
     closePosition: mocks.closePosition,
-    closeAllPositions: vi.fn(),
+    closeAllPositions: mocks.closeAllPositions,
   },
 }))
 
@@ -35,7 +43,10 @@ vi.mock('@/stores/authStore', () => ({
   useAuthStore: () => ({ apiKey: 'test-api-key', user: { broker: 'zerodha' } }),
 }))
 
-vi.mock('@/stores/themeStore', () => ({ onModeChange: () => () => {} }))
+vi.mock('@/stores/themeStore', () => ({
+  onModeChange: () => () => {},
+  useThemeStore: (sel: (s: { appMode: string }) => unknown) => sel({ appMode: 'analyzer' }),
+}))
 
 // The live-price hook owns the WebSocket. Pass the positions straight through
 // so the table renders exactly what the API returned.
@@ -181,5 +192,60 @@ describe('Positions close button', () => {
     await renderPositions([CLOSED_POSITION])
 
     expect(screen.getByRole('button', { name: /Close All/ })).toBeDisabled()
+  })
+})
+
+describe('Positions close all with running strategies (The Bridge 1.0.11)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    localStorage.clear()
+  })
+
+  it('warns when strategy legs are open and offers Cancel and Close anyway', async () => {
+    mocks.openLegs.mockResolvedValue(2)
+    await renderPositions([OPEN_POSITION])
+    fireEvent.click(screen.getByRole('button', { name: /Close All/ }))
+    const warning = await screen.findByTestId('strategy-legs-warning')
+    expect(warning).toHaveTextContent(
+      "2 positions belong to running strategies; closing them here won't update those strategies. Use Strategy Positions → Close all open positions instead."
+    )
+    expect(mocks.openLegs).toHaveBeenCalledWith('sandbox')
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Close anyway' })).toBeInTheDocument()
+  })
+
+  it('Cancel sends nothing', async () => {
+    mocks.openLegs.mockResolvedValue(1)
+    await renderPositions([OPEN_POSITION])
+    fireEvent.click(screen.getByRole('button', { name: /Close All/ }))
+    await screen.findByTestId('strategy-legs-warning')
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+    expect(mocks.closeAllPositions).not.toHaveBeenCalled()
+  })
+
+  it('Close anyway closes, then reconciles the strategy legs', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    try {
+      mocks.openLegs.mockResolvedValue(1)
+      mocks.closeAllPositions.mockResolvedValue({ status: 'success' })
+      await renderPositions([OPEN_POSITION])
+      fireEvent.click(screen.getByRole('button', { name: /Close All/ }))
+      await screen.findByTestId('strategy-legs-warning')
+      fireEvent.click(screen.getByRole('button', { name: 'Close anyway' }))
+      await waitFor(() => expect(mocks.closeAllPositions).toHaveBeenCalled())
+      vi.advanceTimersByTime(2000)
+      await waitFor(() => expect(mocks.reconcile).toHaveBeenCalledWith('sandbox'))
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('keeps the plain confirm when no strategy holds a position', async () => {
+    mocks.openLegs.mockResolvedValue(0)
+    await renderPositions([OPEN_POSITION])
+    fireEvent.click(screen.getByRole('button', { name: /Close All/ }))
+    await screen.findByText('Close All Positions?')
+    expect(screen.queryByTestId('strategy-legs-warning')).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Close anyway' })).toBeNull()
   })
 })

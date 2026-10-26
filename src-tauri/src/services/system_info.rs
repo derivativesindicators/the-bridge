@@ -560,11 +560,7 @@ const REPORT_SECTIONS: &[Section<'static>] = &[
             ("Memory used (%)", "memory_percent"),
         ],
     ),
-    (
-        "Build",
-        "build",
-        &[("The Bridge", "openalgo_version")],
-    ),
+    ("Build", "build", &[("The Bridge", "openalgo_version")]),
     (
         "Brokers",
         "brokers",

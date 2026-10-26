@@ -174,3 +174,25 @@ export async function closeAllStrategyPositions(): Promise<CloseAllReply> {
     throw new Error(errorBody(e)?.message ?? 'Close all could not run')
   }
 }
+
+/** The Bridge 1.0.11: open strategy legs in one book (0 when unreadable). */
+export async function fetchOpenStrategyLegs(mode: DeskMode): Promise<number> {
+  try {
+    const r = await webClient.get<{ status: string; open_legs?: number }>(
+      '/strategy/api/desk/open_legs',
+      { params: { mode } }
+    )
+    return r.data?.open_legs ?? 0
+  } catch {
+    return 0
+  }
+}
+
+/** Mark strategy legs whose contract is now flat in the book as closed. */
+export async function reconcileStrategyLegs(mode: DeskMode): Promise<void> {
+  try {
+    await webClient.post('/strategy/api/desk/reconcile', { mode })
+  } catch {
+    // Best effort: the sandbox also reconciles on its own every few seconds.
+  }
+}

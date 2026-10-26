@@ -14,7 +14,11 @@ use crate::server::envelope::json_response;
 use crate::server::middleware::User;
 use crate::state::AppState;
 use crate::strategy::store::{EventFields, StrategyRow};
-use axum::{extract::{Path, State}, http::StatusCode, response::Response};
+use axum::{
+    extract::{Path, State},
+    http::StatusCode,
+    response::Response,
+};
 use serde_json::json;
 use serde_json::Value;
 
@@ -24,13 +28,32 @@ pub(super) async fn close_positions_row(ctx: &AppState, user: &str, row: &Strate
         return json!({"id": row.id, "name": row.name, "ok": true, "closed": 0, "exits": [],
             "message": "Not running: no open positions to close"});
     };
-    let mode = ctx.strategy.store.get_run(run_id).ok().flatten().map(|r| r.mode);
+    let mode = ctx
+        .strategy
+        .store
+        .get_run(run_id)
+        .ok()
+        .flatten()
+        .map(|r| r.mode);
     let r = ctx.strategy.close_open_legs(run_id, user).await;
     if !r.ok && r.exits.is_empty() {
         // Refused before any exit (no session, not active): say so in the log.
-        record(ctx, row.id, user, "manual_close",
-            &format!("Close positions refused: {}", r.error.clone().unwrap_or_default()),
-            EventFields { run_id: Some(run_id), severity: Some("warn"), ..Default::default() }).await;
+        record(
+            ctx,
+            row.id,
+            user,
+            "manual_close",
+            &format!(
+                "Close positions refused: {}",
+                r.error.clone().unwrap_or_default()
+            ),
+            EventFields {
+                run_id: Some(run_id),
+                severity: Some("warn"),
+                ..Default::default()
+            },
+        )
+        .await;
     }
     let closed = r.exits.iter().filter(|e| e["ok"] == true).count();
     json!({
@@ -50,7 +73,11 @@ pub async fn close_positions(State(ctx): Ctx, User(u): User, Path(sid): Path<Str
         Err(r) => return *r,
     };
     let result = close_positions_row(&ctx, &u.username, &row).await;
-    let code = if result["ok"] == true { StatusCode::OK } else { StatusCode::CONFLICT };
+    let code = if result["ok"] == true {
+        StatusCode::OK
+    } else {
+        StatusCode::CONFLICT
+    };
     let mut body = json!({"status": if code == StatusCode::OK { "success" } else { "error" }});
     if let (Some(b), Some(r)) = (body.as_object_mut(), result.as_object()) {
         b.extend(r.clone());
@@ -86,12 +113,15 @@ pub async fn desk_close_all(State(ctx): Ctx, User(u): User) -> Response {
         }
     }
     let failed = results.iter().filter(|r| r["ok"] != true).count();
-    json_response(StatusCode::OK, json!({
-        "status": "success",
-        "results": results,
-        "closed_strategies": results.len() - failed,
-        "failed": failed,
-    }))
+    json_response(
+        StatusCode::OK,
+        json!({
+            "status": "success",
+            "results": results,
+            "closed_strategies": results.len() - failed,
+            "failed": failed,
+        }),
+    )
 }
 
 #[cfg(test)]
@@ -107,4 +137,54 @@ mod tests {
         ];
         assert_eq!(close_all_targets(&rows), vec![1, 3]);
     }
+}
+
+fn mode_arg(v: Option<&str>) -> Result<crate::strategy::dispatch::RunMode, Response> {
+    use crate::strategy::dispatch::RunMode;
+    match v.unwrap_or("") {
+        "live" => Ok(RunMode::Live),
+        "sandbox" | "analyze" => Ok(RunMode::Sandbox),
+        _ => Err(super::err(
+            "mode must be sandbox or live",
+            StatusCode::BAD_REQUEST,
+        )),
+    }
+}
+
+/// GET /strategy/api/desk/open_legs?mode=sandbox|live: how many open
+/// strategy legs that book holds (the Positions page warns before an
+/// app-wide close all).
+pub async fn desk_open_legs(
+    State(ctx): Ctx,
+    User(_u): User,
+    axum::extract::Query(q): axum::extract::Query<std::collections::HashMap<String, String>>,
+) -> Response {
+    let mode = match mode_arg(q.get("mode").map(String::as_str)) {
+        Ok(m) => m,
+        Err(r) => return r,
+    };
+    json_response(
+        StatusCode::OK,
+        json!({"status": "success",
+        "mode": mode.as_str(), "open_legs": ctx.strategy.open_leg_count(mode)}),
+    )
+}
+
+/// POST /strategy/api/desk/reconcile `{"mode": "sandbox"|"live"}`: close
+/// the strategy legs whose contract the book no longer holds (after an
+/// app-wide close all), each with an `external_close` event and no order.
+pub async fn desk_reconcile(State(ctx): Ctx, User(_u): User, body: axum::body::Bytes) -> Response {
+    let payload = match super::json_body(&body) {
+        Ok(p) => p,
+        Err(r) => return *r,
+    };
+    let mode = match mode_arg(payload.get("mode").and_then(Value::as_str)) {
+        Ok(m) => m,
+        Err(r) => return r,
+    };
+    let closed = ctx.strategy.reconcile_positions(mode).await;
+    json_response(
+        StatusCode::OK,
+        json!({"status": "success", "mode": mode.as_str(), "closed": closed}),
+    )
 }

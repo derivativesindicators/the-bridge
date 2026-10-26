@@ -306,7 +306,8 @@ pub(crate) fn http_json(status: StatusCode, text: &str) -> Result<Value> {
                 ))
             } else {
                 Err(AppError::Broker(
-                    "Definedge sent a response The Bridge could not read. Try again shortly.".into(),
+                    "Definedge sent a response The Bridge could not read. Try again shortly."
+                        .into(),
                 ))
             }
         }

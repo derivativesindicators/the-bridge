@@ -251,7 +251,9 @@ pub async fn retry_server(
 ) -> Result<ServerStatus> {
     let mut guard = shell.server.lock().await;
     if guard.is_some() {
-        return Err(AppError::Validation("The Bridge is already running.".into()));
+        return Err(AppError::Validation(
+            "The Bridge is already running.".into(),
+        ));
     }
     if let Some(p) = port {
         crate::services::settings_service::save_server(
@@ -829,7 +831,8 @@ mod shell_open_scope_tests {
     /// `open_external` goes through the same scope.
     #[test]
     fn shell_open_scope_admits_real_links() {
-        let conf: serde_json::Value = serde_json::from_str(include_str!("../../tauri.conf.json")).unwrap();
+        let conf: serde_json::Value =
+            serde_json::from_str(include_str!("../../tauri.conf.json")).unwrap();
         let pat = conf["plugins"]["shell"]["open"].as_str().unwrap();
         let re = regex::Regex::new(&format!("^{}$", pat)).unwrap();
         for ok in [
@@ -841,7 +844,11 @@ mod shell_open_scope_tests {
         ] {
             assert!(re.is_match(ok), "{} refused by {}", ok, pat);
         }
-        for bad in ["file:///C:/Windows/system32/calc.exe", "javascript:alert(1)", "https://"] {
+        for bad in [
+            "file:///C:/Windows/system32/calc.exe",
+            "javascript:alert(1)",
+            "https://",
+        ] {
             assert!(!re.is_match(bad), "{} admitted by {}", bad, pat);
         }
     }

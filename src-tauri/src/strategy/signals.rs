@@ -168,7 +168,11 @@ pub(crate) fn resolved_legs(strategy: &StrategyRow, side: Option<&str>) -> Vec<V
 /// A resolved leg's order side as the engine's long/short: a bought
 /// contract is held long, a sold one short, whichever signal fired it.
 pub(crate) fn order_side(leg: &Value) -> &'static str {
-    if leg["position"].as_str().unwrap_or("B").eq_ignore_ascii_case("S") {
+    if leg["position"]
+        .as_str()
+        .unwrap_or("B")
+        .eq_ignore_ascii_case("S")
+    {
         "short"
     } else {
         "long"
@@ -225,6 +229,11 @@ impl StrategyModule {
         symbol: Option<&str>,
         exchange: Option<&str>,
     ) -> SignalResult {
+        // The Bridge 1.0.11: a leg on an expired contract is settled first,
+        // so no exit or flip is ever sent for it.
+        if let Some(rid) = strategy.current_run_id {
+            self.settle_expired_legs(rid).await;
+        }
         if !SIGNAL_ACTIONS.contains(&action) {
             return SignalResult::refuse(
                 format!("Unknown signal action: '{}'", action),
@@ -280,7 +289,9 @@ impl StrategyModule {
                     None,
                 );
             }
-            return self.handle_resolved(strategy, action, side, vec![leg]).await;
+            return self
+                .handle_resolved(strategy, action, side, vec![leg])
+                .await;
         }
         let lid = leg_id_of(&leg).unwrap_or(1);
         let leg_side = leg["side"].as_str().unwrap_or("both").to_ascii_lowercase();
@@ -636,6 +647,7 @@ mod no_leg_side_tests {
             "No leg on the Short side for this SELL/short_entry signal; edit the strategy and add or move a leg to the Short side"
         );
         assert!(no_leg_on_side_message("short_exit", "short").contains("short_exit signal"));
-        assert!(no_leg_on_side_message("long_entry", "long").contains("Long side for this BUY/long_entry"));
+        assert!(no_leg_on_side_message("long_entry", "long")
+            .contains("Long side for this BUY/long_entry"));
     }
 }

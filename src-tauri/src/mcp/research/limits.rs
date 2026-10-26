@@ -271,17 +271,16 @@ pub async fn admit(
     let args = check_limits(tool, a, today)?;
     let a = &args;
     let budget = dispatch::CALLER.try_with(|b| b.clone()).ok();
-    let token =
-        match &budget {
-            Some(b) => match ctx.mcp.enter(&b.key, MAX_PER_TOKEN) {
-                Some(g) => Some(g),
-                None => return Err(busy(
-                    "This AI client already has the most analysis requests The Bridge runs at once. \
+    let token = match &budget {
+        Some(b) => match ctx.mcp.enter(&b.key, MAX_PER_TOKEN) {
+            Some(g) => Some(g),
+            None => return Err(busy(
+                "This AI client already has the most analysis requests The Bridge runs at once. \
 Wait for one to finish and try again.",
-                )),
-            },
-            None => None,
-        };
+            )),
+        },
+        None => None,
+    };
     let slots = ctx.mcp.research_slots();
     let Ok(Ok(slot)) = tokio::time::timeout(SLOT_WAIT, slots.acquire_owned()).await else {
         return Err(busy(

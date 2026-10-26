@@ -656,7 +656,9 @@ fn rebuild_state(
     state.lock_armed = state.lock_floor.is_some();
     state.trail_to_entry_active = cp["trail_to_entry_active"].as_bool().unwrap_or(false);
     state.stopping = stopping;
-    state.day_base = serde_json::from_value(cp["day_base"].clone()).ok().flatten();
+    state.day_base = serde_json::from_value(cp["day_base"].clone())
+        .ok()
+        .flatten();
     Ok(state)
 }
 

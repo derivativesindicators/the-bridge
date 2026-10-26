@@ -665,10 +665,9 @@ impl Runner {
         &self,
         read: impl FnOnce(&Runner) -> T + Send + 'static,
     ) -> crate::error::Result<T> {
-        let me = self
-            .me
-            .upgrade()
-            .ok_or_else(|| crate::error::AppError::Internal("The Bridge is shutting down".into()))?;
+        let me = self.me.upgrade().ok_or_else(|| {
+            crate::error::AppError::Internal("The Bridge is shutting down".into())
+        })?;
         tokio::task::spawn_blocking(move || read(&me))
             .await
             .map_err(|e| crate::error::AppError::Internal(format!("Blocking task failed: {}", e)))

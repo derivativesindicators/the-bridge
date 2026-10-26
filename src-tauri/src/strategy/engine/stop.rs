@@ -452,7 +452,11 @@ impl StrategyModule {
             .with_run(run_id, |r| r.open_legs().iter().map(|l| l.leg_id).collect())
             .unwrap_or_default();
         if leg_ids.is_empty() {
-            return StopOutcome { ok: true, run_stopped: Some(false), ..Default::default() };
+            return StopOutcome {
+                ok: true,
+                run_stopped: Some(false),
+                ..Default::default()
+            };
         }
         if let Err(e) = self.authorised_for(run_id, mode) {
             return StopOutcome::err(e);
@@ -472,9 +476,16 @@ impl StrategyModule {
             .filter(|e| e["ok"] != json!(true))
             .map(|e| {
                 if e["unconfirmed"] == json!(true) {
-                    format!("leg {}: sent but not confirmed by the broker; check the order book", e["leg_id"])
+                    format!(
+                        "leg {}: sent but not confirmed by the broker; check the order book",
+                        e["leg_id"]
+                    )
                 } else {
-                    format!("leg {}: {}", e["leg_id"], e["error"].as_str().unwrap_or("refused"))
+                    format!(
+                        "leg {}: {}",
+                        e["leg_id"],
+                        e["error"].as_str().unwrap_or("refused")
+                    )
                 }
             })
             .collect();
@@ -483,11 +494,22 @@ impl StrategyModule {
             user_id,
             "manual_close",
             &if failed.is_empty() {
-                format!("Operator closed all open positions ({} leg(s)); the strategy keeps running", leg_ids.len())
+                format!(
+                    "Operator closed all open positions ({} leg(s)); the strategy keeps running",
+                    leg_ids.len()
+                )
             } else {
                 format!("Operator close of open positions: {}", failed.join("; "))
             },
-            ev(Some(run_id), None, if failed.is_empty() { "info" } else { "critical" }),
+            ev(
+                Some(run_id),
+                None,
+                if failed.is_empty() {
+                    "info"
+                } else {
+                    "critical"
+                },
+            ),
         )
         .await;
         StopOutcome {

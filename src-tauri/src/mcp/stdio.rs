@@ -45,8 +45,7 @@ impl Default for Waits {
     }
 }
 
-pub const NOT_RUNNING: &str =
-    "The Bridge is not running, so this request could not be sent. \
+pub const NOT_RUNNING: &str = "The Bridge is not running, so this request could not be sent. \
 Open The Bridge, sign in, and try again.";
 pub const BAD_TOKEN: &str =
     "The Bridge did not accept this AI client's token: it was revoked or copied incorrectly. \
@@ -143,10 +142,7 @@ impl Bridge {
                 return Err(Failure::Message(NOT_RUNNING.into()));
             }
             Err(e) => {
-                tracing::warn!(
-                    "The Bridge's answer to an MCP request was lost: {}",
-                    e
-                );
+                tracing::warn!("The Bridge's answer to an MCP request was lost: {}", e);
                 return Err(Failure::Message(ANSWER_LOST.into()));
             }
         };
@@ -521,7 +517,11 @@ mod tests {
                     value,
                     debug
                 );
-                let port = if app_dev { 5500 } else { crate::config::DEFAULT_HTTP_PORT };
+                let port = if app_dev {
+                    5500
+                } else {
+                    crate::config::DEFAULT_HTTP_PORT
+                };
                 assert_eq!(
                     default_url_for(value, debug),
                     format!("http://127.0.0.1:{}", port),

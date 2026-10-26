@@ -396,17 +396,29 @@ fn migrate_legacy_data_dir(new_dir: &std::path::Path) {
         for e in std::fs::read_dir(src)? {
             let e = e?;
             let (s, d) = (e.path(), dst.join(e.file_name()));
-            if e.file_type()?.is_dir() { copy(&s, &d)? } else if e.file_name() != "LOCK" && !e.file_name().to_string_lossy().ends_with(".lock") { std::fs::copy(&s, &d)?; }
+            if e.file_type()?.is_dir() {
+                copy(&s, &d)?
+            } else if e.file_name() != "LOCK" && !e.file_name().to_string_lossy().ends_with(".lock")
+            {
+                std::fs::copy(&s, &d)?;
+            }
         }
         Ok(())
     }
-    if new_dir.exists() { return; }
-    let Some(parent) = new_dir.parent() else { return };
+    if new_dir.exists() {
+        return;
+    }
+    let Some(parent) = new_dir.parent() else {
+        return;
+    };
     let old = parent.join("com.openalgo.desktop");
     if old.is_dir() && old != new_dir {
         match copy(&old, new_dir) {
             Ok(()) => tracing::info!("Copied legacy data folder {:?} to {:?}", old, new_dir),
-            Err(e) => { tracing::error!("Legacy data copy failed: {}", e); let _ = std::fs::remove_dir_all(new_dir); }
+            Err(e) => {
+                tracing::error!("Legacy data copy failed: {}", e);
+                let _ = std::fs::remove_dir_all(new_dir);
+            }
         }
     }
 }

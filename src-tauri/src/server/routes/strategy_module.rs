@@ -31,12 +31,14 @@ use serde_json::{json, Map, Value};
 use std::collections::HashMap;
 use std::sync::Arc;
 
-mod desk;
 mod close;
+mod desk;
 mod history;
 
+pub use close::{
+    close_all_targets, close_positions, desk_close_all, desk_open_legs, desk_reconcile,
+};
 pub use desk::{desk, desk_margin};
-pub use close::{close_all_targets, close_positions, desk_close_all};
 
 pub use history::{
     checkpoints, events, orderbook, orders, positions, runs, tradebook, webhook_events,

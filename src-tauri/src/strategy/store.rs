@@ -40,8 +40,9 @@ mod webhook_audit;
 
 pub use by_mode::ModedOrder;
 pub use management::{
-    migrate_revision, migrate_signal_options, migrate_webhook_messages, ClaimOutcome, StartClaim, ALREADY_RUNNING,
-    CHANGED_WHILE_EDITING, CHANGED_WHILE_STARTING, LIVE_NOT_ENABLED, WEBHOOK_LOCKED,
+    migrate_revision, migrate_signal_options, migrate_webhook_messages, ClaimOutcome, StartClaim,
+    ALREADY_RUNNING, CHANGED_WHILE_EDITING, CHANGED_WHILE_STARTING, LIVE_NOT_ENABLED,
+    WEBHOOK_LOCKED,
 };
 pub use runs::migrate_run_account;
 pub use webhook_audit::WebhookEvent;
@@ -82,6 +83,8 @@ pub const ORDER_KINDS: &[&str] = &[
     "exit_leg_manual",
     "exit_recovery",
     "exit_signal",
+    "exit_external",
+    "exit_auto_squareoff",
 ];
 pub const ORDER_STATUSES: &[&str] = &["pending", "open", "complete", "cancelled", "rejected"];
 pub const TERMINAL_ORDER_STATUSES: &[&str] = &["complete", "cancelled", "rejected"];
@@ -134,6 +137,10 @@ pub const EVENT_KINDS: &[&str] = &[
     "pending_entry_placed",
     "cas_exit",
     "cas_tracking_unavailable",
+    "manual_close",
+    "expiry_settled",
+    "external_close",
+    "auto_squareoff",
 ];
 pub const WEBHOOK_RESULTS: &[&str] = &[
     "ok",

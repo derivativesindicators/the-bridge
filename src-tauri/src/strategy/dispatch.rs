@@ -297,6 +297,25 @@ pub enum Book {
 
 /// Everything the engine needs from the outside world to act on an order.
 /// Production goes through the app's services; tests inject a fake.
+fn contract_matches(r: &Value, symbol: &str, exchange: &str, product: &str) -> bool {
+    let t = |k: &str| r[k].as_str().unwrap_or("").trim().to_ascii_uppercase();
+    t("symbol") == symbol.to_ascii_uppercase()
+        && t("exchange") == exchange.to_ascii_uppercase()
+        && (t("product").is_empty() || t("product") == product.to_ascii_uppercase())
+}
+
+/// The row of one contract in a book's `data`.
+pub fn find_contract<'a>(
+    data: &'a Value,
+    symbol: &str,
+    exchange: &str,
+    product: &str,
+) -> Option<&'a Value> {
+    data.as_array()?
+        .iter()
+        .find(|r| contract_matches(r, symbol, exchange, product))
+}
+
 #[async_trait]
 pub trait OrderGateway: Send + Sync {
     /// Place one order through the run's own pipe.
@@ -323,6 +342,50 @@ pub trait OrderGateway: Send + Sync {
     }
     /// One account book through the run's pipe: the service's own envelope.
     async fn book(&self, mode: RunMode, book: Book) -> Result<Value, Value>;
+    /// The Bridge 1.0.11: the book's net quantity and last price of one
+    /// contract, `Ok(None)` when the book has no row for it, `Err` when the
+    /// book could not be read (never read as "flat"). Default: the
+    /// position book.
+    async fn contract_position(
+        &self,
+        mode: RunMode,
+        symbol: &str,
+        exchange: &str,
+        product: &str,
+    ) -> Result<Option<(i64, Option<f64>)>, String> {
+        let b = self.book(mode, Book::Positions).await.map_err(|e| {
+            e["message"]
+                .as_str()
+                .unwrap_or("book unavailable")
+                .to_string()
+        })?;
+        Ok(
+            find_contract(&b["data"], symbol, exchange, product).map(|r| {
+                let q = crate::risk::value_to_f64(&r["quantity"]).unwrap_or(0.0) as i64;
+                (q, crate::risk::value_to_f64(&r["ltp"]).filter(|p| *p > 0.0))
+            }),
+        )
+    }
+    /// The Bridge 1.0.11: the newest trade of one contract in the book, as
+    /// `(strategy tag, price)`. Default: the trade book.
+    async fn last_trade(
+        &self,
+        mode: RunMode,
+        symbol: &str,
+        exchange: &str,
+        product: &str,
+    ) -> Option<(String, f64)> {
+        let b = self.book(mode, Book::Trades).await.ok()?;
+        let rows = b["data"].as_array()?;
+        rows.iter()
+            .filter(|r| contract_matches(r, symbol, exchange, product))
+            .next_back()
+            .and_then(|r| {
+                let p = crate::risk::value_to_f64(&r["average_price"])
+                    .or_else(|| crate::risk::value_to_f64(&r["price"]))?;
+                Some((r["strategy"].as_str().unwrap_or("").to_string(), p))
+            })
+    }
     /// A last price for the underlying an ATM strike is measured against.
     async fn ltp(&self, symbol: &str, exchange: &str) -> Result<f64, String>;
     /// The Bridge 1.0.8: candles of one contract (the CAS exit's Supertrend
@@ -614,6 +677,43 @@ impl OrderGateway for AppGateway {
         }
     }
 
+    async fn contract_position(
+        &self,
+        mode: RunMode,
+        symbol: &str,
+        exchange: &str,
+        product: &str,
+    ) -> Result<Option<(i64, Option<f64>)>, String> {
+        let Some(ctx) = self.ctx.upgrade() else {
+            return Err("The Bridge is shutting down".into());
+        };
+        if mode == RunMode::Sandbox {
+            // The raw row: the session view hides settled and carried rows.
+            use rust_decimal::prelude::ToPrimitive;
+            return match ctx.sandbox.position_row(symbol, exchange, product).await {
+                Ok(row) => Ok(row.map(|r| {
+                    (
+                        r.quantity,
+                        r.ltp.and_then(|d| d.to_f64()).filter(|p| *p > 0.0),
+                    )
+                })),
+                Err(e) => Err(e.to_string()),
+            };
+        }
+        let b = self.book(mode, Book::Positions).await.map_err(|e| {
+            e["message"]
+                .as_str()
+                .unwrap_or("book unavailable")
+                .to_string()
+        })?;
+        Ok(
+            find_contract(&b["data"], symbol, exchange, product).map(|r| {
+                let q = crate::risk::value_to_f64(&r["quantity"]).unwrap_or(0.0) as i64;
+                (q, crate::risk::value_to_f64(&r["ltp"]).filter(|p| *p > 0.0))
+            }),
+        )
+    }
+
     async fn book(&self, mode: RunMode, book: Book) -> Result<Value, Value> {
         let Some(ctx) = self.ctx.upgrade() else {
             return Err(json!({"status": "error", "message": "The Bridge is shutting down"}));
@@ -738,10 +838,13 @@ impl OrderGateway for AppGateway {
             start: from,
             end: to,
         };
-        h.broker
-            .get_history(&h.auth, &req)
-            .await
-            .map_err(|e| format!("Could not read candles for {}. {}", symbol, e.client_message()))
+        h.broker.get_history(&h.auth, &req).await.map_err(|e| {
+            format!(
+                "Could not read candles for {}. {}",
+                symbol,
+                e.client_message()
+            )
+        })
     }
 
     async fn ltps(&self, keys: &[(String, String)]) -> Result<Vec<Option<f64>>, String> {

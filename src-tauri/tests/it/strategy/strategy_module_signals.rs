@@ -283,7 +283,10 @@ async fn closing_positions_keeps_the_run_and_a_later_close_signal_is_a_noop() {
     let placed = t.gw.placed();
     assert_eq!(placed[1].quantity, placed[0].quantity);
     t.fill_last_exit(run, 1010.0).await;
-    assert!(t.run(run).stopped_at.is_none(), "the strategy keeps running");
+    assert!(
+        t.run(run).stopped_at.is_none(),
+        "the strategy keeps running"
+    );
     assert_eq!(t.leg(run, 1).status, "closed");
     // CLOSE LONG after the close filled: a no-op note, no order.
     let late = signal(&t, &s, "long_exit", 1).await;
@@ -295,7 +298,10 @@ async fn closing_positions_keeps_the_run_and_a_later_close_signal_is_a_noop() {
     assert_eq!(current_run(&t, &s), run);
     assert_eq!(t.gw.actions(), vec!["BUY", "SELL", "BUY"]);
     assert_eq!(t.leg(run, 1).position, "B");
-    let ev = t.m.store.list_events(s.id, None, Some("manual_close"), None, 10).unwrap();
+    let ev =
+        t.m.store
+            .list_events(s.id, None, Some("manual_close"), None, 10)
+            .unwrap();
     assert_eq!(ev.len(), 1);
 }
 
@@ -304,13 +310,23 @@ async fn closing_one_strategy_never_touches_another_on_the_same_contract() {
     // A long and B short on the same contract net to flat at a broker; A's
     // close is A's own quantity only and B's leg stays open.
     let t = t();
-    let a = strategy(&t, json!([signal_leg(1, "RELIANCE", "both")]), json!({"name": "A"}));
-    let b = strategy(&t, json!([signal_leg(1, "RELIANCE", "both")]), json!({"name": "B"}));
+    let a = strategy(
+        &t,
+        json!([signal_leg(1, "RELIANCE", "both")]),
+        json!({"name": "A"}),
+    );
+    let b = strategy(
+        &t,
+        json!([signal_leg(1, "RELIANCE", "both")]),
+        json!({"name": "B"}),
+    );
     signal(&t, &a, "long_entry", 1).await;
     signal(&t, &b, "short_entry", 1).await;
     let (ra, rb) = (current_run(&t, &a), current_run(&t, &b));
-    t.m.apply_fill(ra, 1, Some(1000.0), true, FillOpts::default()).await;
-    t.m.apply_fill(rb, 1, Some(1000.0), true, FillOpts::default()).await;
+    t.m.apply_fill(ra, 1, Some(1000.0), true, FillOpts::default())
+        .await;
+    t.m.apply_fill(rb, 1, Some(1000.0), true, FillOpts::default())
+        .await;
     assert!(t.m.close_open_legs(ra, USER).await.ok);
     assert_eq!(t.gw.actions(), vec!["BUY", "SELL", "SELL"]);
     let placed = t.gw.placed();

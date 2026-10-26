@@ -94,12 +94,20 @@ pub fn clean_hostname(input: &str) -> Option<String> {
         .strip_prefix("https://")
         .or_else(|| s.strip_prefix("http://"))
         .unwrap_or(&s);
-    let host = s.split(['/', '?', '#']).next().unwrap_or("").trim_end_matches('.');
+    let host = s
+        .split(['/', '?', '#'])
+        .next()
+        .unwrap_or("")
+        .trim_end_matches('.');
     let ok = host.contains('.')
         && host.len() <= 253
-        && host
-            .split('.')
-            .all(|l| !l.is_empty() && l.len() <= 63 && l.chars().all(|c| c.is_ascii_alphanumeric() || c == '-') && !l.starts_with('-') && !l.ends_with('-'))
+        && host.split('.').all(|l| {
+            !l.is_empty()
+                && l.len() <= 63
+                && l.chars().all(|c| c.is_ascii_alphanumeric() || c == '-')
+                && !l.starts_with('-')
+                && !l.ends_with('-')
+        })
         && !matches!(host, "localhost")
         && host.parse::<std::net::IpAddr>().is_err();
     ok.then(|| host.to_string())
@@ -156,7 +164,12 @@ fn load_token(ctx: &AppState, provider: Provider) -> Result<crate::security::Sec
 }
 
 /// Save (or replace) the setup. The token is encrypted before it is stored.
-pub fn save(ctx: &AppState, provider: Provider, hostname: &str, token: &str) -> Result<TunnelSettings> {
+pub fn save(
+    ctx: &AppState,
+    provider: Provider,
+    hostname: &str,
+    token: &str,
+) -> Result<TunnelSettings> {
     let (ct, nonce) = ctx.security.encrypt(token, &aad(provider))?;
     let conn = ctx.sqlite.conn()?;
     conn.execute(
@@ -178,7 +191,9 @@ pub fn set_enabled(ctx: &AppState, on: bool) -> Result<()> {
 }
 
 pub fn remove(ctx: &AppState) -> Result<()> {
-    ctx.sqlite.conn()?.execute("DELETE FROM tunnel_settings WHERE id = 1", [])?;
+    ctx.sqlite
+        .conn()?
+        .execute("DELETE FROM tunnel_settings WHERE id = 1", [])?;
     Ok(())
 }
 
@@ -313,7 +328,10 @@ pub fn extract(bytes: &[u8], kind: Archive, name: &str, out: &Path) -> Result<()
                 }
             }
             if !found {
-                return Err(AppError::Internal(format!("{} missing from the download", name)));
+                return Err(AppError::Internal(format!(
+                    "{} missing from the download",
+                    name
+                )));
             }
         }
     }
@@ -346,7 +364,11 @@ impl<R: std::io::Read> TarReader<R> {
             let mut skip = vec![0u8; pad];
             read_full(&mut self.r, &mut skip)?;
             if typ == b'0' || typ == 0 {
-                let full = if prefix.is_empty() { name } else { format!("{}/{}", prefix, name) };
+                let full = if prefix.is_empty() {
+                    name
+                } else {
+                    format!("{}/{}", prefix, name)
+                };
                 return Ok(Some((full, data)));
             }
         }
@@ -478,7 +500,11 @@ pub fn classify_line(line: &str) -> LogLine {
         match *w {
             "ERR" | "FTL" | "PNC" => return LogLine::Problem,
             "INF" | "WRN" | "DBG" | "TRC" => {
-                return if ready { LogLine::Ready } else { LogLine::Other };
+                return if ready {
+                    LogLine::Ready
+                } else {
+                    LogLine::Other
+                };
             }
             _ => {}
         }
@@ -487,7 +513,11 @@ pub fn classify_line(line: &str) -> LogLine {
         return LogLine::Ready;
     }
     let t = low.trim_start();
-    if t.starts_with("error") || t.starts_with("err:") || t.starts_with("fatal") || t.starts_with("panic") {
+    if t.starts_with("error")
+        || t.starts_with("err:")
+        || t.starts_with("fatal")
+        || t.starts_with("panic")
+    {
         return LogLine::Problem;
     }
     LogLine::Other
@@ -499,7 +529,10 @@ pub fn redact_line(line: &str) -> String {
     line.split_whitespace()
         .map(|w| {
             let lw = w.to_ascii_lowercase();
-            if lw.contains("token") || lw.contains("authtoken") || (w.len() >= 32 && !w.contains('/') && !w.contains(':')) {
+            if lw.contains("token")
+                || lw.contains("authtoken")
+                || (w.len() >= 32 && !w.contains('/') && !w.contains(':'))
+            {
                 "[redacted]"
             } else {
                 w
@@ -537,7 +570,9 @@ pub async fn start(ctx: &Arc<AppState>) -> Result<RunState> {
     let bin = match ensure_binary(ctx, s.provider).await {
         Ok(b) => b,
         Err(e) => {
-            set_state(RunState::Failed { message: e.to_string() });
+            set_state(RunState::Failed {
+                message: e.to_string(),
+            });
             return Err(e);
         }
     };
@@ -561,8 +596,14 @@ pub async fn start(ctx: &Arc<AppState>) -> Result<RunState> {
         AppError::Internal(m)
     })?;
     for pipe in [
-        child.stdout.take().map(|p| Box::new(p) as Box<dyn tokio::io::AsyncRead + Send + Unpin>),
-        child.stderr.take().map(|p| Box::new(p) as Box<dyn tokio::io::AsyncRead + Send + Unpin>),
+        child
+            .stdout
+            .take()
+            .map(|p| Box::new(p) as Box<dyn tokio::io::AsyncRead + Send + Unpin>),
+        child
+            .stderr
+            .take()
+            .map(|p| Box::new(p) as Box<dyn tokio::io::AsyncRead + Send + Unpin>),
     ]
     .into_iter()
     .flatten()
@@ -694,9 +735,23 @@ mod tests {
 
     #[test]
     fn hostnames_are_cleaned_and_checked() {
-        assert_eq!(clean_hostname(" https://Abc-12.ngrok-free.dev/ "), Some("abc-12.ngrok-free.dev".into()));
-        assert_eq!(clean_hostname("alerts.example.com/api"), Some("alerts.example.com".into()));
-        for bad in ["", "localhost", "127.0.0.1", "nodot", "-a.example.com", "a..b.com", "has space.com"] {
+        assert_eq!(
+            clean_hostname(" https://Abc-12.ngrok-free.dev/ "),
+            Some("abc-12.ngrok-free.dev".into())
+        );
+        assert_eq!(
+            clean_hostname("alerts.example.com/api"),
+            Some("alerts.example.com".into())
+        );
+        for bad in [
+            "",
+            "localhost",
+            "127.0.0.1",
+            "nodot",
+            "-a.example.com",
+            "a..b.com",
+            "has space.com",
+        ] {
             assert_eq!(clean_hostname(bad), None, "{}", bad);
         }
     }
@@ -704,50 +759,130 @@ mod tests {
     #[test]
     fn tokens_are_taken_from_pasted_commands() {
         let cf = "eyJhIjoiMTIzNDU2Nzg5MCIsInQiOiJhYmMifQ";
-        assert_eq!(clean_token(Provider::Cloudflare, &format!("cloudflared.exe service install {}", cf)).as_deref(), Some(cf));
+        assert_eq!(
+            clean_token(
+                Provider::Cloudflare,
+                &format!("cloudflared.exe service install {}", cf)
+            )
+            .as_deref(),
+            Some(cf)
+        );
         let ng = "2abcDEFghiJKLmnoPQRstuVWX_1234567890abcdefgh";
-        assert_eq!(clean_token(Provider::Ngrok, &format!("ngrok config add-authtoken {}", ng)).as_deref(), Some(ng));
+        assert_eq!(
+            clean_token(
+                Provider::Ngrok,
+                &format!("ngrok config add-authtoken {}", ng)
+            )
+            .as_deref(),
+            Some(ng)
+        );
         assert_eq!(clean_token(Provider::Ngrok, "short"), None);
-        assert_eq!(clean_token(Provider::Ngrok, "two words that are long enough"), None);
+        assert_eq!(
+            clean_token(Provider::Ngrok, "two words that are long enough"),
+            None
+        );
     }
 
     #[test]
     fn tunnel_callers_reach_only_webhook_routes() {
-        for ok in ["/api/v1/placesmartorder", "/api/v1/placeorder", "/api/v1/ping", "/strategy/webhook/abc", "/chartink/webhook/x", "/zerodha/callback"] {
+        for ok in [
+            "/api/v1/placesmartorder",
+            "/api/v1/placeorder",
+            "/api/v1/ping",
+            "/strategy/webhook/abc",
+            "/chartink/webhook/x",
+            "/zerodha/callback",
+        ] {
             assert!(tunnel_path_allowed(ok), "{}", ok);
         }
-        for no in ["/", "/dashboard", "/login", "/auth/login", "/settings/api/server", "/apikey", "/api/websocket/apikey", "/playground/api-key", "/a/b/callback"] {
+        for no in [
+            "/",
+            "/dashboard",
+            "/login",
+            "/auth/login",
+            "/settings/api/server",
+            "/apikey",
+            "/api/websocket/apikey",
+            "/playground/api-key",
+            "/a/b/callback",
+        ] {
             assert!(!tunnel_path_allowed(no), "{}", no);
         }
     }
 
     #[test]
     fn the_token_is_never_an_argument() {
-        let s = TunnelSettings { provider: Provider::Ngrok, hostname: "x.ngrok-free.dev".into(), enabled: true, webhook_only: true };
+        let s = TunnelSettings {
+            provider: Provider::Ngrok,
+            hostname: "x.ngrok-free.dev".into(),
+            enabled: true,
+            webhook_only: true,
+        };
         let (args, env) = command_args(&s, 5050);
         assert_eq!(env, "NGROK_AUTHTOKEN");
         assert!(args.contains(&"https://x.ngrok-free.dev".to_string()));
         assert!(args.contains(&"http://127.0.0.1:5050".to_string()));
-        let s = TunnelSettings { provider: Provider::Cloudflare, ..s };
+        let s = TunnelSettings {
+            provider: Provider::Cloudflare,
+            ..s
+        };
         let (args, env) = command_args(&s, 5050);
-        assert_eq!((args.join(" ").as_str(), env), ("tunnel --no-autoupdate run", "TUNNEL_TOKEN"));
+        assert_eq!(
+            (args.join(" ").as_str(), env),
+            ("tunnel --no-autoupdate run", "TUNNEL_TOKEN")
+        );
     }
 
     #[test]
     fn only_error_levels_are_problems() {
         let info = r#"t=2026-10-26T09:00:00+0530 lvl=info msg="ignoring default config path" path=C:\Users\me\AppData\Local\ngrok\ngrok.yml err="GetFileAttributesEx C:\Users\me\AppData\Local\ngrok\ngrok.yml: The system cannot find the path specified.""#;
         assert_eq!(classify_line(info), LogLine::Other);
-        assert_eq!(classify_line(r#"t=1 lvl=warn msg="failed to check for update" err="timeout""#), LogLine::Other);
-        assert_eq!(classify_line(r#"t=1 lvl=eror msg="session closing" err="authentication failed""#), LogLine::Problem);
-        assert_eq!(classify_line(r#"t=1 lvl=crit msg="boom""#), LogLine::Problem);
-        assert_eq!(classify_line(r#"t=1 lvl=info msg="started tunnel" obj=tunnels name=command_line addr=http://127.0.0.1:5001 url=https://x.ngrok-free.dev"#), LogLine::Ready);
-        assert_eq!(classify_line("ERROR:  authentication failed: Usage of ngrok requires a verified account"), LogLine::Problem);
+        assert_eq!(
+            classify_line(r#"t=1 lvl=warn msg="failed to check for update" err="timeout""#),
+            LogLine::Other
+        );
+        assert_eq!(
+            classify_line(r#"t=1 lvl=eror msg="session closing" err="authentication failed""#),
+            LogLine::Problem
+        );
+        assert_eq!(
+            classify_line(r#"t=1 lvl=crit msg="boom""#),
+            LogLine::Problem
+        );
+        assert_eq!(
+            classify_line(
+                r#"t=1 lvl=info msg="started tunnel" obj=tunnels name=command_line addr=http://127.0.0.1:5001 url=https://x.ngrok-free.dev"#
+            ),
+            LogLine::Ready
+        );
+        assert_eq!(
+            classify_line(
+                "ERROR:  authentication failed: Usage of ngrok requires a verified account"
+            ),
+            LogLine::Problem
+        );
         // cloudflared
         assert_eq!(classify_line("2026-10-26T03:30:00Z INF Registered tunnel connection connIndex=0 location=bom01 protocol=quic"), LogLine::Ready);
-        assert_eq!(classify_line("2026-10-26T03:30:00Z WRN Your version 2024.1.0 is outdated error=\"none\""), LogLine::Other);
-        assert_eq!(classify_line("2026-10-26T03:30:00Z INF Initial protocol quic"), LogLine::Other);
-        assert_eq!(classify_line("2026-10-26T03:30:00Z ERR Failed to serve quic connection error=\"timeout\""), LogLine::Problem);
-        assert_eq!(classify_line("2026-10-26T03:30:00Z FTL tunnel token is invalid"), LogLine::Problem);
+        assert_eq!(
+            classify_line(
+                "2026-10-26T03:30:00Z WRN Your version 2024.1.0 is outdated error=\"none\""
+            ),
+            LogLine::Other
+        );
+        assert_eq!(
+            classify_line("2026-10-26T03:30:00Z INF Initial protocol quic"),
+            LogLine::Other
+        );
+        assert_eq!(
+            classify_line(
+                "2026-10-26T03:30:00Z ERR Failed to serve quic connection error=\"timeout\""
+            ),
+            LogLine::Problem
+        );
+        assert_eq!(
+            classify_line("2026-10-26T03:30:00Z FTL tunnel token is invalid"),
+            LogLine::Problem
+        );
     }
 
     #[test]
@@ -770,7 +905,12 @@ mod tests {
     fn official_sources_only() {
         for p in [Provider::Ngrok, Provider::Cloudflare] {
             if let Some((url, _, _)) = download_source(p) {
-                assert!(url.starts_with("https://bin.equinox.io/") || url.starts_with("https://github.com/cloudflare/cloudflared/releases/"), "{}", url);
+                assert!(
+                    url.starts_with("https://bin.equinox.io/")
+                        || url.starts_with("https://github.com/cloudflare/cloudflared/releases/"),
+                    "{}",
+                    url
+                );
             }
         }
     }
@@ -782,7 +922,8 @@ mod tests {
         let mut buf = std::io::Cursor::new(Vec::new());
         {
             let mut w = zip::ZipWriter::new(&mut buf);
-            w.start_file("ngrok", zip::write::SimpleFileOptions::default()).unwrap();
+            w.start_file("ngrok", zip::write::SimpleFileOptions::default())
+                .unwrap();
             std::io::Write::write_all(&mut w, b"BIN").unwrap();
             w.finish().unwrap();
         }

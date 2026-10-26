@@ -227,7 +227,8 @@ impl AppError {
 
 /// What a sign-in answers when the keys of an earlier build could not be
 /// read from the system keychain to move them into openalgo.db (KEY-01).
-pub const KEYCHAIN_UNAVAILABLE_MESSAGE: &str = "The Bridge needs to read your keys from the system \
+pub const KEYCHAIN_UNAVAILABLE_MESSAGE: &str =
+    "The Bridge needs to read your keys from the system \
 keychain one last time, to move them into its own database, and the keychain is locked or refused \
 access. Choose Allow the keychain once and retry, and allow access when your computer asks: after \
 this The Bridge never uses the keychain again. Or choose Start fresh: your account, settings and \

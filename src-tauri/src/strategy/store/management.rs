@@ -215,9 +215,12 @@ fn check_editable(
 fn column_value(field: &str, value: &Value) -> rusqlite::types::Value {
     match field {
         "entry_time" | "exit_time" => time_col(value).into(),
-        "legs" | "lock_profit" | "scheduler" | "webhook_ip_allowlist" | "webhook_messages" | "signal_options" => {
-            json_col(value).into()
-        }
+        "legs"
+        | "lock_profit"
+        | "scheduler"
+        | "webhook_ip_allowlist"
+        | "webhook_messages"
+        | "signal_options" => json_col(value).into(),
         "overall_sl_mtm" | "overall_target_mtm" | "daily_loss_limit_inr" => num_param(value).into(),
         "trail_sl_to_entry" => i64::from(value.as_bool().unwrap_or(false)).into(),
         _ => value.as_str().map(str::to_string).into(),

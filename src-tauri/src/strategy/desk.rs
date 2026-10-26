@@ -38,7 +38,11 @@ pub fn ist_date(stored_utc: &str) -> Option<NaiveDate> {
     let naive = NaiveDateTime::parse_from_str(t, "%Y-%m-%d %H:%M:%S%.f")
         .or_else(|_| NaiveDateTime::parse_from_str(t, "%Y-%m-%dT%H:%M:%S%.f"))
         .ok()
-        .or_else(|| chrono::DateTime::parse_from_rfc3339(t).ok().map(|d| d.naive_utc()))?;
+        .or_else(|| {
+            chrono::DateTime::parse_from_rfc3339(t)
+                .ok()
+                .map(|d| d.naive_utc())
+        })?;
     Some(
         Utc.from_utc_datetime(&naive)
             .with_timezone(&chrono_tz::Asia::Kolkata)
@@ -66,7 +70,11 @@ pub fn closed_on(history: &[ModedOrder], mode: RunMode, today: NaiveDate) -> Vec
         // (side +1 long / -1 short, qty, price, symbol, entry time)
         let mut open: Vec<(i64, i64, f64)> = Vec::new();
         for o in list {
-            let side = if o.action.eq_ignore_ascii_case("BUY") { 1 } else { -1 };
+            let side = if o.action.eq_ignore_ascii_case("BUY") {
+                1
+            } else {
+                -1
+            };
             let price = fill_price(o).unwrap_or(0.0);
             let mut remaining = filled_quantity(o);
             let mut realized = 0.0;
@@ -111,25 +119,44 @@ impl StrategyModule {
     /// Lots, expiry, strike and instrument type from the master contract.
     fn describe(&self, row: &mut Value) {
         let qty = number(&row["quantity"]) as i64;
-        if let Some(t) = self.symbols.by_symbol(&text(&row["exchange"]), &text(&row["symbol"])) {
+        if let Some(t) = self
+            .symbols
+            .by_symbol(&text(&row["exchange"]), &text(&row["symbol"]))
+        {
             let lot = i64::from(t.lot_size.max(1));
             row["lot_size"] = json!(lot);
             row["lots"] = json!((qty.abs() as f64 / lot as f64 * 100.0).round() / 100.0);
             row["expiry"] = json!(t.expiry);
-            row["strike"] = if t.strike > 0.0 { json!(t.strike) } else { Value::Null };
+            row["strike"] = if t.strike > 0.0 {
+                json!(t.strike)
+            } else {
+                Value::Null
+            };
             row["instrument_type"] = json!(t.instrument_type);
         } else {
             row["lot_size"] = Value::Null;
             row["lots"] = Value::Null;
         }
-        row["side"] = json!(if qty > 0 { "long" } else if qty < 0 { "short" } else { "flat" });
+        row["side"] = json!(if qty > 0 {
+            "long"
+        } else if qty < 0 {
+            "short"
+        } else {
+            "flat"
+        });
     }
 
     /// The desk for `mode`: one book read, every strategy's share of it.
     /// A book the broker could not give is an error envelope; a local read
     /// failure is `Err`.
-    pub async fn desk(&self, strategies: Vec<DeskStrategy>, mode: RunMode) -> Result<Value, AppError> {
-        let today = Utc::now().with_timezone(&chrono_tz::Asia::Kolkata).date_naive();
+    pub async fn desk(
+        &self,
+        strategies: Vec<DeskStrategy>,
+        mode: RunMode,
+    ) -> Result<Value, AppError> {
+        let today = Utc::now()
+            .with_timezone(&chrono_tz::Asia::Kolkata)
+            .date_naive();
         let book = match self.gateway.book(mode, Book::Positions).await {
             Ok(p) => Some(rows(&p["data"])),
             Err(_) => None,
@@ -152,18 +179,23 @@ impl StrategyModule {
         }
         let holders = owner_counts(gathered.iter().map(|g| &g.3));
         let net = {
-            let fills: Vec<&OrderRow> = gathered.iter().flat_map(|g| placed_in(&g.1, mode)).collect();
+            let fills: Vec<&OrderRow> = gathered
+                .iter()
+                .flat_map(|g| placed_in(&g.1, mode))
+                .collect();
             let mut rows = net_positions(&fills, today);
             for r in rows.iter_mut() {
                 self.describe(r);
-                let row = book.as_deref().and_then(|b| b.iter().find(|x| {
-                    text(&x["symbol"]).eq_ignore_ascii_case(&text(&r["symbol"]))
-                        && text(&x["exchange"]).eq_ignore_ascii_case(&text(&r["exchange"]))
-                        && {
-                            let p = text(&x["product"]).to_ascii_uppercase();
-                            p.is_empty() || p == text(&r["product"])
-                        }
-                }));
+                let row = book.as_deref().and_then(|b| {
+                    b.iter().find(|x| {
+                        text(&x["symbol"]).eq_ignore_ascii_case(&text(&r["symbol"]))
+                            && text(&x["exchange"]).eq_ignore_ascii_case(&text(&r["exchange"]))
+                            && {
+                                let p = text(&x["product"]).to_ascii_uppercase();
+                                p.is_empty() || p == text(&r["product"])
+                            }
+                    })
+                });
                 if let Some(x) = row {
                     r["ltp"] = x["ltp"].clone();
                     if mode == RunMode::Live {
@@ -181,7 +213,11 @@ impl StrategyModule {
                     r["unrealized"] = json!(u);
                     r["pnl"] = json!(round2(u + number(&r["realized"])));
                     let avg = number(&r["average_price"]);
-                    r["change_percent"] = if avg > 0.0 { json!(round2((number(&ltp) - avg) / avg * 100.0)) } else { Value::Null };
+                    r["change_percent"] = if avg > 0.0 {
+                        json!(round2((number(&ltp) - avg) / avg * 100.0))
+                    } else {
+                        Value::Null
+                    };
                 }
             }
             rows
@@ -275,10 +311,13 @@ pub fn attribute(
     };
     for mut o in shared {
         let key = contract(&o);
-        if let Some(row) = book.and_then(|b| b.iter().find(|r| {
-            let (s, e, p) = contract(r);
-            (s.as_str(), e.as_str()) == (key.0.as_str(), key.1.as_str()) && (p.is_empty() || p == key.2)
-        })) {
+        if let Some(row) = book.and_then(|b| {
+            b.iter().find(|r| {
+                let (s, e, p) = contract(r);
+                (s.as_str(), e.as_str()) == (key.0.as_str(), key.1.as_str())
+                    && (p.is_empty() || p == key.2)
+            })
+        }) {
             o["ltp"] = row["ltp"].clone();
         }
         o["source"] = json!("local/shared");
@@ -321,12 +360,20 @@ pub fn net_positions(fills: &[&OrderRow], today: NaiveDate) -> Vec<Value> {
         );
         let n = nets.entry(key).or_default();
         let q = filled_quantity(o);
-        let signed = if o.action.eq_ignore_ascii_case("BUY") { q } else { -q };
+        let signed = if o.action.eq_ignore_ascii_case("BUY") {
+            q
+        } else {
+            -q
+        };
         let price = fill_price(o).unwrap_or(0.0);
         let is_today = ist_date(&when(o)) == Some(today);
         if is_today {
             n.traded_today = true;
-            if signed > 0 { n.buy_qty += q } else { n.sell_qty += q }
+            if signed > 0 {
+                n.buy_qty += q
+            } else {
+                n.sell_qty += q
+            }
         }
         let mut realized = 0.0;
         if n.qty == 0 || n.qty.signum() == signed.signum() {
@@ -373,8 +420,12 @@ pub fn margin_positions(positions: &[Value]) -> Vec<Value> {
         if q == 0 {
             continue;
         }
-        *net.entry((text(&p["symbol"]), text(&p["exchange"]), text(&p["product"]).to_ascii_uppercase()))
-            .or_default() += q;
+        *net.entry((
+            text(&p["symbol"]),
+            text(&p["exchange"]),
+            text(&p["product"]).to_ascii_uppercase(),
+        ))
+        .or_default() += q;
     }
     net.into_iter()
         .filter(|(_, q)| *q != 0)
@@ -394,15 +445,37 @@ pub fn margin_positions(positions: &[Value]) -> Vec<Value> {
 mod tests {
     use super::*;
 
-    fn order(id: i64, leg: i64, kind: &str, action: &str, qty: i64, price: f64, at: &str) -> ModedOrder {
+    fn order(
+        id: i64,
+        leg: i64,
+        kind: &str,
+        action: &str,
+        qty: i64,
+        price: f64,
+        at: &str,
+    ) -> ModedOrder {
         ModedOrder {
             order: OrderRow {
-                id, run_id: 1, leg_id: leg, kind: kind.into(), position_ref: None,
-                broker_order_id: Some(format!("b{}", id)), symbol: "NIFTY28OCT2625000CE".into(),
-                exchange: "NFO".into(), action: action.into(), qty, product: Some("NRML".into()),
-                pricetype: "MARKET".into(), price: 0.0, trigger_price: 0.0, status: "complete".into(),
-                placed_at: at.into(), filled_at: Some(at.into()), avg_fill_price: Some(price),
-                filled_qty: Some(qty), reject_reason: None,
+                id,
+                run_id: 1,
+                leg_id: leg,
+                kind: kind.into(),
+                position_ref: None,
+                broker_order_id: Some(format!("b{}", id)),
+                symbol: "NIFTY28OCT2625000CE".into(),
+                exchange: "NFO".into(),
+                action: action.into(),
+                qty,
+                product: Some("NRML".into()),
+                pricetype: "MARKET".into(),
+                price: 0.0,
+                trigger_price: 0.0,
+                status: "complete".into(),
+                placed_at: at.into(),
+                filled_at: Some(at.into()),
+                avg_fill_price: Some(price),
+                filled_qty: Some(qty),
+                reject_reason: None,
             },
             mode: "sandbox".into(),
         }
@@ -410,8 +483,14 @@ mod tests {
 
     #[test]
     fn ist_dates_cross_midnight_utc() {
-        assert_eq!(ist_date("2026-10-25 19:00:00.000000"), NaiveDate::from_ymd_opt(2026, 10, 26));
-        assert_eq!(ist_date("2026-10-26 03:45:00.123456"), NaiveDate::from_ymd_opt(2026, 10, 26));
+        assert_eq!(
+            ist_date("2026-10-25 19:00:00.000000"),
+            NaiveDate::from_ymd_opt(2026, 10, 26)
+        );
+        assert_eq!(
+            ist_date("2026-10-26 03:45:00.123456"),
+            NaiveDate::from_ymd_opt(2026, 10, 26)
+        );
         assert_eq!(ist_date("junk"), None);
     }
 
@@ -419,10 +498,42 @@ mod tests {
     fn closed_today_counts_only_exits_filled_today() {
         let today = NaiveDate::from_ymd_opt(2026, 10, 26).unwrap();
         let h = vec![
-            order(1, 1, "entry", "BUY", 75, 100.0, "2026-10-26 04:00:00.000000"),
-            order(2, 1, "exit_target", "SELL", 75, 120.0, "2026-10-26 05:00:00.000000"),
-            order(3, 2, "entry", "SELL", 75, 50.0, "2026-10-24 04:00:00.000000"),
-            order(4, 2, "exit_sl", "BUY", 75, 60.0, "2026-10-24 05:00:00.000000"),
+            order(
+                1,
+                1,
+                "entry",
+                "BUY",
+                75,
+                100.0,
+                "2026-10-26 04:00:00.000000",
+            ),
+            order(
+                2,
+                1,
+                "exit_target",
+                "SELL",
+                75,
+                120.0,
+                "2026-10-26 05:00:00.000000",
+            ),
+            order(
+                3,
+                2,
+                "entry",
+                "SELL",
+                75,
+                50.0,
+                "2026-10-24 04:00:00.000000",
+            ),
+            order(
+                4,
+                2,
+                "exit_sl",
+                "BUY",
+                75,
+                60.0,
+                "2026-10-24 05:00:00.000000",
+            ),
             order(5, 3, "entry", "BUY", 75, 10.0, "2026-10-26 04:00:00.000000"),
         ];
         let c = closed_on(&h, RunMode::Sandbox, today);
@@ -549,7 +660,10 @@ mod tests {
         assert!(net_positions(&[&a, &b], today()).is_empty());
         // Carried open from an earlier day: listed, no realized today.
         let n = net_positions(&[&a], today());
-        assert_eq!((number(&n[0]["quantity"]), number(&n[0]["realized"])), (75.0, 0.0));
+        assert_eq!(
+            (number(&n[0]["quantity"]), number(&n[0]["realized"])),
+            (75.0, 0.0)
+        );
     }
 
     #[test]
@@ -562,7 +676,13 @@ mod tests {
         ];
         let m = margin_positions(&p);
         assert_eq!(m.len(), 2);
-        assert_eq!((m[0]["action"].as_str(), m[0]["quantity"].as_str()), (Some("BUY"), Some("50")));
-        assert_eq!((m[1]["action"].as_str(), m[1]["quantity"].as_str()), (Some("SELL"), Some("75")));
+        assert_eq!(
+            (m[0]["action"].as_str(), m[0]["quantity"].as_str()),
+            (Some("BUY"), Some("50"))
+        );
+        assert_eq!(
+            (m[1]["action"].as_str(), m[1]["quantity"].as_str()),
+            (Some("SELL"), Some("75"))
+        );
     }
 }

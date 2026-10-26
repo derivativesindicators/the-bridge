@@ -35,9 +35,9 @@ pub mod strategy_module;
 pub mod strategy_portfolio;
 pub mod telegram;
 pub mod traffic;
+pub mod tunnel;
 pub mod update;
 pub mod watchlist;
-pub mod tunnel;
 pub mod websocket_example;
 pub mod webui;
 pub mod whatsapp;
@@ -759,8 +759,30 @@ fn strategy_management() -> Vec<RouteSpec> {
         r!(GET, "/strategy/api/strategies", User, strategy_module::list),
         // The Bridge 1.0.10: the Strategy desk.
         r!(GET, "/strategy/api/desk", User, strategy_module::desk),
-        r!(GET, "/strategy/api/desk/margin", User, strategy_module::desk_margin),
-        r!(POST, "/strategy/api/desk/close_all", User, strategy_module::desk_close_all),
+        r!(
+            GET,
+            "/strategy/api/desk/margin",
+            User,
+            strategy_module::desk_margin
+        ),
+        r!(
+            POST,
+            "/strategy/api/desk/close_all",
+            User,
+            strategy_module::desk_close_all
+        ),
+        r!(
+            GET,
+            "/strategy/api/desk/open_legs",
+            User,
+            strategy_module::desk_open_legs
+        ),
+        r!(
+            POST,
+            "/strategy/api/desk/reconcile",
+            User,
+            strategy_module::desk_reconcile
+        ),
         r!(
             POST,
             "/strategy/api/strategies",

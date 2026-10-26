@@ -64,6 +64,9 @@ impl StrategyModule {
         mode: RunMode,
         user_id: &str,
     ) -> Vec<Value> {
+        // The Bridge 1.0.11: never an exit order for an expired contract;
+        // such a leg is closed at its settlement instead (`external.rs`).
+        self.settle_expired_legs(run_id).await;
         // Claimed and classified in ONE hold of the run lock.
         let (live, unfilled) = self.state.claim_legs_for_exit(run_id, leg_ids, kind, scope);
         let targets = self.exit_targets(run_id, leg_ids, live);

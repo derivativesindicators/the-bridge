@@ -15,6 +15,7 @@ import {
   X,
 } from 'lucide-react'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { fetchOpenStrategyLegs, reconcileStrategyLegs } from '@/api/desk'
 import { tradingApi } from '@/api/trading'
 import { ChartSymbolLink } from '@/components/trading/ChartSymbolLink'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -59,7 +60,7 @@ import { useSupportedExchanges } from '@/hooks/useSupportedExchanges'
 import { sideTextClass } from '@/lib/sideColor'
 import { cn, makeFormatCurrency, sanitizeCSV } from '@/lib/utils'
 import { useAuthStore } from '@/stores/authStore'
-import { onModeChange } from '@/stores/themeStore'
+import { onModeChange, useThemeStore } from '@/stores/themeStore'
 import type { Position } from '@/types/trading'
 import { showToast } from '@/utils/toast'
 
@@ -460,12 +461,20 @@ export default function Positions() {
     }
   }
 
+  const appMode = useThemeStore((st) => st.appMode)
+  const deskMode = appMode === 'analyzer' ? 'sandbox' : 'live'
+  const [strategyLegs, setStrategyLegs] = useState(0)
+
   const handleCloseAllPositions = async () => {
     try {
       const response = await tradingApi.closeAllPositions()
       if (response.status === 'success') {
         // Toast handled by close_position_event socket
         fetchPositions(true)
+        if (strategyLegs > 0) {
+          // Legs whose contract is now flat are marked closed (external_close).
+          setTimeout(() => void reconcileStrategyLegs(deskMode), 1500)
+        }
       } else {
         showToast.error(response.message || 'Failed to close all positions', 'positions')
       }
@@ -755,7 +764,14 @@ export default function Positions() {
             Export
           </Button>
 
-          <AlertDialog>
+          <AlertDialog
+            onOpenChange={(open) => {
+              if (open) {
+                setStrategyLegs(0)
+                void fetchOpenStrategyLegs(deskMode).then(setStrategyLegs)
+              }
+            }}
+          >
             <AlertDialogTrigger asChild>
               <Button variant="destructive" size="sm" disabled={stats.total === 0}>
                 <X className="h-4 w-4 mr-2" />
@@ -769,10 +785,21 @@ export default function Positions() {
                   This will close all {stats.total} open positions at market price. This action
                   cannot be undone.
                 </AlertDialogDescription>
+                {strategyLegs > 0 && (
+                  <Alert variant="destructive" data-testid="strategy-legs-warning">
+                    <AlertDescription>
+                      {strategyLegs} {strategyLegs === 1 ? 'position belongs' : 'positions belong'}{' '}
+                      to running strategies; closing them here won't update those strategies. Use
+                      Strategy Positions → Close all open positions instead.
+                    </AlertDescription>
+                  </Alert>
+                )}
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={handleCloseAllPositions}>Close All</AlertDialogAction>
+                <AlertDialogAction onClick={handleCloseAllPositions}>
+                  {strategyLegs > 0 ? 'Close anyway' : 'Close All'}
+                </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
