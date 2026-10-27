@@ -20,13 +20,33 @@ use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, Weak};
 use tokio::sync::{broadcast, mpsc};
 
-/// The symbol master as the engine's instrument source.
-pub struct MasterSymbols(pub SymbolResolver);
+/// The symbol master as the engine's instrument source. The Bridge 1.0.12:
+/// with the stored master (`symtoken`) as a fallback, because the in-memory
+/// master is dropped when the broker session ends (the 03:00 IST daily
+/// boundary) and only reloaded at the next sign-in; until then every sandbox
+/// order, including the exit of a carried position on its expiry day, was
+/// refused as "Symbol ... not found".
+pub struct MasterSymbols(pub SymbolResolver, pub Option<Arc<crate::db::sqlite::SqliteDb>>);
+
+impl MasterSymbols {
+    fn stored(&self, symbol: &str, exchange: &str) -> Option<SymbolMeta> {
+        let db = self.1.as_ref()?;
+        let conn = db.conn().ok()?;
+        let r = crate::db::sqlite::symbol::find_symbol(&conn, exchange, symbol)
+            .ok()
+            .flatten()?;
+        Some(SymbolMeta {
+            lotsize: i64::from(r.lot_size.max(1)),
+            contract_value: Decimal::ONE,
+            expiry: parse_oa_expiry(&r.expiry),
+        })
+    }
+}
 
 impl SymbolSource for MasterSymbols {
     fn lookup(&self, symbol: &str, exchange: &str) -> Option<SymbolMeta> {
         let g = self.0.snapshot();
-        g.by_symbol(exchange, symbol).map(|r| SymbolMeta {
+        let hit = g.by_symbol(exchange, symbol).map(|r| SymbolMeta {
             lotsize: i64::from(r.lot_size.max(1)),
             // Crypto masters carry a multiplier (0.001 BTC per BTCUSD
             // contract); everything else is 1.
@@ -36,7 +56,8 @@ impl SymbolSource for MasterSymbols {
                 .filter(|v| *v > Decimal::ZERO)
                 .unwrap_or(Decimal::ONE),
             expiry: parse_oa_expiry(&r.expiry),
-        })
+        });
+        hit.or_else(|| self.stored(symbol, exchange))
     }
 }
 
@@ -318,7 +339,7 @@ mod tests {
     fn master_symbols_give_lot_and_expiry() {
         let r = SymbolResolver::new();
         r.load(vec![row("NIFTY27OCT26FUT", "NFO", 65, "27-OCT-26")]);
-        let m = MasterSymbols(r);
+        let m = MasterSymbols(r, None);
         let meta = m.lookup("NIFTY27OCT26FUT", "NFO").unwrap();
         assert_eq!(meta.lotsize, 65);
         assert_eq!(meta.expiry, chrono::NaiveDate::from_ymd_opt(2026, 10, 27));

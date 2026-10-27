@@ -21,6 +21,8 @@ export interface DeskPosition {
   expiry?: string
   strike?: number | null
   instrument_type?: string
+  /** 1.0.12: when this position was entered (stored UTC). */
+  entry_time?: string | null
 }
 
 export interface DeskTrip {
@@ -32,6 +34,7 @@ export interface DeskTrip {
   qty: number
   entry_price: number
   exit_price: number
+  entry_time?: string | null
   exit_time: string
   exit_kind: string
   pnl: number
@@ -69,6 +72,9 @@ export interface NetPosition {
   instrument_type?: string
   broker_quantity?: number
   mismatch?: boolean
+  /** 1.0.12: when the current net position opened / was last reduced today. */
+  entry_time?: string | null
+  exit_time?: string | null
 }
 
 export interface DeskData {

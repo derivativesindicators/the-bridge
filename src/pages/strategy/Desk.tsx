@@ -45,6 +45,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { istStamp } from '@/lib/istStamp'
 import { sideBadgeClass, sideTextClass } from '@/lib/sideColor'
 
 const inr = (v: number | null | undefined) =>
@@ -53,6 +54,33 @@ const inr = (v: number | null | undefined) =>
     : v.toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 })
 const price = (v: number | null | undefined) =>
   v == null || !Number.isFinite(v) ? '—' : v.toFixed(2)
+/** 1.0.12: a price with its fill time (IST) under it. */
+function PriceAt({
+  value,
+  at,
+  label,
+}: {
+  value: number | null | undefined
+  at?: string | null
+  label: string
+}) {
+  const when = istStamp(at)
+  return (
+    <>
+      <div>{price(value)}</div>
+      {when && (
+        <div
+          className="text-[10px] text-muted-foreground"
+          title={`${label} time`}
+          data-testid={`${label.toLowerCase()}-time`}
+        >
+          {when}
+        </div>
+      )}
+    </>
+  )
+}
+
 const pnlClass = (v: number | null | undefined) =>
   v == null ? '' : v > 0 ? 'text-green-600' : v < 0 ? 'text-red-600' : ''
 
@@ -301,7 +329,9 @@ function StrategyGroup({
           </TableCell>
           <TableCell className="text-right font-mono">{lotsText(p)}</TableCell>
           <TableCell className="text-xs">{p.product}</TableCell>
-          <TableCell className="text-right font-mono">{price(p.average_price)}</TableCell>
+          <TableCell className="text-right font-mono">
+            <PriceAt value={p.average_price} at={p.entry_time} label="Entry" />
+          </TableCell>
           <TableCell className="text-right font-mono">{price(p.ltp)}</TableCell>
           <TableCell />
           <TableCell className={`text-right font-mono ${pnlClass(p.mtm)}`}>{inr(p.mtm)}</TableCell>
@@ -365,7 +395,13 @@ export function NetPositionsTable({ rows, total }: { rows: NetPosition[]; total:
                 >
                   {r.quantity > 0 ? `+${r.quantity}` : r.quantity}
                 </TableCell>
-                <TableCell className="text-right font-mono">{price(r.average_price)}</TableCell>
+                <TableCell className="text-right font-mono">
+                  {flat ? (
+                    <PriceAt value={r.average_price} at={r.exit_time} label="Exit" />
+                  ) : (
+                    <PriceAt value={r.average_price} at={r.entry_time} label="Entry" />
+                  )}
+                </TableCell>
                 <TableCell className="text-right font-mono">{price(r.ltp)}</TableCell>
                 <TableCell className={`text-right font-mono ${pnlClass(r.pnl)}`}>
                   {inr(r.pnl)}
@@ -667,10 +703,10 @@ export default function StrategyDesk() {
                             </TableCell>
                             <TableCell className="text-right font-mono">{t.qty}</TableCell>
                             <TableCell className="text-right font-mono">
-                              {price(t.entry_price)}
+                              <PriceAt value={t.entry_price} at={t.entry_time} label="Entry" />
                             </TableCell>
                             <TableCell className="text-right font-mono">
-                              {price(t.exit_price)}
+                              <PriceAt value={t.exit_price} at={t.exit_time} label="Exit" />
                             </TableCell>
                             <TableCell className="text-xs">{t.exit_kind}</TableCell>
                             <TableCell className={`text-right font-mono ${pnlClass(t.pnl)}`}>

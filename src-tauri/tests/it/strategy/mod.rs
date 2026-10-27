@@ -24,6 +24,7 @@ mod order_facts;
 mod risk_vectors;
 mod signal_index_legs;
 mod signal_options_it;
+mod v1012_regressions;
 mod strategy_book;
 mod strategy_module_api;
 mod strategy_module_broadcast;

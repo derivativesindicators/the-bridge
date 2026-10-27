@@ -68,7 +68,7 @@ pub fn closed_on(history: &[ModedOrder], mode: RunMode, today: NaiveDate) -> Vec
         let when = |o: &OrderRow| o.filled_at.clone().unwrap_or_else(|| o.placed_at.clone());
         list.sort_by(|a, b| (when(a), a.id).cmp(&(when(b), b.id)));
         // (side +1 long / -1 short, qty, price, symbol, entry time)
-        let mut open: Vec<(i64, i64, f64)> = Vec::new();
+        let mut open: Vec<(i64, i64, f64, String)> = Vec::new();
         for o in list {
             let side = if o.action.eq_ignore_ascii_case("BUY") {
                 1
@@ -81,7 +81,11 @@ pub fn closed_on(history: &[ModedOrder], mode: RunMode, today: NaiveDate) -> Vec
             let mut matched_total = 0;
             let mut entry_value = 0.0;
             let mut lot_side = 0;
+            let mut entry_time: Option<String> = None;
             while remaining > 0 && !open.is_empty() && open[0].0 != side {
+                if entry_time.is_none() {
+                    entry_time = Some(open[0].3.clone());
+                }
                 let m = remaining.min(open[0].1);
                 realized += (price - open[0].2) * m as f64 * open[0].0 as f64;
                 entry_value += open[0].2 * m as f64;
@@ -94,7 +98,7 @@ pub fn closed_on(history: &[ModedOrder], mode: RunMode, today: NaiveDate) -> Vec
                 }
             }
             if remaining > 0 {
-                open.push((side, remaining, price));
+                open.push((side, remaining, price, when(o)));
             }
             if matched_total > 0 && ist_date(&when(o)) == Some(today) {
                 trips.push(json!({
@@ -104,6 +108,7 @@ pub fn closed_on(history: &[ModedOrder], mode: RunMode, today: NaiveDate) -> Vec
                     "qty": matched_total,
                     "entry_price": round2(entry_value / matched_total as f64),
                     "exit_price": price,
+                    "entry_time": entry_time,
                     "exit_time": when(o),
                     "exit_kind": o.kind,
                     "pnl": round2(realized),
@@ -230,6 +235,7 @@ impl StrategyModule {
             positions.retain(|r| number(&r["quantity"]) != 0.0);
             for p in positions.iter_mut() {
                 self.describe(p);
+                p["entry_time"] = json!(open_entry_time(&history, mode, p));
                 // Mark-to-market of the open quantity from the book's LTP.
                 let (q, avg, ltp) = (number(&p["quantity"]), &p["average_price"], &p["ltp"]);
                 if !avg.is_null() && !ltp.is_null() {
@@ -263,6 +269,30 @@ impl StrategyModule {
             "totals": {"realized": round2(t_real), "unrealized": round2(t_unreal), "total": round2(t_real + t_unreal)},
         }}))
     }
+}
+
+/// The Bridge 1.0.12: when an open position was entered, the latest fill
+/// on its side for its run, leg and contract (`None` when unknown, e.g. a
+/// row with no owning leg).
+pub fn open_entry_time(history: &[ModedOrder], mode: RunMode, p: &Value) -> Option<String> {
+    let run = p["run_id"].as_i64()?;
+    let leg = p["leg_id"].as_i64()?;
+    let q = number(&p["quantity"]);
+    if q == 0.0 {
+        return None;
+    }
+    let want = if q > 0.0 { "BUY" } else { "SELL" };
+    let sym = text(&p["symbol"]);
+    placed_in(history, mode)
+        .filter(|o| {
+            o.run_id == run
+                && o.leg_id == leg
+                && o.symbol.eq_ignore_ascii_case(&sym)
+                && o.action.eq_ignore_ascii_case(want)
+                && filled_quantity(o) > 0
+        })
+        .map(|o| o.filled_at.clone().unwrap_or_else(|| o.placed_at.clone()))
+        .max()
 }
 
 fn contract(row: &Value) -> (String, String, String) {
@@ -343,6 +373,10 @@ pub fn net_positions(fills: &[&OrderRow], today: NaiveDate) -> Vec<Value> {
         traded_today: bool,
         buy_qty: i64,
         sell_qty: i64,
+        /// When the current net position was opened (1.0.12).
+        opened_at: Option<String>,
+        /// The last fill that reduced it today (1.0.12).
+        reduced_at: Option<String>,
     }
     let mut list: Vec<&OrderRow> = fills
         .iter()
@@ -377,6 +411,9 @@ pub fn net_positions(fills: &[&OrderRow], today: NaiveDate) -> Vec<Value> {
         }
         let mut realized = 0.0;
         if n.qty == 0 || n.qty.signum() == signed.signum() {
+            if n.qty == 0 {
+                n.opened_at = Some(when(o));
+            }
             let total = n.qty + signed;
             n.avg = (n.avg * n.qty.abs() as f64 + price * signed.abs() as f64) / total.abs() as f64;
             n.qty = total;
@@ -384,10 +421,14 @@ pub fn net_positions(fills: &[&OrderRow], today: NaiveDate) -> Vec<Value> {
             let closing = signed.abs().min(n.qty.abs());
             realized = (price - n.avg) * closing as f64 * n.qty.signum() as f64;
             let total = n.qty + signed;
+            if is_today {
+                n.reduced_at = Some(when(o));
+            }
             if total == 0 {
                 n.avg = 0.0;
             } else if total.signum() != n.qty.signum() {
                 n.avg = price;
+                n.opened_at = Some(when(o));
             }
             n.qty = total;
         }
@@ -405,6 +446,7 @@ pub fn net_positions(fills: &[&OrderRow], today: NaiveDate) -> Vec<Value> {
                 "average_price": if n.qty != 0 { json!(round2(n.avg * 10000.0) / 10000.0) } else { Value::Null },
                 "realized": round2(n.realized_today),
                 "buy_quantity": n.buy_qty, "sell_quantity": n.sell_qty,
+                "entry_time": n.opened_at, "exit_time": n.reduced_at,
                 "ltp": Value::Null, "unrealized": Value::Null, "pnl": round2(n.realized_today),
             })
         })
@@ -540,6 +582,8 @@ mod tests {
         assert_eq!(c.len(), 1);
         assert_eq!(c[0]["pnl"], json!(1500.0));
         assert_eq!(c[0]["side"], "long");
+        assert!(c[0]["entry_time"].is_string(), "1.0.12: the trip carries its entry time");
+        assert!(c[0]["entry_time"].as_str() < c[0]["exit_time"].as_str());
         // Live view sees none of the sandbox orders.
         assert!(closed_on(&h, RunMode::Live, today).is_empty());
     }
@@ -628,6 +672,9 @@ mod tests {
         assert_eq!(number(&n[0]["quantity"]), 0.0);
         assert!(n[0]["average_price"].is_null());
         assert_eq!(number(&n[0]["realized"]), 750.0);
+        // 1.0.12: when it was opened and when it was closed.
+        assert_eq!(n[0]["entry_time"], "2026-10-26 04:01:00");
+        assert_eq!(n[0]["exit_time"], "2026-10-26 04:02:00");
     }
 
     #[test]

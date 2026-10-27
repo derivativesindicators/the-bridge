@@ -59,6 +59,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { istStamp } from '@/lib/istStamp'
 import { sideBadgeClass } from '@/lib/sideColor'
 import { cn } from '@/lib/utils'
 import {
@@ -523,7 +524,26 @@ function LiveTab({
                         )}
                       </TableCell>
                       <TableCell className="text-right font-mono">
-                        {formatPrice(legLive?.entry_avg)}
+                        {formatPrice(legLive?.entry_avg ?? entry?.avg_fill_price)}
+                        {entry &&
+                          entry.status !== 'rejected' &&
+                          istStamp(entry.filled_at ?? entry.placed_at) && (
+                            <div
+                              className="text-[10px] text-muted-foreground"
+                              data-testid="leg-entry-time"
+                            >
+                              {istStamp(entry.filled_at ?? entry.placed_at)}
+                            </div>
+                          )}
+                        {exit && istStamp(exit.filled_at ?? exit.placed_at) && (
+                          <div
+                            className="text-[10px] text-muted-foreground"
+                            data-testid="leg-exit-time"
+                          >
+                            Exit {formatPrice(exit.avg_fill_price)} ·{' '}
+                            {istStamp(exit.filled_at ?? exit.placed_at)}
+                          </div>
+                        )}
                       </TableCell>
                       <TableCell className="text-right font-mono">
                         {formatPrice(legLive?.ltp)}

@@ -294,6 +294,7 @@ impl Parts<'_> {
             crate::sandbox::SandboxDeps {
                 symbols: Arc::new(crate::services::sandbox_feed::MasterSymbols(
                     self.symbols.clone(),
+                    Some(self.stores.sqlite.clone()),
                 )),
                 quotes: Arc::new(crate::services::sandbox_feed::LiveQuotes::new(me.clone())),
                 clock: self.opts.clock.clone(),

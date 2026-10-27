@@ -272,4 +272,28 @@ describe('1.0.11 Net positions view', () => {
     expect(rows.map((r) => r.textContent).join(' ')).not.toMatch(/sandbox|paper/i)
     localStorage.removeItem('bridge.strategyPositions.view')
   })
+  it('1.0.12: shows entry and exit times in IST beside the prices, with the date for a carry', async () => {
+    localStorage.clear()
+    const nowUtc = new Date(Date.now() - 60_000).toISOString().replace('T', ' ').replace('Z', '')
+    const s0 = desk.strategies[0]
+    fetchDesk.mockResolvedValue({
+      ...desk,
+      strategies: [
+        {
+          ...s0,
+          positions: [{ ...s0.positions[0], entry_time: '2020-10-26 08:15:14.004171' }],
+          closed_today: [
+            { ...s0.closed_today[0], entry_time: '2020-10-26 08:15:14', exit_time: nowUtc },
+          ],
+        },
+      ],
+    })
+    view()
+    expect(await screen.findByText('NIFTY28OCT2625000CE')).toBeTruthy()
+    const entries = screen.getAllByTestId('entry-time').map((e) => e.textContent)
+    expect(entries).toEqual(['26 Oct 13:45:14 IST', '26 Oct 13:45:14 IST'])
+    const exit = screen.getByTestId('exit-time').textContent ?? ''
+    expect(exit).toMatch(/^\d{2}:\d{2}:\d{2} IST$/)
+    expect(screen.getByRole('switch', { name: 'Live' })).toBeTruthy()
+  })
 })

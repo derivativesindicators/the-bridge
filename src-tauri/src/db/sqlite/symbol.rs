@@ -312,6 +312,26 @@ pub fn load_by_instrument_type(conn: &Connection, itype: &str) -> Result<Vec<Sym
     Ok(rows)
 }
 
+/// One stored instrument by exchange and symbol, or `None` (also when there
+/// is no table). The Bridge 1.0.12: the sandbox falls back to this when the
+/// in-memory master was dropped at the 03:00 IST session boundary, so a held
+/// position can still be exited before the broker is signed in again.
+pub fn find_symbol(conn: &Connection, exchange: &str, symbol: &str) -> Result<Option<SymbolInfo>> {
+    if !table_exists(conn)? {
+        return Ok(None);
+    }
+    Ok(conn
+        .query_row(
+            &format!(
+                "SELECT {} FROM symtoken WHERE exchange = ?1 AND symbol = ?2 LIMIT 1",
+                COLUMNS
+            ),
+            [exchange, symbol],
+            row,
+        )
+        .optional()?)
+}
+
 pub fn count_symbols(conn: &Connection) -> Result<i64> {
     Ok(conn.query_row("SELECT COUNT(*) FROM symtoken", [], |r| r.get(0))?)
 }
@@ -336,6 +356,22 @@ mod tests {
         let conn = Connection::open_in_memory().unwrap();
         crate::db::sqlite::migrations::run_legacy_schema(&conn).unwrap();
         conn
+    }
+
+    #[test]
+    fn find_symbol_reads_one_stored_contract_for_the_sandbox_fallback() {
+        let conn = Connection::open_in_memory().unwrap();
+        assert!(find_symbol(&conn, "NFO", "X").unwrap().is_none(), "no table");
+        conn.execute_batch(CREATE_TABLE).unwrap();
+        conn.execute_batch(
+            "INSERT INTO symtoken (symbol, brsymbol, name, exchange, brexchange, token, expiry, strike, lotsize, instrumenttype, tick_size)
+             VALUES ('NIFTY27OCT2622700PE', 'NIFTY26O2722700PE', 'NIFTY', 'NFO', 'NFO', '1', '27-OCT-26', 22700, 65, 'PE', 0.05);",
+        )
+        .unwrap();
+        let r = find_symbol(&conn, "NFO", "NIFTY27OCT2622700PE").unwrap().unwrap();
+        assert_eq!(r.lot_size, 65);
+        assert_eq!(r.expiry, "27-OCT-26");
+        assert!(find_symbol(&conn, "NSE", "NIFTY27OCT2622700PE").unwrap().is_none());
     }
 
     #[test]

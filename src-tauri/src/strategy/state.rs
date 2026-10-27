@@ -78,7 +78,18 @@ impl LegState {
     }
 
     /// Whether this leg still owns exposure, or an entry that may become one.
+    /// A leg that never opened (`configured`) is flat. The Bridge 1.0.12:
+    /// so is an `open` leg whose entry completed but which holds no
+    /// quantity and has no exit in flight (nothing at the broker to manage).
     pub fn requires_management(&self) -> bool {
+        if self.status == "open"
+            && self.entry_status == "complete"
+            && self.qty == 0
+            && self.superseded.is_none()
+            && !self.exit_in_flight()
+        {
+            return false;
+        }
         self.superseded.is_some()
             || self.exit_order_id.is_some()
             || self.exit_claim_token.is_some()
@@ -243,8 +254,19 @@ impl RunState {
     }
 
     /// Whether any actual or still-working position keeps this run managed.
+    ///
+    /// The Bridge 1.0.12: once the run is stopping, a signal-entry claim
+    /// that holds no unconfirmed order row can never become a position
+    /// (`add_leg` refuses a stopping run), so it no longer keeps the run
+    /// managed. A claim leaked by an entry that never released it used to
+    /// hold a durable stop pending forever ("Stop requested ... exit orders
+    /// are being attempted" every 5 s) while every leg was flat or had never
+    /// opened. Legs that never opened (`configured`) or are flat at qty 0
+    /// are not managed either (see `LegState::requires_management`).
     pub fn requires_management(&self) -> bool {
-        !self.signal_entry_claims.is_empty()
+        self.signal_entry_claims
+            .values()
+            .any(|c| !self.stopping || c.unconfirmed_row.is_some())
             || self.legs.values().any(LegState::requires_management)
     }
 

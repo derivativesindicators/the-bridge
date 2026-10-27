@@ -152,6 +152,13 @@ impl StrategyModule {
         user_id: &str,
         reason: &str,
     ) -> Result<String, StopOutcome> {
+        // The Bridge 1.0.12: announce a stop once, not on every 5 s retry.
+        let already = self
+            .store
+            .get_run(run_id)
+            .ok()
+            .flatten()
+            .is_some_and(|r| r.stop_requested_reason.is_some());
         if !self.store.request_run_stop(run_id, reason).unwrap_or(false) {
             return Err(StopOutcome {
                 ok: false,
@@ -172,6 +179,9 @@ impl StrategyModule {
             .and_then(|r| r.stop_requested_reason)
             .unwrap_or_else(|| reason.to_string());
         self.state.mark_stopping(run_id);
+        if already {
+            return Ok(reason);
+        }
         self.emit(
             strategy_id,
             user_id,
