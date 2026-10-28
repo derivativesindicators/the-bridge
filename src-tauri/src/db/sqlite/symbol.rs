@@ -361,17 +361,24 @@ mod tests {
     #[test]
     fn find_symbol_reads_one_stored_contract_for_the_sandbox_fallback() {
         let conn = Connection::open_in_memory().unwrap();
-        assert!(find_symbol(&conn, "NFO", "X").unwrap().is_none(), "no table");
+        assert!(
+            find_symbol(&conn, "NFO", "X").unwrap().is_none(),
+            "no table"
+        );
         conn.execute_batch(CREATE_TABLE).unwrap();
         conn.execute_batch(
             "INSERT INTO symtoken (symbol, brsymbol, name, exchange, brexchange, token, expiry, strike, lotsize, instrumenttype, tick_size)
              VALUES ('NIFTY27OCT2622700PE', 'NIFTY26O2722700PE', 'NIFTY', 'NFO', 'NFO', '1', '27-OCT-26', 22700, 65, 'PE', 0.05);",
         )
         .unwrap();
-        let r = find_symbol(&conn, "NFO", "NIFTY27OCT2622700PE").unwrap().unwrap();
+        let r = find_symbol(&conn, "NFO", "NIFTY27OCT2622700PE")
+            .unwrap()
+            .unwrap();
         assert_eq!(r.lot_size, 65);
         assert_eq!(r.expiry, "27-OCT-26");
-        assert!(find_symbol(&conn, "NSE", "NIFTY27OCT2622700PE").unwrap().is_none());
+        assert!(find_symbol(&conn, "NSE", "NIFTY27OCT2622700PE")
+            .unwrap()
+            .is_none());
     }
 
     #[test]

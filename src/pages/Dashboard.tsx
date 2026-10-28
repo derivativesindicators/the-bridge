@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
+import { useBrokerLoginNotice } from '@/hooks/useBrokerLoginNotice'
 import { useOrderEventRefresh } from '@/hooks/useOrderEventRefresh'
 import { cn } from '@/lib/utils'
 import { onModeChange } from '@/stores/themeStore'
@@ -60,6 +61,7 @@ function getPnLBadgeVariant(value: string | number): 'default' | 'destructive' |
 }
 
 export default function Dashboard() {
+  useBrokerLoginNotice()
   const [marginData, setMarginData] = useState<MarginData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)

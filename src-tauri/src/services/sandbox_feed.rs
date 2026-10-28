@@ -26,7 +26,10 @@ use tokio::sync::{broadcast, mpsc};
 /// boundary) and only reloaded at the next sign-in; until then every sandbox
 /// order, including the exit of a carried position on its expiry day, was
 /// refused as "Symbol ... not found".
-pub struct MasterSymbols(pub SymbolResolver, pub Option<Arc<crate::db::sqlite::SqliteDb>>);
+pub struct MasterSymbols(
+    pub SymbolResolver,
+    pub Option<Arc<crate::db::sqlite::SqliteDb>>,
+);
 
 impl MasterSymbols {
     fn stored(&self, symbol: &str, exchange: &str) -> Option<SymbolMeta> {

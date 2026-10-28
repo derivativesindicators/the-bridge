@@ -214,7 +214,13 @@ async fn every_broker_signs_in_the_way_the_server_tells_the_broker_page() {
                     authorize
                 );
                 let (_, h, v) = send_to(ctx, broker_redirect(broker, &authorize, &cookie)).await;
-                assert_eq!(location(&h), "/dashboard", "{}: {}", broker, v);
+                assert_eq!(
+                    location(&h).split('?').next().unwrap(),
+                    "/dashboard",
+                    "{}: {}",
+                    broker,
+                    v
+                );
                 let a = mock.last_auth.lock().clone().unwrap();
                 assert!(a.request_token.is_some(), "{}", broker);
             }
@@ -397,7 +403,13 @@ async fn a_bare_callback_starts_a_sign_in_only_from_inside_openalgo() {
         // The broker's own redirect back (cross-site, with its code) still
         // completes the sign-in.
         let (_, h, v) = send_to(ctx, broker_redirect(b, &authorize, &cookie)).await;
-        assert_eq!(location(&h), "/dashboard", "{}: {}", b, v);
+        assert_eq!(
+            location(&h).split('?').next().unwrap(),
+            "/dashboard",
+            "{}: {}",
+            b,
+            v
+        );
         assert_eq!(pending(ctx), before, "{}", b);
         BrokerAuthService::revoke(ctx, SessionEndReason::Logout)
             .await

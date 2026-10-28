@@ -179,6 +179,12 @@ pub async fn peer_layer(
         && crate::tunnel::webhook_only_active()
         && !crate::tunnel::tunnel_path_allowed(req.uri().path())
     {
+        // The Bridge 1.0.13: a person's browser that lands here gets a page
+        // that says what this address is, not a bare JSON 404. It shows no
+        // part of the app and links only to this computer's own address.
+        if wants_html_page(req.method(), req.headers()) {
+            return tunnel_not_found_page();
+        }
         return error(StatusCode::NOT_FOUND, "Not found");
     }
     // A resource guard on every request, well above legitimate use: the
@@ -925,4 +931,27 @@ pub fn redirect(to: &str) -> Response {
         )],
     )
         .into_response()
+}
+
+/// A browser page load (GET/HEAD asking for HTML), not an API call.
+pub fn wants_html_page(method: &Method, headers: &HeaderMap) -> bool {
+    (*method == Method::GET || *method == Method::HEAD)
+        && headers
+            .get(header::ACCEPT)
+            .and_then(|v| v.to_str().ok())
+            .is_some_and(|a| a.contains("text/html"))
+}
+
+/// The tunnel's friendly 404 for a person's browser (still a 404).
+pub fn tunnel_not_found_page() -> Response {
+    crate::server::routes::broker::html_page(
+        StatusCode::NOT_FOUND,
+        "<!doctype html><html><head><meta charset=\"utf-8\"><title>The Bridge</title>\
+         <style>body{font-family:system-ui,sans-serif;max-width:32rem;margin:4rem auto;padding:0 1rem}</style>\
+         </head><body><h1>Nothing to see here</h1>\
+         <p>This public address only receives broker sign-ins and webhooks for The Bridge.</p>\
+         <p>If you were signing in to your broker, return to The Bridge on your computer. \
+         You can close this tab.</p></body></html>"
+            .to_string(),
+    )
 }

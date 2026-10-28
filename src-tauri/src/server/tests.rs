@@ -1417,7 +1417,7 @@ async fn zerodha_oauth_round_trip_uses_request_token_and_verifies_state() {
         )))
         .await;
     assert_eq!(s, StatusCode::FOUND);
-    assert_eq!(location(&headers), "/dashboard");
+    assert_eq!(location(&headers).split('?').next().unwrap(), "/dashboard");
     let creds = h.mock.last_auth.lock().clone().unwrap();
     assert_eq!(creds.request_token.as_deref(), Some("rt123"));
     assert_eq!(creds.api_secret.as_deref(), Some("kitesecret"));
@@ -1540,7 +1540,7 @@ async fn aliceblue_stateless_callback_needs_the_starting_browser_session() {
     let (_, headers, _) = h
         .send(with_session(get(ALICE_CALLBACK), &cookie, None))
         .await;
-    assert_eq!(location(&headers), "/dashboard");
+    assert_eq!(location(&headers).split('?').next().unwrap(), "/dashboard");
     let creds = h.mock.last_auth.lock().clone().unwrap();
     assert_eq!(creds.auth_code.as_deref(), Some("AB1234:ac1"));
     assert!(h.ctx().is_broker_connected());
@@ -1595,7 +1595,7 @@ async fn aliceblue_callback_for_another_account_is_refused() {
     let (_, headers, _) = h
         .send(with_session(get(ALICE_CALLBACK), &cookie, None))
         .await;
-    assert_eq!(location(&headers), "/dashboard");
+    assert_eq!(location(&headers).split('?').next().unwrap(), "/dashboard");
     assert!(h.ctx().is_broker_connected());
     assert_eq!(h.ctx().get_broker_session().unwrap().user_id, "AB1234");
 
@@ -1956,7 +1956,7 @@ async fn state_less_callbacks_are_bound_to_the_browser_session() {
         with_session(get("/shoonya/callback?code=c1"), &cookie, None),
     )
     .await;
-    assert_eq!(location(&headers), "/dashboard");
+    assert_eq!(location(&headers).split('?').next().unwrap(), "/dashboard");
     assert_eq!(
         mocks[1]
             .last_auth
@@ -2065,7 +2065,7 @@ async fn first_state_less_sign_in_needs_the_saved_client_id() {
         with_session(get("/arrow/callback?request_token=r2"), &cookie, None),
     )
     .await;
-    assert_eq!(location(&h), "/dashboard");
+    assert_eq!(location(&h).split('?').next().unwrap(), "/dashboard");
     assert_eq!(ctx.get_broker_session().unwrap().user_id, "AR123");
     ctx.runtime.teardown(ctx).await;
 }
@@ -2460,7 +2460,7 @@ async fn forged_state_less_callbacks_are_refused() {
         .await
         .unwrap();
     let (_, h, _) = send_to(ctx, callback("code=mine")).await;
-    assert_eq!(location(&h), "/dashboard");
+    assert_eq!(location(&h).split('?').next().unwrap(), "/dashboard");
     assert_eq!(ctx.get_broker_session().unwrap().user_id, "U1");
 
     fresh_limits();
@@ -2496,7 +2496,7 @@ async fn forged_state_less_callbacks_are_refused() {
         .await
         .unwrap();
     let (_, h, _) = send_to(ctx, callback("code=c1")).await;
-    assert_eq!(location(&h), "/dashboard");
+    assert_eq!(location(&h).split('?').next().unwrap(), "/dashboard");
     let (_, h, _) = send_to(ctx, callback("code=c2")).await;
     assert!(location(&h).starts_with("/broker?error="));
 
@@ -2528,7 +2528,7 @@ async fn forged_state_less_callbacks_are_refused() {
         .await
         .unwrap();
     let (_, h, _) = send_to(ctx, dhan_cb("tokenId=t1&consentAppId=consent-1")).await;
-    assert_eq!(location(&h), "/dashboard");
+    assert_eq!(location(&h).split('?').next().unwrap(), "/dashboard");
     assert_eq!(ctx.get_broker_session().unwrap().broker_id, "dhan");
     ctx.runtime.teardown(ctx).await;
 }
@@ -2563,7 +2563,7 @@ async fn xts_form_post_redirect_is_public_and_state_verified() {
         .to_string();
     let state = ret.split("state=").nth(1).unwrap().to_string();
     let (_, headers, _) = send_to(ctx, form(&state)).await;
-    assert_eq!(location(&headers), "/dashboard");
+    assert_eq!(location(&headers).split('?').next().unwrap(), "/dashboard");
     assert_eq!(
         mocks[3]
             .last_auth
@@ -2970,4 +2970,110 @@ async fn master_contract_routes_and_server_settings_status() {
     assert_eq!(sv["ws"]["state"], "port_in_use");
     assert!(sv.get("state").is_some());
     h.ctx().runtime.teardown(h.ctx()).await;
+}
+
+/// 1.0.13: a callback hit through the public tunnel (the broker's registered
+/// redirect is the ngrok/Cloudflare address) must not strand the window on
+/// that origin. It answers with a small result page that sends the window
+/// back to the app on this computer, flagged for the success toast, and
+/// carries no token. Through 127.0.0.1 it stays a plain redirect.
+#[tokio::test]
+async fn tunnel_callback_returns_to_the_app_on_this_computer() {
+    let h = H::new();
+    h.setup();
+    h.save_broker_credentials();
+    let port = h.ctx().listening_port();
+    let state = state_from_kite_url(
+        &BrokerAuthService::start_oauth(h.ctx(), "zerodha", None)
+            .await
+            .unwrap(),
+    );
+    let mut r = get(&format!(
+        "/zerodha/callback?status=success&action=login&request_token=secretrt777&state={}",
+        state
+    ));
+    r.headers_mut()
+        .insert("x-forwarded-for", "203.0.113.7".parse().unwrap());
+    r.headers_mut()
+        .insert(header::ACCEPT, "text/html".parse().unwrap());
+    let (s, headers, body) = h.send(r).await;
+    assert_eq!(s, StatusCode::OK);
+    assert!(h.ctx().is_broker_connected());
+    let html = String::from_utf8(body).unwrap();
+    let target = format!(
+        "http://127.0.0.1:{}/dashboard?broker_login=success&amp;broker=zerodha",
+        port
+    );
+    assert!(html.contains("Logged in to Zerodha"), "{}", html);
+    assert!(html.contains(&format!("url={}", target)), "{}", html);
+    assert!(html.contains(&format!("href=\"{}\"", target)), "{}", html);
+    assert!(!html.contains("secretrt777") && !html.contains(&state));
+    assert_eq!(headers[header::REFERRER_POLICY], "no-referrer");
+    assert_eq!(headers[header::CACHE_CONTROL], "no-store");
+
+    // Failure through the tunnel: back to the broker page with the reason.
+    let mut r = get("/zerodha/callback?status=success&request_token=secretrt888&state=forged");
+    r.headers_mut()
+        .insert("x-forwarded-for", "203.0.113.7".parse().unwrap());
+    let (s, _, body) = h.send(r).await;
+    assert_eq!(s, StatusCode::OK);
+    let html = String::from_utf8(body).unwrap();
+    assert!(html.contains("Zerodha login failed"), "{}", html);
+    assert!(html.contains(&format!("http://127.0.0.1:{}/broker?error=", port)));
+    assert!(!html.contains("secretrt888"));
+}
+
+#[tokio::test]
+async fn local_callback_redirects_to_the_flagged_dashboard() {
+    let h = H::new();
+    h.setup();
+    h.save_broker_credentials();
+    let state = state_from_kite_url(
+        &BrokerAuthService::start_oauth(h.ctx(), "zerodha", None)
+            .await
+            .unwrap(),
+    );
+    let (s, headers, _) = h
+        .send(get(&format!(
+            "/zerodha/callback?status=success&request_token=rt5&state={}",
+            state
+        )))
+        .await;
+    assert_eq!(s, StatusCode::FOUND);
+    assert_eq!(
+        location(&headers),
+        "/dashboard?broker_login=success&broker=zerodha"
+    );
+}
+
+#[test]
+fn tunnel_not_found_page_is_html_for_browsers_only() {
+    use crate::server::middleware::{tunnel_not_found_page, wants_html_page};
+    let mut hm = axum::http::HeaderMap::new();
+    assert!(!wants_html_page(&Method::GET, &hm));
+    hm.insert(
+        header::ACCEPT,
+        "text/html,application/xhtml+xml".parse().unwrap(),
+    );
+    assert!(wants_html_page(&Method::GET, &hm));
+    assert!(!wants_html_page(&Method::POST, &hm));
+    let r = tunnel_not_found_page();
+    assert_eq!(r.status(), StatusCode::NOT_FOUND);
+    assert!(r.headers()[header::CONTENT_TYPE]
+        .to_str()
+        .unwrap()
+        .starts_with("text/html"));
+}
+
+#[tokio::test]
+async fn sign_in_result_page_escapes_the_reason() {
+    let r = crate::server::routes::broker::sign_in_result_page(
+        "Zerodha",
+        Some("<script>x</script>"),
+        "http://127.0.0.1:5001/broker",
+    );
+    let body = axum::body::to_bytes(r.into_body(), 1 << 20).await.unwrap();
+    let html = String::from_utf8(body.to_vec()).unwrap();
+    assert!(!html.contains("<script>"));
+    assert!(html.contains("&lt;script&gt;"));
 }

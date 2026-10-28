@@ -9,6 +9,7 @@ use crate::security::Secret;
 use crate::server::envelope::{error, json_response};
 use crate::server::form::FormData;
 use crate::server::middleware::{login_limited, redirect, ClientIp, Sess, User};
+use crate::server::source::Source;
 use crate::services::broker_auth_service::{BrokerAuthService, CallbackOrigin, FormLogin};
 use crate::services::broker_config_service::BrokerConfigService;
 use crate::services::broker_settings_service::{
@@ -33,11 +34,120 @@ fn valid_broker(b: &str) -> bool {
 
 /// Back to Select Broker with the reason, shown on that broker's card.
 fn broker_page_with_error(broker: &str, msg: &str) -> Response {
-    redirect(&format!(
+    redirect(&broker_error_path(broker, msg))
+}
+
+fn broker_error_path(broker: &str, msg: &str) -> String {
+    format!(
         "/broker?error={}&broker={}",
         urlencoding::encode(msg),
         urlencoding::encode(broker)
-    ))
+    )
+}
+
+/// Where a finished sign-in lands: the dashboard, flagged so the app shows
+/// "<Broker> login successful" once.
+fn dashboard_after_login(broker: &str) -> String {
+    format!(
+        "/dashboard?broker_login=success&broker={}",
+        urlencoding::encode(broker)
+    )
+}
+
+/// The Bridge 1.0.13: the end of a broker sign-in.
+///
+/// The broker redirects to the registered callback, which is often the
+/// public tunnel address (ngrok / Cloudflare). The app's own pages live on
+/// this computer (`http://127.0.0.1:<port>`, where the window's session
+/// cookie is); the tunnel origin never serves them (webhook-only mode
+/// refuses them outright). A relative redirect there stranded the window on
+/// a JSON "Not found". So a callback that did not arrive from this computer
+/// answers with a small page that says how it went and sends the window
+/// back to the app's own address. It carries no token, and
+/// `Referrer-Policy: no-referrer` keeps the callback URL (with the broker's
+/// request token) from being sent onward.
+fn finish_sign_in(
+    ctx: &AppState,
+    source: Option<Source>,
+    broker: &str,
+    outcome: Result<(), String>,
+) -> Response {
+    let path = match &outcome {
+        Ok(()) => dashboard_after_login(broker),
+        Err(msg) => broker_error_path(broker, msg),
+    };
+    if matches!(source, None | Some(Source::Local)) {
+        return redirect(&path);
+    }
+    let target = format!("http://127.0.0.1:{}{}", ctx.listening_port(), path);
+    sign_in_result_page(
+        &catalog_display_name(broker),
+        outcome.as_ref().err().map(|s| s.as_str()),
+        &target,
+    )
+}
+
+fn catalog_display_name(broker: &str) -> String {
+    let mut c = broker.chars();
+    match c.next() {
+        Some(f) => f.to_uppercase().collect::<String>() + c.as_str(),
+        None => String::new(),
+    }
+}
+
+pub(crate) fn html_escape(s: &str) -> String {
+    s.replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+        .replace('"', "&quot;")
+        .replace('\'', "&#39;")
+}
+
+/// A self-contained page (no scripts, no app assets) with the result.
+pub(crate) fn sign_in_result_page(name: &str, error: Option<&str>, target: &str) -> Response {
+    let name = html_escape(name);
+    let href = html_escape(target);
+    let (title, body) = match error {
+        None => (
+            format!("Logged in to {}", name),
+            format!(
+                "<p>Logged in to {name}. Taking you back to The Bridge&hellip;</p>\
+                 <p>If this is a separate browser tab, you can close it and return to The Bridge.</p>"
+            ),
+        ),
+        Some(e) => (
+            format!("{} login failed", name),
+            format!(
+                "<p>The {name} login did not complete: {}</p><p>Taking you back to The Bridge&hellip;</p>",
+                html_escape(e)
+            ),
+        ),
+    };
+    let html = format!(
+        "<!doctype html><html><head><meta charset=\"utf-8\"><title>{title} - The Bridge</title>\
+         <meta http-equiv=\"refresh\" content=\"1;url={href}\">\
+         <style>body{{font-family:system-ui,sans-serif;max-width:32rem;margin:4rem auto;padding:0 1rem}}</style>\
+         </head><body><h1>{title}</h1>{body}<p><a href=\"{href}\">Return to The Bridge</a></p></body></html>"
+    );
+    html_page(StatusCode::OK, html)
+}
+
+pub(crate) fn html_page(status: StatusCode, html: String) -> Response {
+    use axum::http::header;
+    (
+        status,
+        [
+            (header::CONTENT_TYPE, "text/html; charset=utf-8"),
+            (header::CACHE_CONTROL, "no-store"),
+            (header::REFERRER_POLICY, "no-referrer"),
+            (
+                header::CONTENT_SECURITY_POLICY,
+                "default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'none'",
+            ),
+        ],
+        html,
+    )
+        .into_response()
 }
 
 /// GET /auth/broker-config. The broker app key is never sent to the page:
@@ -169,8 +279,10 @@ pub async fn oauth_callback(
     ClientIp(ip): ClientIp,
     Sess(sess): Sess,
     headers: axum::http::HeaderMap,
+    source: Option<axum::Extension<Source>>,
     Query(params): Query<HashMap<String, String>>,
 ) -> Response {
+    let source = source.map(|e| e.0);
     if !valid_broker(&broker) {
         return error(StatusCode::NOT_FOUND, "Unknown broker.");
     }
@@ -202,13 +314,14 @@ pub async fn oauth_callback(
     let origin = CallbackOrigin::Redirect {
         session_id: sess.as_ref().map(|s| s.id.as_str()),
     };
-    match BrokerAuthService::complete_oauth(&ctx, &broker, &params, origin).await {
-        Ok(_) => redirect("/dashboard"),
+    let outcome = match BrokerAuthService::complete_oauth(&ctx, &broker, &params, origin).await {
+        Ok(_) => Ok(()),
         Err(e) => {
             tracing::warn!("Broker sign-in for {} failed: {}", broker, e.code());
-            broker_page_with_error(&broker, &e.client_message())
+            Err(e.client_message())
         }
-    }
+    };
+    finish_sign_in(&ctx, source, &broker, outcome)
 }
 
 /// POST /<broker>/callback. For the XTS third-party login (compositedge,
@@ -222,9 +335,11 @@ pub async fn callback_post(
     ClientIp(ip): ClientIp,
     Sess(sess): Sess,
     headers: axum::http::HeaderMap,
+    source: Option<axum::Extension<Source>>,
     Query(query): Query<HashMap<String, String>>,
     form: FormData,
 ) -> Response {
+    let source = source.map(|e| e.0);
     if !valid_broker(&broker) {
         return error(StatusCode::NOT_FOUND, "Unknown broker.");
     }
@@ -241,13 +356,15 @@ pub async fn callback_post(
         let origin = CallbackOrigin::Redirect {
             session_id: sess.as_ref().map(|s| s.id.as_str()),
         };
-        return match BrokerAuthService::complete_oauth(&ctx, &broker, &params, origin).await {
-            Ok(_) => redirect("/dashboard"),
+        let outcome = match BrokerAuthService::complete_oauth(&ctx, &broker, &params, origin).await
+        {
+            Ok(_) => Ok(()),
             Err(e) => {
                 tracing::warn!("Broker sign-in for {} failed: {}", broker, e.code());
-                broker_page_with_error(&broker, &e.client_message())
+                Err(e.client_message())
             }
         };
+        return finish_sign_in(&ctx, source, &broker, outcome);
     }
     // Every other broker: the in-app login form, which needs the signed-in
     // user and, checked here as well as in the session layer, the CSRF

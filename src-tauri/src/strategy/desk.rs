@@ -582,7 +582,10 @@ mod tests {
         assert_eq!(c.len(), 1);
         assert_eq!(c[0]["pnl"], json!(1500.0));
         assert_eq!(c[0]["side"], "long");
-        assert!(c[0]["entry_time"].is_string(), "1.0.12: the trip carries its entry time");
+        assert!(
+            c[0]["entry_time"].is_string(),
+            "1.0.12: the trip carries its entry time"
+        );
         assert!(c[0]["entry_time"].as_str() < c[0]["exit_time"].as_str());
         // Live view sees none of the sandbox orders.
         assert!(closed_on(&h, RunMode::Live, today).is_empty());
